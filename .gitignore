@@ -1,0 +1,29 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+/docker/dev/.env
+/docker/dev/data
+/docker/prod/.env
+/docker/prod/data
+/docker/prod/web
+/docker/prod/core
+/docker/prod/ahpuojv2-deploy/assets/install/config.ini
+
+# FE
+/FE/node_modules
+/FE/dist
+/FE/package-lock.json
+
+# backend
+/ahpuoj/ahpuoj
+/ahpuoj/go.sum
+/ahpuoj/config/config.ini
