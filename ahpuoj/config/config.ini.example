@@ -1,5 +1,5 @@
 [project]
-datadir=/home/judge/hustoj_core/data
+datadir=../docker/dev/data
 server=http://localhost
 cookielivetime=1209600
 enviroment=debug

@@ -5,11 +5,9 @@ services:
     image: ahpuoj_judger:1.0.0
     container_name: ahpuojv2_judger
     tty: true
-    depends_on:
-      - db
     volumes:
       - ${OJ_DATA_PATH_HOST}:${OJ_DATA_PATH_CONTAINER}${OJ_CODE_CONTAINER_FLAG}
-    links:
+    depends_on:
       - db
     entrypoint: /usr/local/bin/docker-entrypoint.sh
     privileged: true
@@ -20,11 +18,10 @@ services:
       - "3306:3306"
     volumes:
       - /var/lib/mysql
+      - ../sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       TZ: Asia/Shanghai
 
   redis:

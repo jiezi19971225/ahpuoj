@@ -2,7 +2,6 @@
 mkdir /core
 cp -r ./* /core
 cd /core
-pwd
 cd judged
 make
 chmod +x judged
@@ -26,5 +25,5 @@ cp sim.sh /usr/bin
 chmod +x /usr/bin/sim.sh
 
 rm -rf /core
-# judged
+judged
 echo "done!"
