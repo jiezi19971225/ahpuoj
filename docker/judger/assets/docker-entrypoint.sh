@@ -1,5 +1,4 @@
 #!/bin/bash
-service nginx start
 update-alternatives --auto java
 update-alternatives --auto javac
 /usr/bin/judged

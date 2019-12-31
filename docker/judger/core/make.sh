@@ -1,6 +1,6 @@
 #!/bin/bash
 mkdir /core
-cp -r ./*  /core
+cp -r ./* /core
 cd /core
 pwd
 cd judged
@@ -25,7 +25,6 @@ cd ..
 cp sim.sh /usr/bin
 chmod +x /usr/bin/sim.sh
 
-cd /home/judge/go/src/ahpuoj/core
 rm -rf /core
 # judged
 echo "done!"
