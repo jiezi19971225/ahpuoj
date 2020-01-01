@@ -1,74 +1,105 @@
-### AHPUOJv2
+# AHPUOJv2
 
-#### 项目结构
+### 准备
 
-```
-├── config // 项目配置文件
-├── controller
-├── docker
-├───core 判题机源码
-├───dev 开发环境容器
-└───prod 生产环境容器
-├── middleware // 中间件
-├── model // 数据模型
-├── request // 表单验证模型
-├── router // 后台路由
-├── service // mysql 和 redis 服务
-├── tools // 开发时使用的工具函数
-├── utils // 工具函数
-├── vendor // go依赖
-├── web-admin // 后台管理系统前端
-├── web-common // 前端公共
-└── web-user // oj前台前端
-├── webpack.base.js // 公用 webpack 配置
-├── webpack.config.js // 开发环境 webpack 配置
-├── webpack.prod.config.js // 生产环境构建 webpack 配置
-├── main.go // go 程序入口
-```
-
-#### 准备工作
-
-因为 OJ 系统的判题机需要运行在一个比较复杂的环境中，所以部署工作较为复杂
-
-- 将 docker/dev 和 docker/prod 目录中的 .env.example 文件复制一份，重命名为 .env，并将空缺的参数填写上去
-- 将 config 目录下的 config.ini.example 复制一份，重命名为 config.ini，并填上参数，参数设置应该与 docker/dev 和 /docker/prod 中的 .env 文件中的参数一致
-- docker/prod/ahpuojv2-deploy/assets/install 中的 config.ini.example 文件也做同样的处理
-
-#### 部署开发环境
-
-- go 的依赖采用 govendor 管理，保存在 vendor 目录下
-- 在项目目录下运行以下命令，启动前端的开发环境
+项目部署采用 docker-compose 管理，首先需要构建 ahpuoj-judger 镜像
 
 ```
-npm install // 安装npm依赖
-npm run dev // 启动开发模式
+cd docker
+docker build judger -t ahpuoj_judger:1.0.0
 ```
 
-- cd 进入 docker/dev 目录，使用命令启动容器
+添加后端配置文件，将 ahpuoj/config/config.ini.example 复制一份，文件名设置为 config.ini，默认不需要更改配置
+
+### 开发环境部署
+
+#### 启动容器
 
 ```
+cd docker/compose
 docker-compose up -d
 ```
 
-- 进入容器，开发环境做了项目目录的映射，项目目录映射到了 容器内 /home/judge/go/src/ahpuoj 目录
+#### 启动后端
 
 ```
-docker-compose exec ahpuoj bash
+cd ahpuoj
+go run main.go
 ```
 
-- 在容器内进入 /home/judge/go/src/ahpuoj/docker/dev 目录，运行脚本 install.sh
-- 在容器 /home/judge/go/src/ahpuoj 目录下运行命令，可以在开发时对 go 程序进行热编译
+#### 启动前端
 
 ```
-gowatch
+cd FE
+yarn run dev
 ```
 
-- 开发环境部署完成，建议使用 vscode-insider 的 remote-docker 扩展，在容器内开发，便于 go 程序的调试
+### 生产环境部署
 
-#### 服务器部署
+#### 说明
 
-- 将 docker 目录整体上传到服务器
-- cd 进入 docker/prod 目录，使用命令启动容器，服务器环境做了容器 web 目录（存放前端资源） 、 data 目录（保存题目数据）和 core 目录（判题机源码）的 的映射
-- 确保各项配置都已经正确设置，在本机项目文件夹下使用 go build 生成 go 的可执行程序，运行 npm run build 生成前端文件
-- 参考 remote_deploy_mycloud.sh 将程序上传到服务器上映射的 容器 web 目录
-- 在服务器进入部署环境容器，使用 supervisorctl 运行 ahpuoj
+目前方案是将 docker 目录上传到服务器，在服务器构建并启动容器。容器启动后，compose 文件夹下面会生成 web 目录和 data 目录，分别为 nginx 容器的站点根目录和 judger 容器存放题目数据文件的目录
+
+#### 前端打包
+
+首先更改前端打包配置，如果配置错误，图片相关资源将无法正常显示
+FE/webcommon/const/index.js 中
+
+```
+if (process.env.NODE_ENV == 'production') {
+  server = 'http://172.16.0.3/';     // 这里更改为部署服务器的地址
+} else {
+  server = 'http://localhost:8888/';
+}
+```
+
+运行打包命令
+
+```
+cd FE
+yarn run build
+```
+
+#### 后端打包
+
+```
+cd ahpuoj
+go build
+```
+
+#### 上传文件
+
+将后端打包生产的 ahpuoj，config 目录，和 前端打包生成的 dist 目录下的文件上传到服务器的 docker/compose/web 目录下，结构应该是这样的
+
+```
+web
+    ├── admin_index.html
+    ├── ahpuoj
+    ├── config
+    ├── dist
+    ├── index.html
+    ├── js
+    ├── static
+    └── upload
+```
+
+#### 后端配置
+
+config.ini 的配置默认是为开发环境配置的，如果按照以上项目结构，需要改为如下
+
+```
+datadir=../data
+uploaddir=./upload
+server=http://localhost // 这里改为服务器的地址
+```
+
+#### 启动后端
+
+```
+cd docker/compose/web
+nohup ahpuoj &
+```
+
+#### nginx 配置
+
+在 docker/nginx/nginx.conf 中，将 proxy_pass http://127.0.0.1:8080; 中的 IP 地址，改为宿主机的内网 IP 地址。
