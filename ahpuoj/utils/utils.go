@@ -52,14 +52,17 @@ func GetRandomString(length int) string {
 }
 
 func SaveFile(file multipart.File, ext string, category string) (string, error) {
+	cfg := GetCfg()
+	uploadDir, _ := cfg.GetValue("project", "uploaddir")
 	dateString := time.Now().Format("20060102150405")
 	filename := dateString + GetRandomString(20) + ext
-	filepath := "upload/" + category + "/" + filename
+	filepath := uploadDir + "/" + category + "/" + filename
+	storepath := "upload/" + category + "/" + filename
+	os.MkdirAll(path.Dir(filepath), os.ModePerm)
 	out, err := os.Create(filepath)
-	Consolelog(err)
 	defer out.Close()
 	_, err = io.Copy(out, file)
-	return filepath, err
+	return storepath, err
 }
 
 func PathExists(path string) (bool, error) {
