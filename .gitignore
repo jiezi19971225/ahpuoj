@@ -10,12 +10,10 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-/docker/dev/data
-/docker/prod/.env
-/docker/prod/data
-/docker/prod/web
-/docker/prod/core
-/docker/prod/ahpuojv2-deploy/assets/install/config.ini
+
+# docker
+docker/compose/data/
+docker/compose/web/
 
 # FE
 /FE/node_modules
