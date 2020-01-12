@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"ahpuoj/controller"
 	"ahpuoj/model"
 	"ahpuoj/utils"
 	"errors"
@@ -40,7 +39,7 @@ func parseToken(c *gin.Context) (model.User, error) {
 		utils.Consolelog("role", role)
 		user.Role = role
 		// 判断用户登录token是否存在redis缓存中
-		conn := controller.REDISPOOL.Get()
+		conn := REDISPOOL.Get()
 		defer conn.Close()
 		storeToken, _ := redis.String(conn.Do("get", "token:"+username))
 

@@ -39,12 +39,12 @@ func ImportProblemSet(c *gin.Context) {
 		}
 		problem := model.Problem{
 			Title:        item.Title,
-			Description:  sql.NullString{item.Description, true},
-			Input:        sql.NullString{item.Input, true},
-			Output:       sql.NullString{item.Output, true},
-			SampleInput:  sql.NullString{item.SampleInput, true},
-			SampleOutput: sql.NullString{item.SampleOutput, true},
-			Hint:         sql.NullString{item.Hint, true},
+			Description:  model.NullString{sql.NullString{item.Description, true}},
+			Input:        model.NullString{sql.NullString{item.Input, true}},
+			Output:       model.NullString{sql.NullString{item.Output, true}},
+			SampleInput:  model.NullString{sql.NullString{item.SampleInput, true}},
+			SampleOutput: model.NullString{sql.NullString{item.SampleOutput, true}},
+			Hint:         model.NullString{sql.NullString{item.Hint, true}},
 			TimeLimit:    timeLimit,
 			MemoryLimit:  memoryLimit,
 		}

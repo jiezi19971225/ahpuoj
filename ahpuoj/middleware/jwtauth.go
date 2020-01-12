@@ -55,7 +55,7 @@ func JwtauthMiddleware() gin.HandlerFunc {
 							user, _ := c.Get("user")
 							if user, ok := user.(model.User); ok {
 								newToken := utils.CreateToken(user.Username)
-								conn := controller.REDISPOOL.Get()
+								conn := REDISPOOL.Get()
 								defer conn.Close()
 								conn.Do("set", "token:"+user.Username, newToken)
 								conn.Do("expire", "token:"+user.Username, 60*60*24*15)

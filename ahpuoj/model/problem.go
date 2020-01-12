@@ -2,7 +2,6 @@ package model
 
 import (
 	"ahpuoj/utils"
-	"database/sql"
 	"errors"
 	"os"
 	"strconv"
@@ -11,14 +10,14 @@ import (
 type Problem struct {
 	Id           int                      `db:"id" json:"id"`
 	Title        string                   `db:"title" json:"title"`
-	Description  sql.NullString           `db:"description" json:"description"`
+	Description  NullString               `db:"description" json:"description"`
 	Level        int                      `db:"level" json:"level"`
-	Input        sql.NullString           `db:"input" json:"input"`
-	Output       sql.NullString           `db:"output" json:"output"`
-	SampleInput  sql.NullString           `db:"sample_input" json:"sample_input"`
-	SampleOutput sql.NullString           `db:"sample_output" json:"sample_output"`
+	Input        NullString               `db:"input" json:"input"`
+	Output       NullString               `db:"output" json:"output"`
+	SampleInput  NullString               `db:"sample_input" json:"sample_input"`
+	SampleOutput NullString               `db:"sample_output" json:"sample_output"`
 	Spj          int                      `db:"spj" json:"spj"`
-	Hint         sql.NullString           `db:"hint" json:"hint"`
+	Hint         NullString               `db:"hint" json:"hint"`
 	Defunct      int                      `db:"defunct" json:"defunct"`
 	TimeLimit    int                      `db:"time_limit" json:"time_limit"`
 	MemoryLimit  int                      `db:"memory_limit" json:"memory_limit"`
@@ -34,14 +33,14 @@ type Problem struct {
 type ProblemWithoutTag struct {
 	Id           int                      `db:"id" json:"id"`
 	Title        string                   `db:"title" json:"title"`
-	Description  sql.NullString           `db:"description" json:"description"`
+	Description  NullString               `db:"description" json:"description"`
 	Level        int                      `db:"level" json:"level"`
-	Input        sql.NullString           `db:"input" json:"input"`
-	Output       sql.NullString           `db:"output" json:"output"`
-	SampleInput  sql.NullString           `db:"sample_input" json:"sample_input"`
-	SampleOutput sql.NullString           `db:"sample_output" json:"sample_output"`
+	Input        NullString               `db:"input" json:"input"`
+	Output       NullString               `db:"output" json:"output"`
+	SampleInput  NullString               `db:"sample_input" json:"sample_input"`
+	SampleOutput NullString               `db:"sample_output" json:"sample_output"`
 	Spj          int                      `db:"spj" json:"spj"`
-	Hint         sql.NullString           `db:"hint" json:"hint"`
+	Hint         NullString               `db:"hint" json:"hint"`
 	Defunct      int                      `db:"defunct" json:"defunct"`
 	TimeLimit    int                      `db:"time_limit" json:"time_limit"`
 	MemoryLimit  int                      `db:"memory_limit" json:"memory_limit"`

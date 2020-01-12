@@ -17,8 +17,8 @@ var REDISPOOL *redis.Pool
 var RedisCacheLiveTime int
 
 func init() {
-	DB, _ = mysql.NewDB()
-	REDISPOOL = redisConn.NewPool()
+	DB = mysql.Pool
+	REDISPOOL = redisConn.Pool
 
 	// 默认1800
 	RedisCacheLiveTime = 1800

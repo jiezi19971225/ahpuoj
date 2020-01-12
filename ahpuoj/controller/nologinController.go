@@ -384,7 +384,7 @@ func NologinGetProblem(c *gin.Context) {
 		}
 		c.JSON(200, gin.H{
 			"message": "数据获取成功",
-			"problem": cache,
+			"problem": jsonData,
 		})
 		return
 	} else {
@@ -396,6 +396,7 @@ func NologinGetProblem(c *gin.Context) {
 		problem.FetchTags()
 		problem.ConvertImgUrl()
 		// 缓存到 redis
+		utils.Consolelog(problem.Description)
 		if stringify, err := json.Marshal(problem); err == nil {
 			conn.Do("set", "problem:"+strconv.Itoa(problem.Id), stringify)
 			conn.Do("expire", "problem:"+strconv.Itoa(problem.Id), RedisCacheLiveTime)

@@ -3,6 +3,8 @@ package model
 import (
 	"ahpuoj/service/mysql"
 	"ahpuoj/utils"
+	"database/sql"
+	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -10,6 +12,22 @@ import (
 )
 
 var DB *sqlx.DB
+
+func init() {
+	DB = mysql.Pool
+}
+
+type NullString struct {
+	sql.NullString
+}
+
+func (v NullString) MarshalJSON() ([]byte, error) {
+	if v.Valid {
+		return json.Marshal(v.String)
+	} else {
+		return json.Marshal(nil)
+	}
+}
 
 func Paginate(page int, perpage int, tableName string, outputField []string, whereString string) (*sqlx.Rows, int, error) {
 	var total int
@@ -28,14 +46,4 @@ func Paginate(page int, perpage int, tableName string, outputField []string, whe
 	utils.Consolelog(sql)
 	DB.Get(&total, sql)
 	return rows, total, err
-}
-
-func init() {
-	DB, _ = mysql.NewDB()
-	err := DB.Ping()
-	if err != nil {
-		utils.Consolelog(err.Error())
-	} else {
-		utils.Consolelog("successful connect to db")
-	}
 }
