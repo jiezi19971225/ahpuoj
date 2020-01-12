@@ -16,22 +16,22 @@ const webpackDevConfig = {
   },
   module: {
     // 处理项目中的不同类型的模块。
-    rules: [
-      {
-        test: /\.(js|vue)$/,
-        loader: 'eslint-loader',
-        enforce: 'pre',
-        include: [
-          path.resolve(__dirname, 'web-admin'),
-          path.resolve(__dirname, 'web-common'),
-          path.resolve(__dirname, 'web-user')
-        ], // 指定检查的目录
-        options: {
-          // 这里的配置项参数将会被传递到 eslint 的 CLIEngine
-          formatter: require('eslint-friendly-formatter') // 指定错误报告的格式规范
-        }
-      }
-    ]
+    // rules: [
+    //   {
+    //     test: /\.(js|vue)$/,
+    //     loader: 'eslint-loader',
+    //     enforce: 'pre',
+    //     include: [
+    //       path.resolve(__dirname, 'web-admin'),
+    //       path.resolve(__dirname, 'web-common'),
+    //       path.resolve(__dirname, 'web-user')
+    //     ], // 指定检查的目录
+    //     options: {
+    //       // 这里的配置项参数将会被传递到 eslint 的 CLIEngine
+    //       formatter: require('eslint-friendly-formatter') // 指定错误报告的格式规范
+    //     }
+    //   }
+    // ]
   },
   plugins: [
     // 多入口 链式调用
@@ -68,9 +68,14 @@ const webpackDevConfig = {
     disableHostCheck: true,
     // 这个配置 真是找了好久才知道 这样可以起到和生产环境配置nginx一样的效果
     historyApiFallback: {
-      rewrites: [
-        { from: /^\/$/, to: '/index.html' },
-        { from: /^\/admin/, to: '/admin/index.html' }
+      rewrites: [{
+          from: /^\/$/,
+          to: '/index.html'
+        },
+        {
+          from: /^\/admin/,
+          to: '/admin/index.html'
+        }
       ]
     },
     proxy: {

@@ -16,9 +16,10 @@ body {
 h3 {
   font-size: .2rem;
 }
+
 //  修复 导致 vue-image-crop-upload 出现bug 的样式
-.vicp-wrap img{
-  max-width:none;
+.vicp-wrap img {
+  max-width: none;
 }
 
 .el-button--mini {
@@ -150,6 +151,7 @@ h3 {
           &:not(:last-child) {
             border-bottom: 1px solid $--color-level13;
           }
+
           padding: 0.1rem 0;
         }
       }

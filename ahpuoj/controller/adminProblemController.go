@@ -5,6 +5,7 @@ import (
 	"ahpuoj/request"
 	"ahpuoj/utils"
 	"database/sql"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -68,11 +69,14 @@ func GetProblem(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "数据获取成功",
-		"problem": problem.Response(),
+		"problem": problem,
 	})
 }
 
 func StoreProblem(c *gin.Context) {
+	conn := REDISPOOL.Get()
+	defer conn.Close()
+
 	var req request.Problem
 	err := c.ShouldBindJSON(&req)
 	if utils.CheckError(c, err, "请求参数错误") != nil {
@@ -80,14 +84,14 @@ func StoreProblem(c *gin.Context) {
 	}
 	problem := model.Problem{
 		Title:        req.Title,
-		Description:  sql.NullString{req.Description, true},
-		Input:        sql.NullString{req.Input, true},
-		Output:       sql.NullString{req.Output, true},
-		SampleInput:  sql.NullString{req.SampleInput, true},
-		SampleOutput: sql.NullString{req.SampleOutput, true},
+		Description:  sql.NullString{String: req.Description, Valid: true},
+		Input:        sql.NullString{String: req.Input, Valid: true},
+		Output:       sql.NullString{String: req.Output, Valid: true},
+		SampleInput:  sql.NullString{String: req.SampleInput, Valid: true},
+		SampleOutput: sql.NullString{String: req.SampleOutput, Valid: true},
 		Spj:          req.Spj,
 		Level:        req.Level,
-		Hint:         sql.NullString{req.Hint, true},
+		Hint:         sql.NullString{String: req.Hint, Valid: true},
 		TimeLimit:    req.TimeLimit,
 		MemoryLimit:  req.MemoryLimit,
 	}
@@ -97,13 +101,22 @@ func StoreProblem(c *gin.Context) {
 	}
 	problem.AddTags(req.Tags)
 
+	// 同步到 redis 缓存
+	if stringify, err := json.Marshal(problem); err == nil {
+		conn.Do("set", "problem:"+strconv.Itoa(problem.Id), stringify)
+		conn.Do("expire", "problem:"+strconv.Itoa(problem.Id), RedisCacheLiveTime)
+	}
+
 	c.JSON(200, gin.H{
 		"message": "新建问题成功",
-		"problem": problem.Response(),
+		"problem": problem,
 	})
 }
 
 func UpdateProblem(c *gin.Context) {
+	conn := REDISPOOL.Get()
+	defer conn.Close()
+
 	id, _ := strconv.Atoi(c.Param("id"))
 	var req request.Problem
 	err := c.ShouldBindJSON(&req)
@@ -113,14 +126,14 @@ func UpdateProblem(c *gin.Context) {
 	problem := model.Problem{
 		Id:           id,
 		Title:        req.Title,
-		Description:  sql.NullString{req.Description, true},
-		Input:        sql.NullString{req.Input, true},
-		Output:       sql.NullString{req.Output, true},
-		SampleInput:  sql.NullString{req.SampleInput, true},
-		SampleOutput: sql.NullString{req.SampleOutput, true},
+		Description:  sql.NullString{String: req.Description, Valid: true},
+		Input:        sql.NullString{String: req.Input, Valid: true},
+		Output:       sql.NullString{String: req.Output, Valid: true},
+		SampleInput:  sql.NullString{String: req.SampleInput, Valid: true},
+		SampleOutput: sql.NullString{String: req.SampleOutput, Valid: true},
 		Spj:          req.Spj,
 		Level:        req.Level,
-		Hint:         sql.NullString{req.Hint, true},
+		Hint:         sql.NullString{String: req.Hint, Valid: true},
 		TimeLimit:    req.TimeLimit,
 		MemoryLimit:  req.MemoryLimit,
 	}
@@ -132,9 +145,15 @@ func UpdateProblem(c *gin.Context) {
 	if utils.CheckError(c, err, "编辑问题失败，问题标题已存在或该问题不存在") != nil {
 		return
 	}
+	// 同步到 redis 缓存
+	if stringify, err := json.Marshal(problem); err == nil {
+		conn.Do("set", "problem:"+strconv.Itoa(problem.Id), stringify)
+		conn.Do("expire", "problem:"+strconv.Itoa(problem.Id), RedisCacheLiveTime)
+	}
+
 	c.JSON(200, gin.H{
 		"message": "编辑问题成功",
-		"problem": problem.Response(),
+		"problem": problem,
 	})
 }
 

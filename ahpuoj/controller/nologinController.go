@@ -3,12 +3,15 @@ package controller
 import (
 	"ahpuoj/model"
 	"ahpuoj/utils"
+	"encoding/json"
+	"errors"
 	"net/http"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gomodule/redigo/redis"
 )
 
 // 访客获取新闻列表的接口
@@ -366,24 +369,47 @@ func NologinGetProblem(c *gin.Context) {
 
 	var problem model.Problem
 	id, _ := strconv.Atoi(c.Param("id"))
-	var err error
 
-	if loggedIn && user.Role != "admin" || !loggedIn {
-		err = DB.Get(&problem, "select * from problem where id = ? and defunct = 0", id)
+	// 查询缓存
+	conn := REDISPOOL.Get()
+	defer conn.Close()
+	if cache, err := redis.Bytes(conn.Do("get", "problem:"+c.Param("id"))); err == nil {
+		var jsonData map[string]interface{}
+		json.Unmarshal(cache, &jsonData)
+		if jsonData["defunct"] == 1 && (loggedIn && user.Role != "admin" || !loggedIn) {
+			err = errors.New("权限不足")
+		}
+		if utils.CheckError(c, err, "问题不存在") != nil {
+			return
+		}
+		c.JSON(200, gin.H{
+			"message": "数据获取成功",
+			"problem": cache,
+		})
+		return
 	} else {
-		err = DB.Get(&problem, "select * from problem where id = ?", id)
-	}
+		err := DB.Get(&problem, "select * from problem where id = ?", id)
+		// 查询成功 但是用户没有权限查看该题目
+		if err == nil && problem.Defunct == 1 && (loggedIn && user.Role != "admin" || !loggedIn) {
+			err = errors.New("权限不足")
+		}
+		problem.FetchTags()
+		problem.ConvertImgUrl()
+		// 缓存到 redis
+		if stringify, err := json.Marshal(problem); err == nil {
+			conn.Do("set", "problem:"+strconv.Itoa(problem.Id), stringify)
+			conn.Do("expire", "problem:"+strconv.Itoa(problem.Id), RedisCacheLiveTime)
+		}
 
-	if utils.CheckError(c, err, "问题不存在") != nil {
+		if utils.CheckError(c, err, "问题不存在") != nil {
+			return
+		}
+		c.JSON(200, gin.H{
+			"message": "数据获取成功",
+			"problem": problem,
+		})
 		return
 	}
-
-	problem.FetchTags()
-
-	c.JSON(200, gin.H{
-		"message": "数据获取成功",
-		"problem": problem.ResponseToUser(),
-	})
 }
 
 // 获取竞赛作业问题信息的接口
@@ -460,7 +486,7 @@ func NologinGetContestProblem(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "数据获取成功",
 			"seeable": seeable,
-			"problem": problem.Response(),
+			"problem": problem,
 		})
 	} else {
 		c.JSON(200, gin.H{

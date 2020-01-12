@@ -25,7 +25,7 @@
                     p(v-else) 总版
                     p.text-muted {{item.reply_count}}条回复 最后回复时间 {{item.updated_at}}
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(screenWidth>960?',jumper':'')",:total="total",:small="!(screenWidth>960)")
+        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
         .mt30
         h1.content__panel__title 发表新讨论
         .post__box__wrapper
@@ -45,15 +45,10 @@ import TinymceEditor from '@/web-common/components/tinymce_editor.vue';
 import {EventBus} from '@/web-common/eventbus';
 import {postIssue, replyToIssue} from '@/web-user/js/api/user.js';
 import {toggleIssueStatus} from '@/web-user/js/api/admin.js';
+import {mapState} from 'vuex';
 export default {
   components: {
     TinymceEditor
-  },
-  props: {
-    screenWidth: {
-      type: Number,
-      default: 1920
-    }
   },
   data() {
     return {
@@ -75,7 +70,11 @@ export default {
       }
     };
   },
-
+  computed: {
+    ...mapState({
+      device: state => state.app.device
+    })
+  },
   mounted() {
     this.fetchData();
   },

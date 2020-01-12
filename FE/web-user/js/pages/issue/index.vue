@@ -45,7 +45,7 @@
                           el-button.ml10(type="primary",size="mini",@click="handleReplyToReply(item.id,subitem.user.id)") 回复
                           el-button.ml10(v-if="$store.getters.userRole=='admin'",:type="subitem.is_deleted == 0?'danger':'success'",size="mini",@click="toggleReplyStatus(subitem.id)") {{subitem.is_deleted == 0 ? "删除":"恢复"}}
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(screenWidth>960?',jumper':'')",:total="total",:small="!(screenWidth>960)")
+        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
 
         h1.content__panel__title 发表新回复
         .post__box__wrapper
@@ -69,15 +69,10 @@ import TinymceEditor from '@/web-common/components/tinymce_editor.vue';
 import {EventBus} from '@/web-common/eventbus';
 import {postIssue, replyToIssue} from '@/web-user/js/api/user.js';
 import {toggleReplyStatus} from '@/web-user/js/api/admin.js';
+import {mapState} from 'vuex';
 export default {
   components: {
     TinymceEditor
-  },
-  props: {
-    screenWidth: {
-      type: Number,
-      default: 1920
-    }
   },
   data() {
     return {
@@ -97,7 +92,11 @@ export default {
       }
     };
   },
-
+  computed: {
+    ...mapState({
+      device: state => state.app.device
+    })
+  },
   mounted() {
     this.fetchData();
   },

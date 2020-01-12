@@ -1,6 +1,6 @@
 [project]
-datadir=../docker/dev/data
-uploaddir=../docker/dev/upload
+datadir=../docker/compose/data
+uploaddir=../docker/compose/upload
 server=http://localhost
 cookielivetime=1209600
 enviroment=debug
@@ -17,6 +17,7 @@ password=123456
 host=localhost
 port=6379
 password=123456
+cachelivetime=1800
 
 [mail]
 user=

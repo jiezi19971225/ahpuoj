@@ -16,22 +16,17 @@
               br
               .reply__content(v-html="calcContent(item.content)")
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(screenWidth>960?',jumper':'')",:total="total",:small="!(screenWidth>960)")
+        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
 </template>
 
 <script>
 import TinymceEditor from '@/web-common/components/tinymce_editor.vue';
 import {EventBus} from '@/web-common/eventbus';
 import {getMyReplys} from '@/web-user/js/api/user.js';
+import {mapState} from 'vuex';
 export default {
   components: {
     TinymceEditor
-  },
-  props: {
-    screenWidth: {
-      type: Number,
-      default: 1920
-    }
   },
   data() {
     return {
@@ -41,6 +36,11 @@ export default {
       replys: [],
       total: 0
     };
+  },
+  computed: {
+    ...mapState({
+      device: state => state.app.device
+    })
   },
   mounted() {
     this.fetchData();

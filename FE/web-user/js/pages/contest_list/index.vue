@@ -33,21 +33,16 @@
               span(class="contestlist__time__tag") {{spliteDate(scope.row.end_time)}}&nbsp
               span(class="contestlist__time__tag") {{spliteTime(scope.row.end_time)}}
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(screenWidth>960?',jumper':'')",:total="total",:small="!(screenWidth>960)")
+        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
 </template>
 
 <script>
 import OjTag from '@/web-common/components/ojtag';
 import {getContestList} from '@/web-user/js/api/nologin.js';
+import {mapState} from 'vuex';
 export default {
   components: {
     OjTag
-  },
-  props: {
-    screenWidth: {
-      type: Number,
-      default: 1920
-    }
   },
   data() {
     return {
@@ -58,6 +53,11 @@ export default {
       total: 0,
       tags: []
     };
+  },
+  computed: {
+    ...mapState({
+      device: state => state.app.device
+    })
   },
   activated() {
     this.fetchData();

@@ -54,20 +54,15 @@
           el-table-column(label="通过", prop="accepted", min-width="60",align="center")
           el-table-column(label="提交", prop="submit", min-width="60",align="center")
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(screenWidth>960?',jumper':'')",:total="total",:small="!(screenWidth>960)")
+        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
 </template>
 
 <script>
 import OjTag from '@/web-common/components/ojtag';
 import {getProblemList, getAllTags} from '@/web-user/js/api/nologin.js';
+import {mapState} from 'vuex';
 export default {
   components: {OjTag},
-  props: {
-    screenWidth: {
-      type: Number,
-      default: 1920
-    }
-  },
   data() {
     return {
       loading: false,
@@ -80,6 +75,11 @@ export default {
       tagId: -1,
       tags: []
     };
+  },
+  computed: {
+    ...mapState({
+      device: state => state.app.device
+    })
   },
   async mounted() {
     this.tagId = this.$store.getters.tagId;

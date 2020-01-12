@@ -9,26 +9,49 @@ import (
 )
 
 type Problem struct {
-	Id           int            `db:"id"`
-	Title        string         `db:"title"`
-	Description  sql.NullString `db:"description"`
-	Level        int            `db:"level"`
-	Input        sql.NullString `db:"input"`
-	Output       sql.NullString `db:"output"`
-	SampleInput  sql.NullString `db:"sample_input"`
-	SampleOutput sql.NullString `db:"sample_output"`
-	Spj          int            `db:"spj"`
-	Hint         sql.NullString `db:"hint"`
-	Defunct      int            `db:"defunct"`
-	TimeLimit    int            `db:"time_limit"`
-	MemoryLimit  int            `db:"memory_limit"`
-	Accepted     int            `db:"accepted"`
-	Submit       int            `db:"submit"`
-	Solved       int            `db:"solved"`
-	CreatedAt    string         `db:"created_at"`
-	UpdatedAt    string         `db:"updated_at"`
-	CreatorId    string         `db:"creator_id"`
-	Tags         []map[string]interface{}
+	Id           int                      `db:"id" json:"id"`
+	Title        string                   `db:"title" json:"title"`
+	Description  sql.NullString           `db:"description" json:"description"`
+	Level        int                      `db:"level" json:"level"`
+	Input        sql.NullString           `db:"input" json:"input"`
+	Output       sql.NullString           `db:"output" json:"output"`
+	SampleInput  sql.NullString           `db:"sample_input" json:"sample_input"`
+	SampleOutput sql.NullString           `db:"sample_output" json:"sample_output"`
+	Spj          int                      `db:"spj" json:"spj"`
+	Hint         sql.NullString           `db:"hint" json:"hint"`
+	Defunct      int                      `db:"defunct" json:"defunct"`
+	TimeLimit    int                      `db:"time_limit" json:"time_limit"`
+	MemoryLimit  int                      `db:"memory_limit" json:"memory_limit"`
+	Accepted     int                      `db:"accepted" json:"accepted"`
+	Submit       int                      `db:"submit" json:"submit"`
+	Solved       int                      `db:"solved" json:"solved"`
+	CreatedAt    string                   `db:"created_at" json:"created_at"`
+	UpdatedAt    string                   `db:"updated_at" json:"updated_at"`
+	CreatorId    string                   `db:"creator_id" json:"creator_id"`
+	Tags         []map[string]interface{} `json:"tags"`
+}
+
+type ProblemWithoutTag struct {
+	Id           int                      `db:"id" json:"id"`
+	Title        string                   `db:"title" json:"title"`
+	Description  sql.NullString           `db:"description" json:"description"`
+	Level        int                      `db:"level" json:"level"`
+	Input        sql.NullString           `db:"input" json:"input"`
+	Output       sql.NullString           `db:"output" json:"output"`
+	SampleInput  sql.NullString           `db:"sample_input" json:"sample_input"`
+	SampleOutput sql.NullString           `db:"sample_output" json:"sample_output"`
+	Spj          int                      `db:"spj" json:"spj"`
+	Hint         sql.NullString           `db:"hint" json:"hint"`
+	Defunct      int                      `db:"defunct" json:"defunct"`
+	TimeLimit    int                      `db:"time_limit" json:"time_limit"`
+	MemoryLimit  int                      `db:"memory_limit" json:"memory_limit"`
+	Accepted     int                      `db:"accepted" json:"accepted"`
+	Submit       int                      `db:"submit" json:"submit"`
+	Solved       int                      `db:"solved" json:"solved"`
+	CreatedAt    string                   `db:"created_at" json:"created_at"`
+	UpdatedAt    string                   `db:"updated_at" json:"updated_at"`
+	CreatorId    string                   `db:"creator_id" json:"creator_id"`
+	Tags         []map[string]interface{} `json:"-"`
 }
 
 func (problem *Problem) Save() error {
@@ -140,30 +163,7 @@ func (problem *Problem) RemoveTags() error {
 	return err
 }
 
-func (problem *Problem) Response() map[string]interface{} {
-
-	return map[string]interface{}{
-		"id":            problem.Id,
-		"title":         problem.Title,
-		"description":   problem.Description.String,
-		"input":         problem.Input.String,
-		"output":        problem.Output.String,
-		"sample_input":  problem.SampleInput.String,
-		"sample_output": problem.SampleOutput.String,
-		"spj":           problem.Spj,
-		"hint":          problem.Hint.String,
-		"defunct":       problem.Defunct,
-		"time_limit":    problem.TimeLimit,
-		"memory_limit":  problem.MemoryLimit,
-		"accepted":      problem.Accepted,
-		"submit":        problem.Submit,
-		"solved":        problem.Solved,
-		"tags":          problem.Tags,
-		"level":         problem.Level,
-	}
-}
-
-func (problem *Problem) ResponseToUser() map[string]interface{} {
+func (problem *Problem) ConvertImgUrl() {
 	// 需要将图片地址转换为绝对地址
 	if problem.Description.Valid {
 		problem.Description.String = utils.ConvertTextImgUrl(problem.Description.String)
@@ -176,24 +176,5 @@ func (problem *Problem) ResponseToUser() map[string]interface{} {
 	}
 	if problem.Hint.Valid {
 		problem.Hint.String = utils.ConvertTextImgUrl(problem.Hint.String)
-	}
-	return map[string]interface{}{
-		"id":            problem.Id,
-		"title":         problem.Title,
-		"description":   problem.Description.String,
-		"input":         problem.Input.String,
-		"output":        problem.Output.String,
-		"sample_input":  problem.SampleInput.String,
-		"sample_output": problem.SampleOutput.String,
-		"spj":           problem.Spj,
-		"hint":          problem.Hint.String,
-		"defunct":       problem.Defunct,
-		"time_limit":    problem.TimeLimit,
-		"memory_limit":  problem.MemoryLimit,
-		"accepted":      problem.Accepted,
-		"submit":        problem.Submit,
-		"solved":        problem.Solved,
-		"tags":          problem.Tags,
-		"level":         problem.Level,
 	}
 }

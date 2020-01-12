@@ -68,19 +68,14 @@
             template(slot-scope="scope") 
               span {{ scope.row.public == 1?"是":"否"}}
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(screenWidth>960?',jumper':'')",:total="total",:small="!(screenWidth>960)")
+        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
 </template>
 
 <script>
 import {getSolutionList, getLanguageList} from '@/web-user/js/api/nologin.js';
 import {resultList} from '@/web-common/const';
+import {mapState} from 'vuex';
 export default {
-  props: {
-    screenWidth: {
-      type: Number,
-      default: 1920
-    }
-  },
   data() {
     return {
       loading: false,
@@ -100,6 +95,9 @@ export default {
     };
   },
   computed: {
+    ...mapState({
+      device: state => state.app.device
+    }),
     searchableResultList() {
       return this.resultList.filter((val, index, arr) => {
         return val.code >= 4 && val.code <= 11;

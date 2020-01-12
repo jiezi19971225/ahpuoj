@@ -22,19 +22,14 @@
           el-table-column(label="提交",width="70",prop="submit")
 
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(screenWidth>960?',jumper':'')",:total="total",:small="!(screenWidth>960)")
+        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
 </template>
 
 <script>
 import {getRankList} from '@/web-user/js/api/nologin.js';
 import {setTimeout} from 'timers';
+import {mapState} from 'vuex';
 export default {
-  props: {
-    screenWidth: {
-      type: Number,
-      default: 1920
-    }
-  },
   data() {
     return {
       loading: false,
@@ -44,6 +39,11 @@ export default {
       tableData: [],
       total: 0
     };
+  },
+  computed: {
+    ...mapState({
+      device: state => state.app.device
+    })
   },
   mounted() {
     this.fetchData();

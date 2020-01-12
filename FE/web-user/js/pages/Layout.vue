@@ -1,16 +1,18 @@
 <template lang="pug">
   .front__page
     title(v-if="$route.meta.title") {{$route.meta.title}}
-    top-bar(:screenWidth="screenWidth")
+    top-bar
     transition(name='fade', mode="out-in", :duration="{ enter: 500, leave: 0 }",appear, appear-active-class='animated fadeInUp fade-enter-active' enter-active-class='animated fadeInUp fade-enter-active' leave-active-class='animated fade-leave-active')
-      router-view(v-if="$route.meta.keepAlive === false",:screenWidth="screenWidth")
+      router-view(v-if="$route.meta.keepAlive === false")
     transition(name='fade', mode="out-in", :duration="{ enter: 500, leave: 0 }",appear, appear-active-class='animated fadeInUp fade-enter-active' enter-active-class='animated fadeInUp fade-enter-active' leave-active-class='animated fade-leave-active')
       keep-alive
-        router-view(v-if="$route.meta.keepAlive !== false",:screenWidth="screenWidth")
+        router-view(v-if="$route.meta.keepAlive !== false")
 </template>
 
 <script>
 import TopBar from '@/web-user/js/common/topbar.vue';
+const {body} = document;
+const WIDTH = 960;
 
 export default {
   name: 'Layout',
@@ -22,30 +24,26 @@ export default {
       screenWidth: document.body.clientWidth
     };
   },
-  watch: {
-    screenWidth(val) {
-      // 为了避免频繁触发resize函数导致页面卡顿，使用定时器
-      if (!this.timer) {
-        // 一旦监听到的screenWidth值改变，就将其重新赋给data里的screenWidth
-        this.screenWidth = val;
-        this.timer = true;
-        let self = this;
-        setTimeout(function() {
-          // 打印screenWidth变化的值
-          console.log(self.screenWidth);
-          self.timer = false;
-        }, 400);
-      }
-    }
+  beforeMount() {
+    window.addEventListener('resize', this.$_resizeHandler);
+  },
+  beforeDestroy() {
+    window.removeEventListener('resize', this.$_resizeHandler);
   },
   mounted() {
-    const self = this;
-    window.onresize = () => {
-      return (() => {
-        window.screenWidth = document.body.clientWidth;
-        self.screenWidth = window.screenWidth;
-      })();
-    };
+    this.$_resizeHandler();
+  },
+  methods: {
+    $_isMobile() {
+      const rect = body.getBoundingClientRect();
+      return rect.width - 1 < WIDTH;
+    },
+    $_resizeHandler() {
+      if (!document.hidden) {
+        const isMobile = this.$_isMobile();
+        this.$store.dispatch('setDevice', isMobile ? 'mobile' : 'desktop');
+      }
+    }
   }
 };
 </script>

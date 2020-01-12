@@ -5,6 +5,7 @@ import (
 	"ahpuoj/service/mysql"
 	"ahpuoj/service/redisConn"
 	"ahpuoj/utils"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gomodule/redigo/redis"
@@ -13,17 +14,18 @@ import (
 
 var DB *sqlx.DB
 var REDISPOOL *redis.Pool
+var RedisCacheLiveTime int
 
 func init() {
 	DB, _ = mysql.NewDB()
 	REDISPOOL = redisConn.NewPool()
-	utils.Consolelog(REDISPOOL)
 
-	err := DB.Ping()
-	if err != nil {
-		utils.Consolelog(err.Error())
-	} else {
-		utils.Consolelog("successful connect to db")
+	// 默认1800
+	RedisCacheLiveTime = 1800
+	if rcltstr, err := utils.GetCfg().GetValue("redis", "cacheLiveTime"); err == nil {
+		if rclt, err := strconv.Atoi(rcltstr); err == nil {
+			RedisCacheLiveTime = rclt
+		}
 	}
 }
 

@@ -1,6 +1,6 @@
 <template lang="pug">
 .topbar__wrapper
-  .topbar__title(v-if="screenWidth > 960")
+  .topbar__title(v-if="device==='desktop'")
     router-link(:to="{name:'index'}") AHPUOJ
   .topbar__mobile_nav(v-else)
     .mobile-humber(@click="toggleMobileNav")
@@ -8,7 +8,7 @@
         span.line
         span.line
         span.line
-  .topbar__nav(v-if="screenWidth > 960")
+  .topbar__nav(v-if="device==='desktop'")
     ul.topbar__nav__bar.clearfix
       li.topbar__nav__item.topbar__section
         router-link(:to="{name:'problemSet'}")
@@ -59,7 +59,7 @@
 
   transition(name="slide-fade")
       el-menu(@select="toggleMobileNav",class="topbar__mobile__nav__menu",background-color="#111144",
-      text-color="#fff",active-text-color="#ffd04b",:router="true", v-if="showMobileNav && screenWidth <= 960")
+      text-color="#fff",active-text-color="#ffd04b",:router="true", v-if="showMobileNav && device === 'mobile' ")
         el-menu-item(:index="1", :route="{name:'index'}", class="submenu-title-noDropdown")
           svg-icon.m__svg(name="dashboard")
           span 首页
@@ -120,13 +120,8 @@
 <script>
 import {login, register} from '@/web-user/js/api/auth.js';
 import {EventBus} from '@/web-common/eventbus';
+import {mapState} from 'vuex';
 export default {
-  props: {
-    screenWidth: {
-      type: Number,
-      default: 1920
-    }
-  },
   data() {
     var validatePassword = (rule, value, callback) => {
       if (value === '') {
@@ -256,7 +251,11 @@ export default {
       }
     };
   },
-
+  computed: {
+    ...mapState({
+      device: state => state.app.device
+    })
+  },
   mounted() {
     console.log(this.$store);
     EventBus.$on('goLogin', () => {
@@ -342,7 +341,7 @@ export default {
 
 <style lang="scss" scoped>
 $mibile-nav-height: 50px;
-$topbar-height:75px;
+$topbar-height: 50px;
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.5s ease;
@@ -382,10 +381,10 @@ $topbar-height:75px;
     float: left;
     width: 150px;
     font-size: 30px;
-    @media screen and (min-width: 1280px) {
-      width: 200px;
-      font-size: 40px;
-    }
+    // @media screen and (min-width: 1280px) {
+    //   width: 200px;
+    //   font-size: 40px;
+    // }
     text-align: center;
     a {
       cursor: pointer;
@@ -397,17 +396,6 @@ $topbar-height:75px;
     color: $--color-level9;
     position: relative;
     margin-left: 150px;
-    @media screen and (min-width: 1280px) {
-      margin-left: 200px !important;
-      .topbar__section {
-        a {
-          font-size: 22px !important;
-        }
-        svg {
-          height: 30px !important;
-        }
-      }
-    }
     line-height: $topbar-height;
     .topbar__nav__bar {
       display: flex;
@@ -423,7 +411,7 @@ $topbar-height:75px;
       }
     }
     .topbar__section {
-      position:relative;
+      position: relative;
       display: block;
       height: 100%;
       transition: all 0.2s ease-out;
@@ -434,7 +422,8 @@ $topbar-height:75px;
         color: $--color-level9;
       }
       svg {
-        height: 24px;
+        vertical-align: -2px;
+        height: 20px;
         margin-right: 0.05rem;
       }
       &:hover {
@@ -449,12 +438,14 @@ $topbar-height:75px;
       }
       &::before {
         content: '';
-        left: 0rem;
-        bottom: 0.1rem;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0 auto;
         position: absolute;
         background: $--color-blue;
         height: 0.02rem;
-        width: 100%;
+        width: 60%;
         transition: all 0.2s ease;
         transform: translate3d(0, 0, 0) scaleX(0);
       }
@@ -470,22 +461,27 @@ $topbar-height:75px;
   .topbar__right__section {
     line-height: $topbar-height;
     height: 100%;
-    font-size: 0.22rem;
     position: absolute;
-    right: 0.4rem;
+    width: 200px;
+    right: 20px;
     top: 0;
-    a {
-      color: $--color-level9;
-      svg {
-        height: 30px !important;
+    .topbar__login__wrapper {
+      width: 100px;
+      float: right;
+      a {
+        font-size: 18px;
+        display: block;
+        color: $--color-level9;
+        svg {
+          height: 20px !important;
+        }
       }
     }
     .topbar__userinfo__wrapper {
-      position: relative;
+      display: flex;
       .username-wrapper {
+        text-align: right;
         box-sizing: border-box;
-        float: left;
-        padding: 0 20px;
         height: $topbar-height;
         width: 140px;
         line-height: $topbar-height;
@@ -494,15 +490,15 @@ $topbar-height:75px;
       }
       img {
         cursor: pointer;
-        margin: 12px 0 0 0;
+        margin-left: auto;
         height: 50px;
+        width: 50px;
         border-radius: 50px;
       }
       .topbar__userinfo__dropdown {
         position: absolute;
-        width: 150px;
+        width: 200px;
         top: $topbar-height;
-        right: -35px;
         z-index: 100;
         background: $--color-level15;
         border: 1px solid $--color-level12;
@@ -521,27 +517,6 @@ $topbar-height:75px;
           &:hover {
             color: $--color-blue;
           }
-        }
-      }
-    }
-    .topbar__login__wrapper {
-      margin-right: -20px;
-    }
-    @media screen and (max-width: 960px) {
-      height: $mibile-nav-height;
-      line-height: $mibile-nav-height;
-      .topbar__userinfo__wrapper {
-        .username-wrapper {
-          height: $mibile-nav-height;
-          line-height: $mibile-nav-height;
-        }
-        img {
-          margin: 5px 0 0 0;
-          height: 40px;
-          border-radius: 20px;
-        }
-        .topbar__userinfo__dropdown {
-          top: $mibile-nav-height;
         }
       }
     }
