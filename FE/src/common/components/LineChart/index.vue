@@ -17,16 +17,14 @@ export default {
   name: 'LineChart',
   mixins: [resize],
   props: {
-    option: {
-      type: Object,
-      default() {
-        return {};
-      },
-    },
     id: {
       type: String,
       default: 'line-chart',
     },
+    chartData:{
+      type:Array,
+      default:() => []
+    }
   },
   data() {
     return {
@@ -34,23 +32,42 @@ export default {
     };
   },
   watch: {
-    option: {
+    chartData: {
       handler(val, oldval) {
-        this.init();
+        this.setOption();
       },
       deep: true,
     },
   },
   mounted() {
-    this.init();
+    this.chart = echarts.init(document.getElementById(this.id));
   },
   methods: {
-    init() {
-      this.$nextTick(() => {
-        this.chart = echarts.init(document.getElementById(this.id));
-        this.chart.setOption(this.option);
-      });
-    },
+    setOption(){
+      const chartOption = {
+        color: ['#ffdf25', '#36a9ce'],
+        tooltip: {},
+        legend: {
+          data: this.chartData.map(x => x.legend),
+        },
+        grid:{
+          left:'20px',
+          right:'20px'
+        },
+        xAxis: {
+          type: 'time',
+        },
+        yAxis: {},
+        series:this.chartData.map(x => {
+          return {
+            name: x.legend,
+            type: 'line',
+            data: x.data,
+          }
+        })
+      }
+      this.chart.setOption(chartOption)
+    }
   },
 };
 </script>

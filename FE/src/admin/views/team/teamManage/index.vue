@@ -1,9 +1,9 @@
 <template lang="pug">
 .admin-content
-  .content-header 团队名称: {{team.name}} 成员总数: {{total}}
+  .content-header 团队名称: {{team && team.name}} 成员总数: {{total}}
   table-tools
     template(#tool)
-      el-button(icon="el-icon-plus",@click="handleAdd") 新建
+      el-button(icon="el-icon-plus",@click="handleAdd") 添加
     template(#search)
       el-input(placeholder="用户名或昵称", style="max-width:20em", v-model="queryParam", @keyup.enter.native="handleSearchByParam",maxlength="20", clearable)
         el-button(slot="append",icon="el-icon-search",@click="handleSearchByParam")
@@ -32,7 +32,6 @@
       template(v-for="(item,index) in infoList")
         p(:key="index") {{item}}
       .dialog-footer(slot="footer")
-        el-button(@click="dialogOperatorInfoVisible = false") 取消
         el-button(type="primary",@click="dialogOperatorInfoVisible = false") 确定
 </template>
 

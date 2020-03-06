@@ -17,7 +17,6 @@
           el-button(size="mini", type="danger", @click="handleDeleteContestUser(scope.row)") 删除
   .content__pagination__wrapper
     el-pagination(@size-change="handleSizeChange", @current-change="fetchDataList", :current-page.sync="currentPage", :page-sizes="[10, 20, 30, 40,50]", :page-size="10", layout="total, sizes, prev, pager, next, jumper", :total="total")
-
   el-dialog(title="添加竞赛成员", :visible.sync="dialogFormVisible", @closed="closeDialog", @opened="openDialog", width="400px",:close-on-click-modal="false")
     el-form(:model="form", ref="form", :rules="rules", @submit.native.prevent)
       el-form-item(label="用户名列表", prop="userList")
@@ -29,7 +28,6 @@
       template(v-for="(item,index) in infoList")
         p(:key="index") {{item}}
       .dialog-footer(slot="footer")
-        el-button(@click="dialogOperatorInfoVisible = false") 取消
         el-button(type="primary",@click="dialogOperatorInfoVisible = false") 确定
 </template>
 
