@@ -32,6 +32,7 @@
 import { rejudgeSolution, rejudgeProblem, reassignProblem } from 'admin/api/problem';
 
 export default {
+  name:"adminRejudgeAndReassignProblem",
   data() {
     return {
       rejudgeSolutionForm: {

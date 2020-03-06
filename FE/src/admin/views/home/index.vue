@@ -10,6 +10,7 @@ import LineChart from 'common/components/LineChart/index.vue';
 import { getSubmitStatistic } from 'admin/api/admin';
 
 export default {
+  name:"home",
   components: {
     LineChart,
   },
@@ -18,11 +19,11 @@ export default {
       chartData: [],
     };
   },
-  mounted() {
-    this.init();
+  activated() {
+    this.fetchData();
   },
   methods: {
-    async init() {
+    async fetchData() {
       try {
         const { id } = this.$route.params;
         const res = await getSubmitStatistic(id);
