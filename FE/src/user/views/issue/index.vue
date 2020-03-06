@@ -5,8 +5,8 @@
       .one-main(v-if="issueEnable==true")
         .link.fr(v-if="issue")
           span 板块&nbsp;
-          router-link(v-if="issue.problem.id == 0",:to="{name:'issueList'}") {{`总板`}}
-          router-link(v-else,:to="{name:'problemIssueList',params:{id:issue.problem.id}}") {{`问题P ${issue.problem.title}`}}
+          router-link(v-if="issue.problem_id == 0",:to="{name:'issueList'}") {{`总板`}}
+          router-link(v-else,:to="{name:'problemIssueList',params:{id:issue.problem_id}}") {{`问题P ${issue.ptitle}`}}
         h1.content__panel__title {{issue?issue.title:''}}
         .reply__box__list
           template(v-for="item,index in replys")
@@ -14,17 +14,17 @@
               .reply__userinfo__wrapper
                 ul
                   li.reply__user__avatar
-                    router-link(:to="{name:'userinfo',params:{id:item.user.id}}")
-                      img(:src="imgUrl(item.user.avatar)")
+                    router-link(:to="{name:'userinfo',params:{id:item.user_id}}")
+                      img(:src="imgUrl(item.avatar)")
                   li.reply__user__name.ell
-                    router-link(:to="{name:'userinfo',params:{id:item.user.id}}") {{item.user.nick}}
+                    router-link(:to="{name:'userinfo',params:{id:item.user_id}}") {{item.user_nick}}
               .reply__content(:class="item.is_deleted == 1?'reply-content--deleted':''")
                 div(v-html="item.content")
                 .reply__addon.mt10.clearfix
                   p.fr.mr10
                     span.text-muted  {{item.created_at}}&nbsp;
                     a(v-if="item.reply_count>0",@click="toggleReplyList(item)") {{`${item.reply_count}个回复(${item.showReplys ===  undefined  || item.showReplys === true ?"收起":"展开"})`}}
-                  el-button.ml10(type="primary",size="mini",@click="handleReplyToReply(item.id,item.user.id)") 回复
+                  el-button.ml10(type="primary",size="mini",@click="handleReplyToReply(item.id,item.user_id)") 回复
                   el-button.ml10(v-if="$store.getters.userRole=='admin'",:type="item.is_deleted == 0?'danger':'success'",size="mini",@click="toggleReplyStatus(item.id)") {{item.is_deleted == 0 ? "删除":"恢复"}}
               el-collapse-transition
                 .subreplys__wrapper.mt10(v-show="item.showReplys ===  undefined  || item.showReplys === true")
@@ -33,16 +33,16 @@
                       .subreply__userinfo__wrapper
                         ul
                           li.reply__user__avatar
-                            router-link(:to="{name:'userinfo',params:{id:subitem.user.id}}")
-                              img(:src="imgUrl(subitem.user.avatar)")
+                            router-link(:to="{name:'userinfo',params:{id:subitem.user_id}}")
+                              img(:src="imgUrl(subitem.avatar)")
                           li.reply__user__name.ell
-                            router-link(:to="{name:'userinfo',params:{id:subitem.user.id}}") {{subitem.user.nick}}
+                            router-link(:to="{name:'userinfo',params:{id:subitem.user_id}}") {{subitem.user_nick}}
                       .subreply__content(:class="subitem.is_deleted == 1?'reply-content--deleted':''")
                         div(v-html="calcSubReply(subitem)")
                         .reply__addon.clearfix
                           p.fr
                             span  {{item.created_at}}&nbsp;
-                          el-button.ml10(type="primary",size="mini",@click="handleReplyToReply(item.id,subitem.user.id)") 回复
+                          el-button.ml10(type="primary",size="mini",@click="handleReplyToReply(item.id,subitem.user_id)") 回复
                           el-button.ml10(v-if="$store.getters.userRole=='admin'",:type="subitem.is_deleted == 0?'danger':'success'",size="mini",@click="toggleReplyStatus(subitem.id)") {{subitem.is_deleted == 0 ? "删除":"恢复"}}
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
         :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
@@ -59,7 +59,7 @@
     el-dialog(title="回复内容", :visible.sync="dialogFormVisible", @closed="closeDialog", @opened="openDialog", width="8rem",:close-on-click-modal="false")
       tinymce-editor.mt10(v-model="subReplyContent",:height="300")
       .dialog-footer(slot="footer")
-        el-button(@click="cancel") 取消
+        el-button(@click="this.dialogFormVisible = false") 取消
         el-button(type="primary", native-type="submit", @click="reply(2)") 确定
 </template>
 
@@ -108,18 +108,17 @@ export default {
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       }
-      const self = this;
       try {
         const res = await getIssue(
-          self.$route.params.id,
-          self.currentPage,
-          self.perpage,
+          this.$route.params.id,
+          this.currentPage,
+          this.perpage,
         );
         const { data } = res;
-        self.issue = data.issue;
-        self.replys = data.replys;
-        self.total = data.total;
-        self.issueEnable = data.issue_enable;
+        this.issue = data.issue;
+        this.replys = data.replys;
+        this.total = data.total;
+        this.issueEnable = data.issue_enable;
       } catch (err) {
         console.log(err);
       }
@@ -129,9 +128,6 @@ export default {
     },
     closeDialog() {
       this.subReplyContent = '';
-    },
-    cancel() {
-      this.dialogFormVisible = false;
     },
     goLogin() {
       EventBus.$emit('goLogin');
@@ -154,9 +150,8 @@ export default {
     async reply(way) {
       console.log(way);
       // 内容不能为空
-      const self = this;
-      self.replyForm.content = way === 1 ? self.replyContent : self.subReplyContent;
-      if (self.replyForm.content === '') {
+      this.replyForm.content = way === 1 ? this.replyContent : this.subReplyContent;
+      if (this.replyForm.content === '') {
         this.$message({
           message: '内容不能为空',
           type: 'error',
@@ -167,20 +162,20 @@ export default {
         // 对主题的回复
         if (way === 1) {
           console.log('way1');
-          self.replyForm.reply_id = 0;
-          self.replyForm.reply_user_id = 0;
+          this.replyForm.reply_id = 0;
+          this.replyForm.reply_user_id = 0;
         }
-        const res = await replyToIssue(self.issue.id, self.replyForm);
-        self.$message({
+        const res = await replyToIssue(this.issue.id, this.replyForm);
+        this.$message({
           message: res.data.message,
           type: 'success',
         });
-        self.replyForm.content = '';
-        self.replyContent = '';
-        self.dialogFormVisible = false;
-        self.fetchData(false);
+        this.replyForm.content = '';
+        this.replyContent = '';
+        this.dialogFormVisible = false;
+        this.fetchData(false);
       } catch (err) {
-        self.$message({
+        this.$message({
           message: err.response.data.message,
           type: 'error',
         });
@@ -200,16 +195,15 @@ export default {
       this.replyForm.reply_user_id = replyUserId;
     },
     async toggleReplyStatus(replyId) {
-      const self = this;
       try {
         const res = await toggleReplyStatus(replyId);
-        self.$message({
+        this.$message({
           message: '变更回复状态成功',
           type: 'success',
         });
-        self.fetchData(false);
+        this.fetchData(false);
       } catch (err) {
-        self.$message({
+        this.$message({
           message: err.response.data.message,
           type: 'error',
         });

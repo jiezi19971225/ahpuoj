@@ -7,9 +7,9 @@
           .reply__box
             p 还没有人回复你
         div(v-else)
-          template(v-for="item,index in replys")
+          template(v-for="(item,index) in replys")
             .reply__box
-              router-link(:to="{name:'userinfo',params:{id:item?item.user.id:0}}") {{item.user.username}}
+              router-link(:to="{name:'userinfo',params:{id:item?item.user_id:0}}") {{item.username}}
               span 在帖子
               router-link(:to="{name:'issue',params:{id:item?item.issue_id:0}}") {{item.issue_title}}
               span 中回复了你
@@ -53,13 +53,12 @@ export default {
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       }
-      const self = this;
       try {
-        const res = await getMyReplys(self.currentPage, self.perpage);
+        const res = await getMyReplys(this.currentPage, this.perpage);
         const { data } = res;
         console.log(res);
-        self.replys = data.replys;
-        self.total = data.total;
+        this.replys = data.replys;
+        this.total = data.total;
       } catch (err) {
         console.log(err);
       }
