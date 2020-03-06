@@ -3,7 +3,7 @@
     .content__main
       .home__wrapper
         h1 对不起，你要访问的页面不存在，即将跳转到主页
-        img(src="common/assets/images/404.jpg")
+        img(src="~common/assets/images/404.jpg")
 </template>
 
 <script>

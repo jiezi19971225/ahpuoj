@@ -29,7 +29,7 @@
                   span(v-if="user") {{user.created_at}}
         .main__section
           h3 近期提交情况
-          line-chart(:option="chartOption",:flag="renderFlag",:id="'chart'",style="width:100%;height:5rem;")
+          line-chart(:chart-data="chartData",:flag="renderFlag",:id="'chart'",style="width:100%;height:5rem;")
         .main__section
           h3 已解决的问题
           .problem__links(v-if="user")
@@ -53,32 +53,7 @@ export default {
   data() {
     return {
       user: null,
-      chartOption: {
-        color: ['#ffdf25', '#36a9ce'],
-        // title: {
-        //   text: "123"
-        // },
-        tooltip: {},
-        legend: {
-          data: ['累计通过', '累计提交'],
-        },
-        xAxis: {
-          type: 'time',
-        },
-        yAxis: {},
-        series: [
-          {
-            name: '累计通过',
-            type: 'line',
-            data: [],
-          },
-          {
-            name: '累计提交',
-            type: 'line',
-            data: [],
-          },
-        ],
-      },
+      chartData:[],
       renderFlag: false,
     };
   },
@@ -88,16 +63,22 @@ export default {
   },
   methods: {
     async init() {
-      const self = this;
       try {
-        const { id } = self.$route.params;
+        const { id } = this.$route.params;
         const res = await getUserInfo(id);
         const { data } = res;
-        self.user = data.userinfo;
-        self.renderFlag = true;
-        self.chartOption.series[0].data = self.user.recent_solved_statistic;
-        self.chartOption.series[1].data = self.user.recent_submit_statistic;
-        console.log(self);
+        this.user = data.userinfo;
+        this.renderFlag = true;
+        this.chartData = [
+          {
+            legend:'累计通过',
+            data:this.user.recent_solved_statistic
+          },
+          {
+            legend:'累计提交',
+            data:this.user.recent_submit_statistic
+          },
+        ]
       } catch (err) {
         console.log(err);
       }
@@ -163,6 +144,11 @@ ul.infolist {
 }
 
 .problem__links {
+  display: flex;
+  flex-wrap: wrap;
+  >*{
+    margin-right: .1rem;
+  }
   font-size: 0.16rem;
   word-spacing: 0.16rem;
 }

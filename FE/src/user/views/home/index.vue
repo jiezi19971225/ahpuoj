@@ -15,6 +15,8 @@
               span.text-muted {{item.updated_at}}
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
         :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
+      div(style="margin-top:.2rem;") 本项目基于 HUSTOJ 二次开发，项目地址
+        a(href="https://github.com/ahpulug/ahpuoj",target="_blank")  https://github.com/ahpulug/ahpuoj
 </template>
 
 <script>
@@ -82,15 +84,17 @@ export default {
   }
 
   .new__title {
+    font-weight: bold;
     text-align: left;
-    font-size: 0.3rem;
+    font-size: 0.2rem;
     color: $--title-color;
+    margin-bottom: 0.04rem;
   }
 
   .new__content {
     min-height: 200px;
     text-align: left;
-    font-size: 0.24rem;
+    font-size: 0.16rem;
   }
 
   .new__time {

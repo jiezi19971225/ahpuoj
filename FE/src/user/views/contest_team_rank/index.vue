@@ -3,7 +3,7 @@
     title {{contest?`竞赛团队排名 -- ${contest.name} - AHPUOJ`:''}}
     .content__main
       .one-main
-        el-button.fr.mr10.mt10(type="primary",@click="exportExcel") 下载excel
+        el-button.fr.mr10(type="primary",@click="exportExcel") 下载excel
         h1.content__panel__title {{contest?`竞赛团队排名 -- ${contest.name}`:""}}
         el-table(v-if="seeable",:data="tableData", style="width: 100%", class="dataTable",:cell-style="cellStyle")
           el-table-column(label="排名", type="index",min-width="40")
@@ -107,7 +107,9 @@ export default {
 
   exportExcel() {
     /* generate workbook object from table */
-    const wb = XLSX.utils.table_to_book(document.querySelector('#ranktable'));
+    const wb = XLSX.utils.table_to_book(document.querySelector('#ranktable'),{
+      raw:true
+    });
     /* get binary string as output */
     const wbout = XLSX.write(wb, {
       bookType: 'xlsx',

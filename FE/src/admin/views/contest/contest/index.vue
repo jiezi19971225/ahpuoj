@@ -4,9 +4,9 @@
     el-form(:model="form", :rules="rules", ref="form", label-width="6em")
       el-form-item(label="名称", prop="name")
         el-input(placeholder="请输入名称",v-model="form.name",:autofocus="true")
-      el-form-item(label="开始时间", prop="start_time")
+      el-form-item(label="开始时间", prop="start_time" required)
         el-date-picker(v-model="form.start_time", type="datetime", format="yyyy-MM-dd HH:mm:ss",value-format="yyyy-MM-dd HH:mm:ss", placeholder="选择开始时间", style="width:100%")
-      el-form-item(label="结束时间", prop="end_time")
+      el-form-item(label="结束时间", prop="end_time" required)
         el-date-picker(v-model="form.end_time", type="datetime", format="yyyy-MM-dd HH:mm:ss",value-format="yyyy-MM-dd HH:mm:ss", placeholder="选择结束时间", style="width:100%")
       el-form-item(label="题目编号")
         el-input(placeholder="使用 , 半角逗号 分隔题目ID列表，格式如:1000,1001,1002",v-model="form.problems",:autofocus="true")
@@ -119,11 +119,6 @@ export default {
     },
   },
   watch: {
-    $route(to) {
-      if (to.name === 'adminAddContest' || to.name === 'adminEditContest') {
-        this.init();
-      }
-    },
     private(to) {
       if (to === 0) {
         this.form.team_mode = 0;
@@ -196,6 +191,7 @@ export default {
               message: res.data.message,
               type: 'success',
             });
+            this.$store.dispatch('tagsView/delViewByRoute', this.$route);
             this.$router.push({ name: 'adminContestList' });
           } catch (err) {
             this.$message({

@@ -1,4 +1,6 @@
 const path = require('path');
+const CompressionWebpackPlugin = require("compression-webpack-plugin");
+const productionGzipExtensions = /\.(js|css)(\?.*)?$/i;
 
 module.exports = {
   lintOnSave: false,
@@ -71,7 +73,13 @@ module.exports = {
   },
   configureWebpack: (config) => {
     if (process.env.NODE_ENV === 'production') {
-      config.devtool = 'source-map';
+      config.plugins.push(new CompressionWebpackPlugin({
+        filename: "[path].gz[query]",
+        algorithm: "gzip",
+        test: productionGzipExtensions,
+        threshold: 10240,
+        minRatio: 0.8
+      }))
     }
     return {
       resolve: {

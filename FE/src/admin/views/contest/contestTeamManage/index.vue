@@ -1,6 +1,6 @@
 <template lang="pug">
 .admin-content
-  .content-header 竞赛名称: {{contest.name}} 团队总数: {{contestTeamList.length}}
+  .content-header 竞赛名称: {{contest && contest.name}} 团队总数: {{contestTeamList.length}}
   table-tools
     template(#tool)
       el-button(icon="el-icon-plus",@click="handleAdd") 添加
@@ -41,7 +41,6 @@
     template(v-for="(item,index) in infoList")
       p(:key="index") {{item}}
     .dialog-footer(slot="footer")
-      el-button(@click="dialogOperatorInfoVisible = false") 取消
       el-button(type="primary",@click="dialogOperatorInfoVisible = false") 确定
 </template>
 

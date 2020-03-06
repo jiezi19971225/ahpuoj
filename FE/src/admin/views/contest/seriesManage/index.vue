@@ -24,7 +24,7 @@
     el-form(:model="form", ref="form", :rules="rules", @submit.native.prevent)
       el-form-item(label="选择竞赛", prop="contest_id")
         el-select(v-model="form.contest_id",filterable,placeholder="请选择")
-          el-option(v-for="item in contests",:key="item.id",:label="item.name",:value="item.id")
+          el-option(v-for="item in contestsNotInSeries",:key="item.id",:label="item.name",:value="item.id")
     .dialog-footer(slot="footer")
       el-button(@click="cancel") 取消
       el-button(type="primary", native-type="submit", @click="submit") 确定
@@ -67,6 +67,13 @@ export default {
       },
       tableData: [],
     };
+  },
+  computed:{
+    contestsNotInSeries(){
+      return this.contests.filter(x => {
+        return !this.tableData.find(y => y.id === x.id)
+      })
+    }
   },
   async activated() {
     const { id } = this.$route.params;

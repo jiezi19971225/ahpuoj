@@ -10,6 +10,9 @@
     el-table(:data="tableData", style="width:100%;", v-loading="loading",border)
       el-table-column(label="ID", prop="id", width="180")
       el-table-column(label="团队名称", prop="name")
+        template(slot-scope="scope")
+          router-link(:to="{name:'adminTeamManage',params:{id:scope.row.id}}")
+            el-link(type="primary") {{scope.row.name}}
       el-table-column(label="操作", width="240")
         template(slot-scope="scope")
           el-button(size="mini", type="primary" @click="$router.push({name:'adminTeamManage',params:{id:scope.row.id}})") 管理

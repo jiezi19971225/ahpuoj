@@ -509,7 +509,7 @@ $topbar-height: 50px;
         width: 140px;
         line-height: $topbar-height;
         color: $--color-level12;
-        font-size: 16px;
+        font-size: 14px;
       }
 
       img {
@@ -540,6 +540,9 @@ $topbar-height: 50px;
           transition: all 0.3s;
 
           a {
+            display: block;
+            width: 100%;
+            height: 100%;
             font-size: 16px;
           }
 

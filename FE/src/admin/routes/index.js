@@ -231,6 +231,7 @@ export default [
         hidden: true,
         meta: {
           title: '编辑竞赛&作业',
+          activeMenu: '/admin/contest/list',
         },
         component: () => import('../views/contest/editContest'),
       },

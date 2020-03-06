@@ -150,7 +150,6 @@ export default {
       window.open(routerResolve.href, '_blank');
     },
   },
-
   beforeRouteUpdate(to, from, next) {
     console.log('beforeRouteUpdate!!');
     this.init();
