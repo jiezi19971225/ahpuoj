@@ -14,7 +14,6 @@ func ToggleIssueStatus(c *gin.Context) {
 	issue := model.Issue{
 		Id: id,
 	}
-
 	err := issue.ToggleStatus()
 	if utils.CheckError(c, err, "更改主题状态失败，目标主题不存在") != nil {
 		return
@@ -29,7 +28,6 @@ func ToggleReplyStatus(c *gin.Context) {
 	reply := model.Reply{
 		Id: id,
 	}
-
 	err := reply.ToggleStatus()
 	if utils.CheckError(c, err, "更改回复状态失败，目标回复不存在") != nil {
 		return

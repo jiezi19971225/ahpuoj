@@ -2,7 +2,6 @@ package model
 
 import (
 	"ahpuoj/utils"
-	"database/sql"
 	"errors"
 	"strconv"
 	"strings"
@@ -10,22 +9,22 @@ import (
 )
 
 type Contest struct {
-	Id           int            `db:"id"`
-	Name         string         `db:"name"`
-	StartTime    string         `db:"start_time"`
-	EndTime      string         `db:"end_time"`
-	Description  sql.NullString `db:"description"`
-	Defunct      int            `db:"defunct"`
-	Private      int            `db:"private"`
-	TeamMode     int            `db:"team_mode"`
-	LangMask     int            `db:"langmask"`
-	CreatedAt    string         `db:"created_at"`
-	UpdatedAt    string         `db:"updated_at"`
-	IsDeleted    int            `db:"is_deleted"`
-	CreatorId    string         `db:"creator_id"`
-	Problems     string
+	Id           int        `db:"id" json:"id"`
+	Name         string     `db:"name" json:"name" binding:"required,max=20"`
+	StartTime    string     `db:"start_time" json:"start_time" binding:"required"`
+	EndTime      string     `db:"end_time" json:"end_time" binding:"required"`
+	Description  NullString `db:"description" json:"description"`
+	Defunct      int        `db:"defunct" json:"defunct"`
+	Private      int        `db:"private"  json:"private" binding:"gte=0,lte=1"`
+	TeamMode     int        `db:"team_mode" json:"team_mode" ltefield=Private` // 限定了团队模式下只能为私有，即不存在private为0同时team_mode为1，即team_mode<=private
+	LangMask     int        `db:"langmask" json:"langmask"`
+	CreatedAt    string     `db:"created_at" json:"created_at"`
+	UpdatedAt    string     `db:"updated_at" json:"updated_at"`
+	IsDeleted    int        `db:"is_deleted" json:"is_deleted"`
+	CreatorId    string     `db:"creator_id" json:"creator_id"`
+	Problems     string     `json:"problems"`
+	Status       int        `json:"status"` // 1代表未开始 2代表进行中 3代表已结束`
 	ProblemInfos []map[string]interface{}
-	Status       int // 1代表未开始 2代表进行中 3代表已结束
 }
 
 func (contest *Contest) Save() error {
@@ -94,7 +93,6 @@ func (contest *Contest) AddProblems(reqProblems string) {
 	if len(pieces) > 0 && len(pieces[0]) > 0 {
 		for index, value := range pieces {
 			problemId, _ := strconv.Atoi(value)
-			utils.Consolelog(problemId)
 			insertable := true
 			var pid int
 			err := checkStmt.Get(&pid, problemId)

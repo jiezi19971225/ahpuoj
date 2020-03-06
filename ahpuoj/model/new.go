@@ -2,18 +2,24 @@ package model
 
 import (
 	"ahpuoj/utils"
-	"database/sql"
+	"encoding/json"
 	"errors"
 )
 
 type New struct {
-	Id        int            `db:"id"`
-	Title     string         `db:"title"`
-	Content   sql.NullString `db:"content"`
-	Top       int            `db:"top"`
-	Defunct   int            `db:"defunct"`
-	CreatedAt string         `db:"created_at"`
-	UpdatedAt string         `db:"updated_at"`
+	Id        int        `db:"id" json:"id" uri:"id"`
+	Title     string     `db:"title" json:"title" binding:"required,max=20"`
+	Content   NullString `db:"content" json:"content"`
+	Top       int        `db:"top" json:"top"`
+	Defunct   int        `db:"defunct" json:"defunct"`
+	CreatedAt string     `db:"created_at" json:"created_at"`
+	UpdatedAt string     `db:"updated_at" json:"updated_at"`
+}
+
+func (new *New) MarshalJSON() ([]byte, error) {
+	type Alias New
+	new.Content.String = utils.ConvertTextImgUrl(new.Content.String)
+	return json.Marshal((*Alias)(new))
 }
 
 func (new *New) Save() error {
@@ -64,7 +70,6 @@ func (new *New) ToggleTopStatus() error {
 		DB.Get(&maxtop, `select max(top) from new`)
 		newtop = maxtop + 1
 	} else {
-		utils.Consolelog(123)
 		newtop = 0
 	}
 	result, err := DB.Exec(`update new set top = ?, updated_at = NOW() where id = ?`, newtop, new.Id)
@@ -73,18 +78,4 @@ func (new *New) ToggleTopStatus() error {
 		return errors.New("数据不存在")
 	}
 	return err
-}
-
-func (new *New) Response() map[string]interface{} {
-	if new.Content.Valid {
-		new.Content.String = utils.ConvertTextImgUrl(new.Content.String)
-	}
-	return map[string]interface{}{
-		"id":         new.Id,
-		"title":      new.Title,
-		"content":    new.Content.String,
-		"top":        new.Top,
-		"defunct":    new.Defunct,
-		"updated_at": new.UpdatedAt,
-	}
 }

@@ -6,6 +6,7 @@ import (
 	"io"
 	"math/rand"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
@@ -113,7 +114,7 @@ func EngNumToInt(engNum string) (int, error) {
 func CheckError(c *gin.Context, err error, msg string) error {
 	if err != nil {
 		Consolelog(err.Error())
-		c.AbortWithStatusJSON(400, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": msg,
 		})
 		return err

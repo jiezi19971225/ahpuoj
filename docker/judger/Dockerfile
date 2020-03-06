@@ -41,9 +41,10 @@ COPY ./assets/java0.policy /home/judge/hustoj_core/etc/java0.policy
 COPY ./assets/install.sh /home/judge/install.sh
 
 RUN set -ex \
-	&& chmod a+x install.sh\
-	&& sh install.sh
-
-RUN set -ex \
 	&& chmod +x /usr/local/bin/docker-entrypoint.sh \
 	&& ln -s /usr/local/bin/docker-entrypoint.sh  /docker-entrypoint.sh
+
+RUN set -ex \
+	&& chmod a+x /home/judge/install.sh
+
+

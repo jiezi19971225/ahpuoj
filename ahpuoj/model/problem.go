@@ -2,16 +2,19 @@ package model
 
 import (
 	"ahpuoj/utils"
+	"encoding/json"
 	"errors"
 	"os"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Problem struct {
 	Id           int                      `db:"id" json:"id"`
-	Title        string                   `db:"title" json:"title"`
+	Title        string                   `db:"title" json:"title" binding:"required,max=20"`
 	Description  NullString               `db:"description" json:"description"`
-	Level        int                      `db:"level" json:"level"`
+	Level        int                      `db:"level" json:"level" binding:"gte=0, lte=2"`
 	Input        NullString               `db:"input" json:"input"`
 	Output       NullString               `db:"output" json:"output"`
 	SampleInput  NullString               `db:"sample_input" json:"sample_input"`
@@ -19,8 +22,8 @@ type Problem struct {
 	Spj          int                      `db:"spj" json:"spj"`
 	Hint         NullString               `db:"hint" json:"hint"`
 	Defunct      int                      `db:"defunct" json:"defunct"`
-	TimeLimit    int                      `db:"time_limit" json:"time_limit"`
-	MemoryLimit  int                      `db:"memory_limit" json:"memory_limit"`
+	TimeLimit    int                      `db:"time_limit" json:"time_limit" binding:"required"`
+	MemoryLimit  int                      `db:"memory_limit" json:"memory_limit" binding:"required"`
 	Accepted     int                      `db:"accepted" json:"accepted"`
 	Submit       int                      `db:"submit" json:"submit"`
 	Solved       int                      `db:"solved" json:"solved"`
@@ -31,26 +34,35 @@ type Problem struct {
 }
 
 type ProblemWithoutTag struct {
-	Id           int                      `db:"id" json:"id"`
-	Title        string                   `db:"title" json:"title"`
-	Description  NullString               `db:"description" json:"description"`
-	Level        int                      `db:"level" json:"level"`
-	Input        NullString               `db:"input" json:"input"`
-	Output       NullString               `db:"output" json:"output"`
-	SampleInput  NullString               `db:"sample_input" json:"sample_input"`
-	SampleOutput NullString               `db:"sample_output" json:"sample_output"`
-	Spj          int                      `db:"spj" json:"spj"`
-	Hint         NullString               `db:"hint" json:"hint"`
-	Defunct      int                      `db:"defunct" json:"defunct"`
-	TimeLimit    int                      `db:"time_limit" json:"time_limit"`
-	MemoryLimit  int                      `db:"memory_limit" json:"memory_limit"`
-	Accepted     int                      `db:"accepted" json:"accepted"`
-	Submit       int                      `db:"submit" json:"submit"`
-	Solved       int                      `db:"solved" json:"solved"`
-	CreatedAt    string                   `db:"created_at" json:"created_at"`
-	UpdatedAt    string                   `db:"updated_at" json:"updated_at"`
-	CreatorId    string                   `db:"creator_id" json:"creator_id"`
-	Tags         []map[string]interface{} `json:"-"`
+	Id           int        `db:"id" json:"id"`
+	Title        string     `db:"title" json:"title"`
+	Description  NullString `db:"description" json:"description"`
+	Level        int        `db:"level" json:"level"`
+	Input        NullString `db:"input" json:"input"`
+	Output       NullString `db:"output" json:"output"`
+	SampleInput  NullString `db:"sample_input" json:"sample_input"`
+	SampleOutput NullString `db:"sample_output" json:"sample_output"`
+	Spj          int        `db:"spj" json:"spj"`
+	Hint         NullString `db:"hint" json:"hint"`
+	Defunct      int        `db:"defunct" json:"defunct"`
+	TimeLimit    int        `db:"time_limit" json:"time_limit"`
+	MemoryLimit  int        `db:"memory_limit" json:"memory_limit"`
+	Accepted     int        `db:"accepted" json:"accepted"`
+	Submit       int        `db:"submit" json:"submit"`
+	Solved       int        `db:"solved" json:"solved"`
+	CreatedAt    string     `db:"created_at" json:"created_at"`
+	UpdatedAt    string     `db:"updated_at" json:"updated_at"`
+	CreatorId    string     `db:"creator_id" json:"creator_id"`
+	Tags         []Tag      `json:"-"`
+}
+
+func (problem *Problem) MarshalJSON() ([]byte, error) {
+	type Alias Problem
+	problem.Description.String = utils.ConvertTextImgUrl(problem.Description.String)
+	problem.Input.String = utils.ConvertTextImgUrl(problem.Input.String)
+	problem.Output.String = utils.ConvertTextImgUrl(problem.Output.String)
+	problem.Hint.String = utils.ConvertTextImgUrl(problem.Hint.String)
+	return json.Marshal((*Alias)(problem))
 }
 
 func (problem *Problem) Save() error {
@@ -111,22 +123,26 @@ func (problem *Problem) AddTags(reqTags []interface{}) {
 		switch t := tag.(type) {
 		// 如果是标签id 直接插入 golang解析json会将数字转成float64
 		case float64:
-			utils.Consolelog("float64")
 			insertStmt.Exec(problem.Id, int(t))
 			tag := Tag{
 				Id: int(t),
 			}
-			tags = append(tags, tag.Response())
+			tags = append(tags, gin.H{
+				"id":   tag.Id,
+				"name": tag.Name,
+			})
 			// 否则生成新的tag并且插入
 		case string:
-			utils.Consolelog("string")
 			newTag := Tag{
 				Name: t,
 			}
 			err := newTag.Save()
 			if err == nil {
 				insertStmt.Exec(problem.Id, newTag.Id)
-				tags = append(tags, newTag.Response())
+				tags = append(tags, gin.H{
+					"id":   newTag.Id,
+					"name": newTag.Name,
+				})
 			}
 		}
 	}
@@ -143,14 +159,15 @@ func (problem *Problem) FetchTags() {
 		return
 	}
 	for rows.Next() {
-		utils.Consolelog("next")
 		var tag Tag
 		err = rows.StructScan(&tag)
-		utils.Consolelog(tag)
 		if err != nil {
 			utils.Consolelog(err)
 		}
-		tags = append(tags, tag.Response())
+		tags = append(tags, gin.H{
+			"id":   tag.Id,
+			"name": tag.Name,
+		})
 	}
 	rows.Close()
 	problem.Tags = tags

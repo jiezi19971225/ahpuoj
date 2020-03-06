@@ -1,7 +1,8 @@
 [project]
 datadir=../docker/compose/data
-uploaddir=../docker/compose/upload
+uploaddir=../docker/compose/web/upload
 server=http://localhost
+cookiedomain=localhost
 cookielivetime=1209600
 enviroment=debug
 

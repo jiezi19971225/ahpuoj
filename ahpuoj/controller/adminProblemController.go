@@ -16,41 +16,26 @@ import (
 )
 
 func IndexProblem(c *gin.Context) {
-
-	pageStr := c.Query("page")
-	perpageStr := c.Query("perpage")
 	param := c.Query("param")
-	page, _ := strconv.Atoi(pageStr)
-	perpage, _ := strconv.Atoi(perpageStr)
-	if page == 0 {
-		page = 1
-	}
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perpage, _ := strconv.Atoi(c.DefaultQuery("perpage", "20"))
 	whereString := ""
 	if len(param) > 0 {
 		whereString += " where title like '%" + param + "%' "
 	}
 	whereString += " order by id desc "
-
 	rows, total, err := model.Paginate(page, perpage, "problem", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-	var problems []map[string]interface{}
+	var problems []model.Problem
 	for rows.Next() {
 		var problem model.Problem
 		rows.StructScan(&problem)
 		problem.FetchTags()
-		problems = append(problems, map[string]interface{}{
-			"id":       problem.Id,
-			"title":    problem.Title,
-			"accepted": problem.Accepted,
-			"submit":   problem.Submit,
-			"solved":   problem.Solved,
-			"defunct":  problem.Defunct,
-			"tags":     problem.Tags,
-		})
+		problems = append(problems, problem)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,
@@ -58,7 +43,7 @@ func IndexProblem(c *gin.Context) {
 	})
 }
 
-func GetProblem(c *gin.Context) {
+func ShowProblem(c *gin.Context) {
 	var problem model.Problem
 	id, _ := strconv.Atoi(c.Param("id"))
 	err := DB.Get(&problem, "select * from problem where id = ?", id)
@@ -66,8 +51,7 @@ func GetProblem(c *gin.Context) {
 		return
 	}
 	problem.FetchTags()
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"problem": problem,
 	})
@@ -100,14 +84,12 @@ func StoreProblem(c *gin.Context) {
 		return
 	}
 	problem.AddTags(req.Tags)
-
 	// 同步到 redis 缓存
 	if stringify, err := json.Marshal(problem); err == nil {
 		conn.Do("set", "problem:"+strconv.Itoa(problem.Id), stringify)
 		conn.Do("expire", "problem:"+strconv.Itoa(problem.Id), RedisCacheLiveTime)
 	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "新建问题成功",
 		"problem": problem,
 	})
@@ -139,7 +121,6 @@ func UpdateProblem(c *gin.Context) {
 	}
 	// 首先清除当前标签
 	problem.RemoveTags()
-
 	err = problem.Update()
 	problem.AddTags(req.Tags)
 	if utils.CheckError(c, err, "编辑问题失败，问题标题已存在或该问题不存在") != nil {
@@ -150,8 +131,7 @@ func UpdateProblem(c *gin.Context) {
 		conn.Do("set", "problem:"+strconv.Itoa(problem.Id), stringify)
 		conn.Do("expire", "problem:"+strconv.Itoa(problem.Id), RedisCacheLiveTime)
 	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "编辑问题成功",
 		"problem": problem,
 	})
@@ -167,7 +147,6 @@ func DeleteProblem(c *gin.Context) {
 		return
 	}
 	// 删除其他相关数据
-
 	// 删除source_code
 	DB.Exec("delete source_code from source_code inner join solution on source_code.solution_id = solution.solution_id where solution.problem_id = ?", problem.Id)
 	DB.Exec("delete compileinfo from compileinfo inner join solution on compileinfo.solution_id = solution.solution_id where solution.problem_id = ?", problem.Id)
@@ -189,7 +168,7 @@ func DeleteProblem(c *gin.Context) {
 	newAutoIncrement := strconv.Itoa(maxId + 1)
 	DB.Exec("alter table problem auto_increment=" + newAutoIncrement)
 
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "删除问题成功",
 	})
 }
@@ -215,7 +194,7 @@ func RejudgeSolution(c *gin.Context) {
 	// 判断提交是否存在
 	DB.Get(&temp, "select count(1) from solution where solution_id = ?", id)
 	if temp == 0 {
-		c.AbortWithStatusJSON(400, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "重判提交失败，该提交不存在",
 		})
 		return
@@ -232,7 +211,7 @@ func RejudgeProblem(c *gin.Context) {
 	// 判断提交是否存在
 	DB.Get(&temp, "select count(1) from problem where id = ?", id)
 	if temp == 0 {
-		c.AbortWithStatusJSON(400, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "重判问题失败，该问题不存在",
 		})
 		return
@@ -254,7 +233,7 @@ func ReassignProblem(c *gin.Context) {
 	DB.Get(&temp, "select count(1) from problem where id = ?", oldId)
 	// 原问题不存在
 	if temp == 0 {
-		c.AbortWithStatusJSON(400, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "重排问题失败，原问题不存在",
 		})
 		return
@@ -262,7 +241,7 @@ func ReassignProblem(c *gin.Context) {
 	DB.Get(&temp, "select count(1) from problem where id = ?", newId)
 	// 新ID已有问题
 	if temp > 0 {
-		c.AbortWithStatusJSON(400, gin.H{
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "重排问题失败，新问题ID已有问题",
 		})
 		return
@@ -327,19 +306,18 @@ func IndexProblemData(c *gin.Context) {
 
 func AddProblemData(c *gin.Context) {
 	var err error
-	var req request.ProblemData
+	var req struct {
+		FileName string `json:"filename" binding:"required,max=20"`
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
 	err = c.ShouldBindJSON(&req)
-
 	if utils.CheckError(c, err, "请求参数错误") != nil {
 		return
 	}
-
 	dataDir, _ := utils.GetCfg().GetValue("project", "datadir")
 	baseDir := dataDir + "/" + strconv.FormatInt(int64(id), 10)
 	inFileName := baseDir + "/" + req.FileName + ".in"
 	outFileName := baseDir + "/" + req.FileName + ".out"
-
 	infos := []string{}
 	_, err = os.Open(inFileName)
 	if os.IsNotExist(err) {
@@ -359,7 +337,6 @@ func AddProblemData(c *gin.Context) {
 	if utils.CheckError(c, err, "创建文件失败，请检查权限设置") != nil {
 		return
 	}
-
 	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
 		"info":    infos,
@@ -411,9 +388,10 @@ func GetProblemData(c *gin.Context) {
 
 func EditProblemData(c *gin.Context) {
 	var err error
-	var req request.ProblemDataContent
+	var req struct {
+		Content string `json:"content" binding:"required"`
+	}
 	err = c.ShouldBindJSON(&req)
-
 	if utils.CheckError(c, err, "请求参数错误") != nil {
 		return
 	}

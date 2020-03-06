@@ -9,13 +9,13 @@ import (
 )
 
 type Team struct {
-	Id        int    `db:"id"`
-	Name      string `db:"name"`
-	CreatedAt string `db:"created_at"`
-	UpdatedAt string `db:"updated_at"`
-	IsDeleted int    `db:"is_deleted"`
-	CreatorId int    `db:"creator_id"`
-	UserInfos []map[string]interface{}
+	Id        int    `db:"id" json:"id"`
+	Name      string `db:"name" json:"name" binding:"required,max=20"`
+	CreatedAt string `db:"created_at" json:"created_at"`
+	UpdatedAt string `db:"updated_at" json:"updated_at"`
+	IsDeleted int    `db:"is_deleted" json:"is_deleted"`
+	CreatorId int    `db:"creator_id" json:"creator_id"`
+	UserInfos []User `json:"userinfos"`
 }
 
 func (team *Team) Save() error {
@@ -77,7 +77,6 @@ func (team *Team) AddUsers(userlist string) []string {
 				utils.Consolelog(err)
 				info = "团队添加用户" + username + "失败，用户不存在"
 			}
-			utils.Consolelog(userId, team.Id, username, insertable)
 			if insertable {
 				insertStmt.Exec(team.Id, userId)
 				info = "团队添加用户" + username + "成功"
@@ -95,8 +94,7 @@ func (team *Team) AddUsers(userlist string) []string {
 func (team *Team) AttachUserInfo(contestId int) {
 	var err error
 	var rows *sqlx.Rows
-	userInfos := make([]map[string]interface{}, 0)
-
+	var userInfos []User
 	if contestId > 0 {
 		rows, err = DB.Queryx(`select user.* from contest_team_user inner join user on contest_team_user.user_id=user.id 
 		where contest_team_user.contest_id = ? and contest_team_user.team_id = ?`, contestId, team.Id)
@@ -111,13 +109,7 @@ func (team *Team) AttachUserInfo(contestId int) {
 	for rows.Next() {
 		var user User
 		err = rows.StructScan(&user)
-		utils.Consolelog(err)
-		userInfo := map[string]interface{}{
-			"id":       user.Id,
-			"username": user.Username,
-			"nick":     user.Nick,
-		}
-		userInfos = append(userInfos, userInfo)
+		userInfos = append(userInfos, user)
 	}
 	team.UserInfos = userInfos
 }

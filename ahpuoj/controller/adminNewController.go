@@ -12,32 +12,25 @@ import (
 )
 
 func IndexNew(c *gin.Context) {
-
-	pageStr := c.Query("page")
-	perpageStr := c.Query("perpage")
 	param := c.Query("param")
-	page, _ := strconv.Atoi(pageStr)
-	perpage, _ := strconv.Atoi(perpageStr)
-	if page == 0 {
-		page = 1
-	}
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perpage, _ := strconv.Atoi(c.DefaultQuery("perpage", "20"))
 	whereString := ""
 	if len(param) > 0 {
 		whereString += "where title like '%" + param + "%'"
 	}
 	whereString += " order by top desc, id desc"
-	utils.Consolelog(whereString)
 	rows, total, err := model.Paginate(page, perpage, "new", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-	var news []map[string]interface{}
+	news := []model.New{}
 	for rows.Next() {
 		var new model.New
 		rows.StructScan(&new)
-		news = append(news, new.Response())
+		news = append(news, new)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,
@@ -45,20 +38,18 @@ func IndexNew(c *gin.Context) {
 	})
 }
 
-func GetNew(c *gin.Context) {
-	var new model.New
+func ShowNew(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	stmt, _ := DB.Preparex("select * from new where id = ?")
-	row := stmt.QueryRowx(id)
-	if err := row.StructScan(&new); err != nil {
-		c.JSON(400, gin.H{
-			"message": "新闻不存在",
-		})
+	new := model.New{
+		Id: id,
+	}
+	err := DB.Get(&new, "select * from new where id = ?", new.Id)
+	if utils.CheckError(c, err, "新闻不存在") != nil {
 		return
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
-		"new":     new.Response(),
+		"new":     new,
 	})
 }
 
@@ -70,16 +61,15 @@ func StoreNew(c *gin.Context) {
 	}
 	new := model.New{
 		Title:   req.Title,
-		Content: sql.NullString{req.Content, true},
+		Content: model.NullString{sql.NullString{req.Content, true}},
 	}
 	err = new.Save()
 	if utils.CheckError(c, err, "新建新闻失败，该新闻已存在") != nil {
 		return
 	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "新建新闻成功",
-		"new":     new.Response(),
+		"new":     new,
 	})
 }
 
@@ -93,16 +83,15 @@ func UpdateNew(c *gin.Context) {
 	new := model.New{
 		Id:      id,
 		Title:   req.Title,
-		Content: sql.NullString{req.Content, true},
+		Content: model.NullString{sql.NullString{req.Content, true}},
 	}
 	err = new.Update()
 	if utils.CheckError(c, err, "编辑新闻失败，该新闻已存在") != nil {
 		return
 	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "编辑新闻成功",
-		"new":     new.Response(),
+		"new":     new,
 	})
 }
 
@@ -115,7 +104,7 @@ func DeleteNew(c *gin.Context) {
 	if utils.CheckError(c, err, "删除新闻失败，该新闻不存在") != nil {
 		return
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "删除新闻成功",
 	})
 }
@@ -125,9 +114,8 @@ func ToggleNewStatus(c *gin.Context) {
 	new := model.New{
 		Id: id,
 	}
-
 	err := new.ToggleStatus()
-	if utils.CheckError(c, err, "删除新闻失败，该新闻不存在") != nil {
+	if utils.CheckError(c, err, "更改新闻状态失败，该新闻不存在") != nil {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -140,7 +128,6 @@ func ToggleNewTopStatus(c *gin.Context) {
 	new := model.New{
 		Id: id,
 	}
-
 	err := new.ToggleTopStatus()
 	if utils.CheckError(c, err, "更改新闻置顶状态失败，该新闻不存在") != nil {
 		return

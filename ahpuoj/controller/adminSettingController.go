@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"ahpuoj/request"
 	"ahpuoj/utils"
 	"net/http"
 
@@ -29,7 +28,9 @@ func GetSettings(c *gin.Context) {
 }
 
 func SetSettings(c *gin.Context) {
-	var req request.Settings
+	var req struct {
+		EnableIssue bool `json:"enable_issue" binding:"required"`
+	}
 	var config = make(map[string]interface{})
 	c.ShouldBindJSON(&req)
 	var enableIssueString string
@@ -38,7 +39,6 @@ func SetSettings(c *gin.Context) {
 	} else {
 		enableIssueString = "false"
 	}
-
 	_, err := DB.Exec("update config set value = ? where item = 'enable_issue'", enableIssueString)
 	if utils.CheckError(c, err, "数据库操作错误") != nil {
 		return
