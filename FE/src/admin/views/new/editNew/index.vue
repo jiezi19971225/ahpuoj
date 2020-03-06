@@ -9,12 +9,6 @@ export default {
   name: 'adminEditNew',
   components: {
     New,
-  },
-  mounted() {
-    console.log('mounted!!!!!!!!!!!!!!!');
-  },
-  activated() {
-    console.log('activated!!!!!!!!!!!!!!!');
-  },
+  }
 };
 </script>

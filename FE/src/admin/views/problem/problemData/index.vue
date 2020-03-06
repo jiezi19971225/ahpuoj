@@ -40,6 +40,7 @@ import {
 } from 'admin/api/problem';
 
 export default {
+  name:"adminProblemData",
   data() {
     return {
       problem: null,
@@ -156,6 +157,7 @@ export default {
             });
             this.fetchDataList();
           } catch (err) {
+            console.log(err)
             this.$message({
               message: err.response.data.message,
               type: 'error',
