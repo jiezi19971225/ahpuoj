@@ -62,20 +62,19 @@ export default {
   methods: {
     async fetchData() {
       console.log('??');
-      const self = this;
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
       try {
         const res = await getContestList(
-          self.currentPage,
-          self.perpage,
-          self.queryParam,
+          this.currentPage,
+          this.perpage,
+          this.queryParam,
         );
         console.log(res);
         const { data } = res;
-        self.tableData = data.data;
-        self.total = data.total;
+        this.tableData = data.data.filter(x => x.defunct === 0)
+        this.total = this.tableData.total;
       } catch (err) {
         console.log(err);
       }
