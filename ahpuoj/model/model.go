@@ -28,8 +28,30 @@ func (v NullString) MarshalJSON() ([]byte, error) {
 		return json.Marshal(nil)
 	}
 }
+func (v *NullString) UnmarshalJSON(b []byte) error {
+	text := strings.ToLower(string(b))
+
+	if text == "null" {
+		v.Valid = false
+		return nil
+	}
+
+	err := json.Unmarshal(b, &v.String)
+	if err != nil {
+		return err
+	}
+
+	v.Valid = true
+	return nil
+}
 
 func Paginate(page int, perpage int, tableName string, outputField []string, whereString string) (*sqlx.Rows, int, error) {
+	if page < 0 {
+		page = 1
+	}
+	if perpage < 0 {
+		perpage = 0
+	}
 	var total int
 	var rows *sqlx.Rows
 	offset := (page - 1) * perpage

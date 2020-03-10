@@ -9,7 +9,7 @@ import (
 func ApiAdminSeriesRouter(g *gin.RouterGroup) {
 	g.POST("/series", controller.StoreSeries)
 	g.GET("/serieses", controller.IndexSeries)
-	g.GET("/series/:id", controller.GetSeries)
+	g.GET("/series/:id", controller.ShowSeries)
 	g.GET("/series/:id/contests", controller.IndexSeriesContest)
 	g.PUT("/series/:id", controller.UpdateSeries)
 	g.DELETE("/series/:id", controller.DeleteSeries)

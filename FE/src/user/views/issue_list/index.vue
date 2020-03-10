@@ -12,16 +12,16 @@
               .issue__userinfo__wrapper
                 ul
                   li.issue__user__avatar
-                    router-link(:to="{name:'userinfo',params:{id:item.user.id}}")
-                      img(:src="imgUrl(item.user.avatar)")
+                    router-link(:to="{name:'userinfo',params:{id:item.user_id}}")
+                      img(:src="imgUrl(item.avatar)")
                   li.issue__user__name.ell
-                    router-link(:to="{name:'userinfo',params:{id:item.user.id}}") {{item.user.nick}}
+                    router-link(:to="{name:'userinfo',params:{id:item.user_id}}") {{item.nick}}
               .issue__content(:class="item.is_deleted == 1?'issue-content--deleted':''")
                 router-link(:to="{name:'issue',params:{id:item.id}}",target="_blank") {{item.title}}
                 .issue__addon.mt10
                   el-button.fl(v-if="$store.getters.userRole=='admin'",:type="item.is_deleted == 0?'danger':'success'",size="mini",@click="toggleIssueStatus(item.id)") {{item.is_deleted == 0 ? "删除":"恢复"}}
                   .issue__addon__info.tar
-                    router-link(v-if="item.problem.id>0",:to="{name:'problem',params:{id:item.problem.id}}") {{`In P${item.problem.id} ${item.problem.title}`}}
+                    router-link(v-if="item.problem_id>0",:to="{name:'problem',params:{id:item.problem_id}}") {{`In P${item.problem_id} ${item.problem.title}`}}
                     p(v-else) 总版
                     p.text-muted {{item.reply_count}}条回复 最后回复时间 {{item.updated_at}}
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
@@ -84,23 +84,22 @@ export default {
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      const self = this;
-      if (self.$route.name === 'issueList') {
-        self.problemId = 0;
+      if (this.$route.name === 'issueList') {
+        this.problemId = 0;
       } else {
-        self.problemId = self.$route.params.id;
+        this.problemId = this.$route.params.id;
       }
       try {
         const res = await getIssueList(
-          self.problemId,
-          self.currentPage,
-          self.perpage,
+          this.problemId,
+          this.currentPage,
+          this.perpage,
         );
         const { data } = res;
 
-        self.issueEnable = data.issue_enable;
-        self.data = data.data;
-        self.total = data.total;
+        this.issueEnable = data.issue_enable;
+        this.data = data.data;
+        this.total = data.total;
       } catch (err) {
         console.log(err);
       }
@@ -110,22 +109,21 @@ export default {
     },
     async postIssue() {
       // 标题和内容不能为空
-      const self = this;
-      if (self.issueForm.title === '') {
+      if (this.issueForm.title === '') {
         this.$message({
           message: '标题不能为空',
           type: 'error',
         });
         return;
       }
-      if (self.issueForm.title.length > 20) {
+      if (this.issueForm.title.length > 20) {
         this.$message({
           message: '标题长度限制在20个字符以内',
           type: 'error',
         });
         return;
       }
-      if (self.replyForm.content === '') {
+      if (this.replyForm.content === '') {
         this.$message({
           message: '内容不能为空',
           type: 'error',
@@ -134,39 +132,38 @@ export default {
       }
       try {
         let res;
-        if (self.$route.name === 'problemIssueList') {
-          self.issueForm.problem_id = Number.parseInt(self.$route.params.id, 10);
+        if (this.$route.name === 'problemIssueList') {
+          this.issueForm.problem_id = Number.parseInt(this.$route.params.id, 10);
         } else {
-          self.issueForm.problem_id = 0;
+          this.issueForm.problem_id = 0;
         }
-        res = await postIssue(self.issueForm);
+        res = await postIssue(this.issueForm);
         const issueId = res.data.issue.id;
-        res = await replyToIssue(issueId, self.replyForm);
-        self.$message({
+        res = await replyToIssue(issueId, this.replyForm);
+        this.$message({
           message: '发布讨论主题成功',
           type: 'success',
         });
-        self.issueForm.title = '';
-        self.replyForm.content = '';
-        self.fetchData();
+        this.issueForm.title = '';
+        this.replyForm.content = '';
+        this.fetchData();
       } catch (err) {
-        self.$message({
+        this.$message({
           message: err.response.data.message,
           type: 'error',
         });
       }
     },
     async toggleIssueStatus(issueId) {
-      const self = this;
       try {
         const res = await toggleIssueStatus(issueId);
-        self.$message({
+        this.$message({
           message: '变更主题状态成功',
           type: 'success',
         });
-        self.fetchData();
+        this.fetchData();
       } catch (err) {
-        self.$message({
+        this.$message({
           message: err.response.data.message,
           type: 'error',
         });

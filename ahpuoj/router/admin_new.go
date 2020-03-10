@@ -7,9 +7,9 @@ import (
 )
 
 func ApiAdminNewRouter(g *gin.RouterGroup) {
-	g.POST("/new", controller.StoreNew)
 	g.GET("/news", controller.IndexNew)
-	g.GET("/new/:id", controller.GetNew)
+	g.POST("/new", controller.StoreNew)
+	g.GET("/new/:id", controller.ShowNew)
 	g.PUT("/new/:id", controller.UpdateNew)
 	g.DELETE("/new/:id", controller.DeleteNew)
 	g.PUT("/new/:id/status", controller.ToggleNewStatus)

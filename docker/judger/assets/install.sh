@@ -8,17 +8,18 @@
 
 # 创建评测机目录文件夹
 cd /home/judge/hustoj_core
-mkdir log data run0 run1 run2 run3
-chown judge run0 run1 run2 run3
+mkdir log data run0 run1 run2 run3 run4 run5 run6 run7 run8 run9
+chown judge log run0 run1 run2 run3 run4 run5 run6 run7 run8 run9
 
-# 赋予评测机源码部署脚本执行权限并部署
-chmod +x /home/judge/core/make.sh
-cd /home/judge/core && ./make.sh
 cd /usr/bin && rm awk && cp -s mawk awk
 
 # 权限设置
 chmod 775 -R /home/judge/hustoj_core/data
 chown -r judge -R /home/judge/hustoj_core/data
+
+# supervisorctl
+mkdir /home/judge/scheduler/log
+supervisord
 
 # 修改配置文件
 CPU=$(grep "cpu cores" /proc/cpuinfo | head -1 | awk '{print $4}')

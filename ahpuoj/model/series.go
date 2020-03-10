@@ -7,14 +7,14 @@ import (
 )
 
 type Series struct {
-	Id          int    `db:"id"`
-	Name        string `db:"name"`
-	Description string `db:"description"`
-	TeamMode    int    `db:"team_mode"`
-	Defunct     int    `db:"defunct"`
-	CreatedAt   string `db:"created_at"`
-	UpdatedAt   string `db:"updated_at"`
-	IsDeleted   int    `db:"is_deleted"`
+	Id          int    `db:"id" json:"id"`
+	Name        string `db:"name" json:"name" binding:"required,max=20"`
+	Description string `db:"description" json:"description"`
+	TeamMode    int    `db:"team_mode" json:"team_mode" binding:"gte=0,lte=1"`
+	Defunct     int    `db:"defunct" json:"defunct"`
+	CreatedAt   string `db:"created_at" json:"created_at"`
+	UpdatedAt   string `db:"updated_at" json:"updated_at"`
+	IsDeleted   int    `db:"is_deleted" json:"is_deleted"`
 	// 附加信息
 	ContestInfos []map[string]interface{}
 }
@@ -80,16 +80,4 @@ func (series *Series) AttachContestInfo() {
 		contestInfos = append(contestInfos, contestInfo)
 	}
 	series.ContestInfos = contestInfos
-}
-
-func (series *Series) Response() map[string]interface{} {
-
-	return map[string]interface{}{
-		"id":           series.Id,
-		"name":         series.Name,
-		"defunct":      series.Defunct,
-		"description":  series.Description,
-		"team_mode":    series.TeamMode,
-		"contestinfos": series.ContestInfos,
-	}
 }

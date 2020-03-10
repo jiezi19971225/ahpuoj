@@ -9,7 +9,7 @@ import (
 func ApiAdminProblemRouter(g *gin.RouterGroup) {
 	g.POST("/problem", controller.StoreProblem)
 	g.GET("/problems", controller.IndexProblem)
-	g.GET("/problem/:id", controller.GetProblem)
+	g.GET("/problem/:id", controller.ShowProblem)
 	g.PUT("/problem/:id", controller.UpdateProblem)
 	g.DELETE("/problem/:id", controller.DeleteProblem)
 	g.PUT("/problem/:id/status", controller.ToggleProblemStatus)

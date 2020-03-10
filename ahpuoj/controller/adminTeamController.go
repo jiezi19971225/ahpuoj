@@ -4,6 +4,7 @@ import (
 	"ahpuoj/model"
 	"ahpuoj/request"
 	"ahpuoj/utils"
+	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -16,40 +17,32 @@ func GetTeam(c *gin.Context) {
 	if utils.CheckError(c, err, "团队不存在") != nil {
 		return
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
-		"team":    team.Response(),
+		"team":    team,
 	})
 }
 
 func IndexTeam(c *gin.Context) {
-
-	pageStr := c.Query("page")
-	perpageStr := c.Query("perpage")
 	param := c.Query("param")
-	page, _ := strconv.Atoi(pageStr)
-	perpage, _ := strconv.Atoi(perpageStr)
-	if page == 0 {
-		page = 1
-	}
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perpage, _ := strconv.Atoi(c.DefaultQuery("perpage", "20"))
 	whereString := " where is_deleted = 0 "
 	if len(param) > 0 {
-		whereString += "where name like '%" + param + "%'"
+		whereString += "and name like '%" + param + "%'"
 	}
 	whereString += " order by id desc"
-
-	utils.Consolelog(whereString)
 	rows, total, err := model.Paginate(page, perpage, "team", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-	var teams []map[string]interface{}
+	teams := []model.Team{}
 	for rows.Next() {
 		var team model.Team
 		rows.StructScan(&team)
-		teams = append(teams, team.Response())
+		teams = append(teams, team)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,
@@ -59,50 +52,41 @@ func IndexTeam(c *gin.Context) {
 
 func GetAllTeams(c *gin.Context) {
 	rows, _ := DB.Queryx("select * from team where is_deleted = 0 order by id desc")
-	var teams []map[string]interface{}
+	teams := []model.Team{}
 	for rows.Next() {
 		var team model.Team
 		rows.StructScan(&team)
-		teams = append(teams, team.Response())
+		teams = append(teams, team)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"teams":   teams,
 	})
 }
 
 func IndexTeamUser(c *gin.Context) {
-
-	pageStr := c.Query("page")
-	perpageStr := c.Query("perpage")
-	param := c.Query("param")
 	teamId := c.Param("id")
-	page, _ := strconv.Atoi(pageStr)
-	perpage, _ := strconv.Atoi(perpageStr)
-	if page == 0 {
-		page = 1
-	}
+	param := c.Query("param")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perpage, _ := strconv.Atoi(c.DefaultQuery("perpage", "20"))
 	whereString := "where team_user.team_id=" + teamId
 	if len(param) > 0 {
 		whereString += " and user.username like '%" + param + "%' or user.nick like '%" + param + "%'"
 	}
 	whereString += " order by user.id desc"
-
-	utils.Consolelog(whereString)
 	rows, total, err := model.Paginate(page, perpage,
 		"team_user inner join user on team_user.user_id = user.id",
 		[]string{"user.*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-	users := []map[string]interface{}{}
+	users := []model.User{}
 	for rows.Next() {
 		var user model.User
 		rows.StructScan(&user)
-		utils.Consolelog(user)
-		users = append(users, user.Response())
+		users = append(users, user)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,
@@ -111,17 +95,16 @@ func IndexTeamUser(c *gin.Context) {
 }
 
 func AddTeamUsers(c *gin.Context) {
-	var req request.TeamUsers
+	var req struct {
+		UserList string `json:"userlist" binding:"required"`
+	}
 	id, _ := strconv.Atoi(c.Param("id"))
 	c.ShouldBindJSON(&req)
-
 	team := model.Team{
 		Id: id,
 	}
-	utils.Consolelog(req.UserList)
 	infos := team.AddUsers(req.UserList)
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
 		"info":    infos,
 	})
@@ -140,8 +123,7 @@ func StoreTeam(c *gin.Context) {
 	if utils.CheckError(c, err, "新建团队失败，该团队已存在") != nil {
 		return
 	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "新建团队成功",
 		"team":    team,
 	})
@@ -162,10 +144,9 @@ func UpdateTeam(c *gin.Context) {
 	if utils.CheckError(c, err, "编辑团队失败") != nil {
 		return
 	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "编辑团队成功",
-		"team":    team.Response(),
+		"team":    team,
 	})
 }
 
@@ -178,8 +159,7 @@ func DeleteTeam(c *gin.Context) {
 	if utils.CheckError(c, err, "删除团队失败，团队不存在") != nil {
 		return
 	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "删除团队成功",
 	})
 }
@@ -187,24 +167,19 @@ func DeleteTeam(c *gin.Context) {
 func DeleteTeamUser(c *gin.Context) {
 	teamId, _ := strconv.Atoi(c.Param("id"))
 	userId, _ := strconv.Atoi(c.Param("userid"))
-
 	result, _ := DB.Exec("delete from team_user where team_id = ? and user_id = ?", teamId, userId)
-
 	// 级联删除
 	DB.Exec(`delete contest_user from contest_user inner join contest_team_user on contest_user.contest_id = contest_team_user.contest_id 
 	where contest_user.user_id = ? and contest_team_user.team_id = ?`, userId, teamId)
-
 	DB.Exec("delete from contest_team_user where team_id = ? and user_id = ?", teamId, userId)
-
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		c.JSON(400, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "删除团队成员失败，团队成员不存在",
 		})
 		return
 	}
-
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "删除团队成员成功",
 	})
 }

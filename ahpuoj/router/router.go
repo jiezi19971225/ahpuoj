@@ -33,7 +33,7 @@ func InitRouter() *gin.Engine {
 	admin := router.Group("/api/admin", middleware.CasbinMiddleware())
 
 	// 权限控制路由
-	ApiAdminCasbinRouter(admin)
+	// ApiAdminCasbinRouter(admin)
 	// 后台用户相关路由
 	ApiAdminUserRouter(admin)
 	// 后台用户问题集相关路由

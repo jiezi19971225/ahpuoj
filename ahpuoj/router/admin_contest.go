@@ -10,7 +10,7 @@ func ApiAdminContestRouter(g *gin.RouterGroup) {
 	g.POST("/contest", controller.StoreContest)
 	g.GET("/contests", controller.IndexContest)
 	g.GET("/allcontests", controller.GetAllContests)
-	g.GET("/contest/:id", controller.GetContest)
+	g.GET("/contest/:id", controller.ShowContest)
 	g.PUT("/contest/:id", controller.UpdateContest)
 	g.DELETE("/contest/:id", controller.DeleteContest)
 	g.PUT("/contest/:id/status", controller.ToggleContestStatus)

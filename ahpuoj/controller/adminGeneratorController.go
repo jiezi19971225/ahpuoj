@@ -2,11 +2,11 @@ package controller
 
 import (
 	"ahpuoj/model"
-	"ahpuoj/request"
 	"ahpuoj/utils"
 	"crypto/sha1"
 	"database/sql"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -14,46 +14,38 @@ import (
 )
 
 func CompeteAccountGenerator(c *gin.Context) {
-	var req request.CompeteAccount
+	var req struct {
+		Prefix string `json:"prefix" binding:"required,max=15"`
+		Number int    `json:"number" binding:"required,min=1,max=100"`
+	}
 	err := c.ShouldBindJSON(&req)
 	if utils.CheckError(c, err, "参数错误") != nil {
 		return
 	}
-
 	var infos []string
-	var users []map[string]interface{}
+	users := []model.User{}
 	for i := 1; i <= req.Number; i++ {
-
 		username := req.Prefix + strconv.Itoa(i)
 		randomPassword := utils.GetRandomString(15)
-
 		h := sha1.New()
 		h.Write([]byte(randomPassword))
 		hashedPassword := fmt.Sprintf("%x", h.Sum(nil))
-
 		user := model.User{
 			Username:      username,
 			Nick:          username,
-			Email:         sql.NullString{"", true},
+			Email:         model.NullString{sql.NullString{"", false}},
 			Password:      hashedPassword,
 			IsCompeteUser: 1,
 		}
-
 		err = user.Save()
 		if err != nil {
 			infos = append(infos, "用户"+username+"创建失败")
 		} else {
-			users = append(users, map[string]interface{}{
-				"username": username,
-				"password": randomPassword,
-			})
-
+			users = append(users, user)
 			infos = append(infos, "用户"+username+"创建成功")
 		}
-
 	}
-	utils.Consolelog(users)
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
 		"users":   users,
 		"info":    infos,
@@ -61,7 +53,9 @@ func CompeteAccountGenerator(c *gin.Context) {
 }
 
 func UserAccountGenerator(c *gin.Context) {
-	var req request.UserAccount
+	var req struct {
+		UserList string `json:"userlist" binding:"required"`
+	}
 	err := c.ShouldBindJSON(&req)
 	if utils.CheckError(c, err, "参数错误") != nil {
 		return
@@ -86,7 +80,7 @@ func UserAccountGenerator(c *gin.Context) {
 			user := model.User{
 				Username: username,
 				Nick:     username,
-				Email:    sql.NullString{"", true},
+				Email:    model.NullString{sql.NullString{"", false}},
 				Password: hashedPassword,
 				PassSalt: salt,
 			}
@@ -103,7 +97,7 @@ func UserAccountGenerator(c *gin.Context) {
 
 		}
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
 		"users":   users,
 		"info":    infos,

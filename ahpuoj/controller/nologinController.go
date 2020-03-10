@@ -20,33 +20,27 @@ func NologinGetNewList(c *gin.Context) {
 	var user model.User
 	user, loggedIn := GetUserInstance(c)
 
-	pageStr := c.Query("page")
-	perpageStr := c.Query("perpage")
-	page, _ := strconv.Atoi(pageStr)
-	perpage, _ := strconv.Atoi(perpageStr)
-	if page == 0 {
-		page = 1
-	}
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perpage, _ := strconv.Atoi(c.DefaultQuery("perpage", "20"))
+
 	whereString := ""
-	if loggedIn {
-		if user.Role != "admin" {
-			whereString += " where defunct = 0 "
-		}
+	if !(loggedIn && user.Role == "admin") {
+		whereString += " where defunct = 0 "
 	}
+
 	whereString += " order by top desc, id desc"
 
 	rows, total, err := model.Paginate(page, perpage, "new", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-
-	var news []map[string]interface{}
+	news := []model.New{}
 	for rows.Next() {
 		var new model.New
 		rows.StructScan(&new)
-		news = append(news, new.Response())
+		news = append(news, new)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"data":    news,
@@ -140,7 +134,7 @@ func NologinGetProblemList(c *gin.Context) {
 			"status":   status,
 		})
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,
@@ -189,7 +183,7 @@ func NologinGetContestList(c *gin.Context) {
 		contest.CalcStatus()
 		contests = append(contests, contest.ResponseToUser())
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,
@@ -265,14 +259,14 @@ func NologinGetSolutionList(c *gin.Context) {
 		return
 	}
 
-	solutions := make([]map[string]interface{}, 0)
+	solutions := []model.Solution{}
 	for rows.Next() {
 		var solution model.Solution
 		rows.StructScan(&solution)
-		solutions = append(solutions, solution.Response())
+		solutions = append(solutions, solution)
 	}
 
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,
@@ -331,16 +325,15 @@ func NologinGetSolution(c *gin.Context) {
 		DB.Get(&compileInfo, "select error from compileinfo where solution_id = ?", solution.Id)
 	}
 
-	responseData := make(map[string]interface{}, 0)
-	responseData["runtime_info"] = runtimeInfo
-	responseData["compile_info"] = compileInfo
-	responseData["source"] = source
-	for k, v := range solution.Response() {
-		responseData[k] = v
-	}
-	c.JSON(200, gin.H{
+	meta := make(map[string]interface{}, 0)
+	meta["runtime_info"] = runtimeInfo
+	meta["compile_info"] = compileInfo
+	meta["source"] = source
+
+	c.JSON(http.StatusOK, gin.H{
 		"message":  "数据获取成功",
-		"solution": responseData,
+		"solution": solution,
+		"meta":	meta,
 		"seeable":  seeable,
 	})
 }
@@ -351,13 +344,13 @@ func NologinGetAllTags(c *gin.Context) {
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-	var tags []map[string]interface{}
+	tags := []model.Tag{}
 	for rows.Next() {
 		var tag model.Tag
 		rows.StructScan(&tag)
-		tags = append(tags, tag.Response())
+		tags = append(tags, tag)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"tags":    tags,
 	})
@@ -382,7 +375,7 @@ func NologinGetProblem(c *gin.Context) {
 		if utils.CheckError(c, err, "问题不存在") != nil {
 			return
 		}
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message": "数据获取成功",
 			"problem": jsonData,
 		})
@@ -405,7 +398,7 @@ func NologinGetProblem(c *gin.Context) {
 		if utils.CheckError(c, err, "问题不存在") != nil {
 			return
 		}
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message": "数据获取成功",
 			"problem": problem,
 		})
@@ -484,13 +477,13 @@ func NologinGetContestProblem(c *gin.Context) {
 	}
 
 	if seeable {
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message": "数据获取成功",
 			"seeable": seeable,
 			"problem": problem,
 		})
 	} else {
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message": "数据获取成功",
 			"seeable": seeable,
 			"reason":  reason,
@@ -581,7 +574,7 @@ func NologinGetContest(c *gin.Context) {
 	} else {
 		contest.ProblemInfos = make([]map[string]interface{}, 0)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"seeable": seeable,
 		"reason":  reason,
@@ -689,7 +682,7 @@ func NologinGetContestRankList(c *gin.Context) {
 		}
 	}
 	sort.Sort(userRankInfoList)
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message":  "数据获取成功",
 		"seeable":  seeable,
 		"reason":   reason,
@@ -862,7 +855,7 @@ out:
 		}
 	}
 	sort.Sort(teamRankInfoList)
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message":      "数据获取成功",
 		"seeable":      seeable,
 		"reason":       reason,
@@ -911,14 +904,14 @@ func NologinGetSeriesList(c *gin.Context) {
 		return
 	}
 
-	var serieses []map[string]interface{}
+	serieses := []model.Series{}
 	for rows.Next() {
 		var series model.Series
 		rows.StructScan(&series)
-		serieses = append(serieses, series.Response())
+		serieses = append(serieses, series)
 	}
 
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,
@@ -950,7 +943,7 @@ func NologinGetSeries(c *gin.Context) {
 	if utils.CheckError(c, err, "数据库查询失败") != nil {
 		return
 	}
-	var contestList []model.Contest
+	contestList := []model.Contest{}
 	contestStrList := ""
 	for rows.Next() {
 		var contest model.Contest
@@ -975,9 +968,9 @@ func NologinGetSeries(c *gin.Context) {
 
 	// 如果竞赛作业数量为0，不进行后续处理
 	if contestCount == 0 {
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message":      "数据获取成功",
-			"series":       series.Response(),
+			"series":       series,
 			"userranklist": userSeriesRankInfoList,
 		})
 		return
@@ -1043,9 +1036,9 @@ func NologinGetSeries(c *gin.Context) {
 
 	// 数据的排序交给前端处理，菜鸡不会用go处理这种排序(⊙﹏⊙)b
 
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message":      "数据获取成功",
-		"series":       series.Response(),
+		"series":       series,
 		"userranklist": userSeriesRankInfoList,
 	})
 }
@@ -1079,34 +1072,23 @@ func NologinGetLanguageList(c *gin.Context) {
 
 // 获取讨论列表的接口
 func NologinGetIssueList(c *gin.Context) {
-
 	// 判断当前是否已经关闭讨论版
 	var enableIssueString string
 	err := DB.Get(&enableIssueString, "select value from config where item = 'enable_issue'")
 	if utils.CheckError(c, err, "数据库配置错误") != nil {
 		return
 	}
-
 	if enableIssueString == "false" {
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message":      "数据获取成功",
 			"issue_enable": false,
 		})
 		return
 	}
-
-	problemIdStr := c.Param("id")
-	problemId, _ := strconv.Atoi(problemIdStr)
-
+	problemId, _ := strconv.Atoi(c.Param("id"))
 	user, loggedIn := GetUserInstance(c)
-	pageStr := c.Query("page")
-	perpageStr := c.Query("perpage")
-	page, _ := strconv.Atoi(pageStr)
-	perpage, _ := strconv.Atoi(perpageStr)
-	if page == 0 {
-		page = 1
-	}
-
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perpage, _ := strconv.Atoi(c.DefaultQuery("perpage", "20"))
 	// 检查问题是否存在
 	if problemId != 0 {
 		var temp int
@@ -1118,35 +1100,28 @@ func NologinGetIssueList(c *gin.Context) {
 			return
 		}
 	}
-
 	whereString := "where 1"
 	// problem=0时显示所有主题
 	if problemId != 0 {
-		whereString += " and problem_id =" + problemIdStr
+		whereString += " and problem_id =" + c.Param("id")
 	}
 	// 管理员可以查看被删除的主题
 	if !loggedIn || (loggedIn && user.Role != "admin") {
 		whereString += " and is_deleted = 0 "
 	}
-
 	whereString += " order by created_at desc"
-
 	rows, total, err := model.Paginate(page, perpage, "issue inner join user on issue.user_id = user.id left join problem on issue.problem_id = problem.id",
 		[]string{"user.username,user.nick,user.avatar,issue.*,problem.title ptitle,(select count(1) from reply where issue_id = issue.id) as reply_count"}, whereString)
-	utils.Consolelog(rows, total, err)
-
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-
-	var issues []map[string]interface{}
+	issues := []model.Issue{}
 	for rows.Next() {
 		var issue model.Issue
 		err = rows.StructScan(&issue)
-		utils.Consolelog(err)
-		issues = append(issues, issue.Response())
+		issues = append(issues, issue)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message":      "数据获取成功",
 		"total":        total,
 		"issue_enable": true,
@@ -1156,34 +1131,23 @@ func NologinGetIssueList(c *gin.Context) {
 
 // 获得讨论以及评论的接口
 func NologinGetIssue(c *gin.Context) {
-
 	// 判断当前是否已经关闭讨论版
 	var enableIssueString string
 	err := DB.Get(&enableIssueString, "select value from config where item = 'enable_issue'")
 	if utils.CheckError(c, err, "数据库配置错误") != nil {
 		return
 	}
-
 	if enableIssueString == "false" {
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"message":      "数据获取成功",
 			"issue_enable": false,
 		})
 		return
 	}
-
-	issueIdStr := c.Param("id")
-	issueId, _ := strconv.Atoi(issueIdStr)
-
+	issueId, _ := strconv.Atoi(c.Param("id"))
 	user, loggedIn := GetUserInstance(c)
-	pageStr := c.Query("page")
-	perpageStr := c.Query("perpage")
-	page, _ := strconv.Atoi(pageStr)
-	perpage, _ := strconv.Atoi(perpageStr)
-	if page == 0 {
-		page = 1
-	}
-
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perpage, _ := strconv.Atoi(c.DefaultQuery("perpage", "20"))
 	var issue model.Issue
 	// 检查讨论是否存在
 	if issueId != 0 {
@@ -1193,48 +1157,42 @@ func NologinGetIssue(c *gin.Context) {
 			return
 		}
 	}
-
 	// 第一步只获取对主题的回复
-	whereString := "where issue_id = " + issueIdStr
+	whereString := "where issue_id = " + c.Param("id")
 	whereString += " and reply_id = 0"
 	// 管理员可以查看被删除的回复
 	if !loggedIn || (loggedIn && user.Role != "admin") {
 		whereString += " and is_deleted = 0 "
 	}
-
 	whereString += " order by reply.created_at asc"
-
 	rows, total, err := model.Paginate(page, perpage, "reply inner join user on reply.user_id = user.id",
 		[]string{"user.username,user.nick,user.avatar,reply.*,'' as rnick,(select count(1) from reply  r where reply.id = r.reply_id) as reply_count"}, whereString)
-	utils.Consolelog(rows, total, err)
-
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-
-	var replys []map[string]interface{}
+	replys := []model.Reply{}
 	for rows.Next() {
 		var reply model.Reply
 		rows.StructScan(&reply)
 
 		// 获取对该回复的回复
 		if reply.ReplyCount > 0 {
-			var subReplys []map[string]interface{}
+			subReplys := []model.Reply{}
 			rows, _ := DB.Queryx(`select user.username,user.nick,user.avatar,reply.*,u2.nick as rnick,(select count(1) from reply  r where reply.id = r.reply_id) as reply_count
 			from reply inner join user on reply.user_id = user.id inner join user u2 on reply.reply_user_id = u2.id where reply.reply_id = ?`, reply.Id)
 			for rows.Next() {
 				var subReply model.Reply
 				err = rows.StructScan(&subReply)
-				subReplys = append(subReplys, subReply.Response())
+				subReplys = append(subReplys, subReply)
 			}
 			reply.SubReplys = subReplys
 		}
-		replys = append(replys, reply.Response())
+		replys = append(replys, reply)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message":      "数据获取成功",
 		"total":        total,
-		"issue":        issue.Response(),
+		"issue":        issue,
 		"replys":       replys,
 		"issue_enable": true,
 	})
@@ -1243,8 +1201,7 @@ func NologinGetIssue(c *gin.Context) {
 // 获取用户信息的接口
 func NologinGetUserInfo(c *gin.Context) {
 	var err error
-	userIdStr := c.Param("id")
-	userId, _ := strconv.Atoi(userIdStr)
+	userId, _ := strconv.Atoi(c.Param("id"))
 
 	var user model.User
 	// 检查用户是否存在
@@ -1324,31 +1281,23 @@ func NologinGetUserInfo(c *gin.Context) {
 	DB.Get(&rank, "select count(1) from user where solved > ? or (solved = ? and submit < ?)", user.Solved, user.Solved, user.Submit)
 
 	type UserInfo struct {
-		Nick                  string          `json:"nick"`
-		Avatar                string          `json:"avatar"`
-		Solved                int             `json:"solved"`
-		Submit                int             `json:"submit"`
+		model.User
 		Rank                  int             `json:"rank"`
-		CreatedAt             string          `json:"created_at"`
 		SolvedProblemList     []int           `json:"solved_problem_list"`
 		UnsolvedProblemList   []int           `json:"unsolved_problem_list"`
 		RecentSolvedStatistic [][]interface{} `json:"recent_solved_statistic"`
 		RecentSubmitStatistic [][]interface{} `json:"recent_submit_statistic"`
 	}
 
-	var userInfo UserInfo = UserInfo{
-		Nick:                  user.Nick,
-		Avatar:                user.Avatar,
-		Solved:                user.Solved,
-		Submit:                user.Submit,
-		CreatedAt:             user.CreatedAt,
+	userInfo := UserInfo{
+		User:                  user,
 		Rank:                  rank + 1,
 		SolvedProblemList:     solvedProblemList,
 		UnsolvedProblemList:   unsolvedProblemList,
 		RecentSolvedStatistic: recentSolvedStatistic,
 		RecentSubmitStatistic: recentSubmitStatistic,
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message":  "获取个人信息成功",
 		"userinfo": userInfo,
 	})
@@ -1370,13 +1319,13 @@ func NologinGetRankList(c *gin.Context) {
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-	var users []map[string]interface{}
+	users := []model.User{}
 	for rows.Next() {
 		var user model.User
 		rows.StructScan(&user)
-		users = append(users, user.Response())
+		users = append(users, user)
 	}
-	c.JSON(200, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
 		"perpage": perpage,

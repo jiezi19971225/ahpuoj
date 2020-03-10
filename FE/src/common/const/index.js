@@ -1,10 +1,10 @@
 export const server = process.env.NODE_ENV === 'production' ? 'http://172.16.0.3/' : 'http://localhost/';
 export const tinymceDocumentBaseUrl = process.env.NODE_ENV === 'production' ? 'http://172.16.0.3/' : 'http://localhost:8888/';
-export const testRunInterval = 15;
+export const testRunInterval = 5;
 export const resultList = [
   {
     code: 0,
-    name: '等待中',
+    name: '队列中',
     description: '',
   },
   {

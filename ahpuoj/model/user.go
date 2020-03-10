@@ -2,26 +2,25 @@ package model
 
 import (
 	"ahpuoj/utils"
-	"database/sql"
 	"errors"
 )
 
 type User struct {
-	Id            int            `db:"id"`
-	Email         sql.NullString `db:"email"`
-	Username      string         `db:"username"`
-	Nick          string         `db:"nick"`
-	Avatar        string         `db:"avatar"`
-	Password      string         `db:"password"`
-	PassSalt      string         `db:"passsalt"`
-	Submit        int            `db:"submit"`
-	Solved        int            `db:"solved"`
-	Defunct       int            `db:"defunct"`
-	CreatedAt     string         `db:"created_at"`
-	UpdatedAt     string         `db:"updated_at"`
-	IsCompeteUser int            `db:"is_compete_user"`
-	RoleId        int            `db:"role_id"`
-	Role          string
+	Id            int        `db:"id" json:"id"`
+	Email         NullString `db:"email" json:"email"`
+	Username      string     `db:"username" json:"username"`
+	Nick          string     `db:"nick" json:"nick"`
+	Avatar        string     `db:"avatar" json:"avatar"`
+	Password      string     `db:"password" json:"-"`
+	PassSalt      string     `db:"passsalt" json:"-"`
+	Submit        int        `db:"submit" json:"submit"`
+	Solved        int        `db:"solved" json:"solved"`
+	Defunct       int        `db:"defunct" json:"defunct"`
+	CreatedAt     string     `db:"created_at" json:"created_at"`
+	UpdatedAt     string     `db:"updated_at" json:"updated_at"`
+	IsCompeteUser int        `db:"is_compete_user" json:"is_compete_user"`
+	RoleId        int        `db:"role_id" json:"role_id"`
+	Role          string     `json:"role"`
 }
 
 func (user *User) Save() error {
