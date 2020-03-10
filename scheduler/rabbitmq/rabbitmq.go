@@ -1,11 +1,10 @@
 package rabbitmq
 
 import (
-	"ahpuoj/utils"
-	"bytes"
 	"errors"
 	"strings"
-
+	"fmt"
+	"github.com/Unknwon/goconfig"
 	"github.com/streadway/amqp"
 )
 
@@ -16,10 +15,13 @@ var queues string
 var hasMQ bool = false
 
 func init() {
-	cfg := utils.GetCfg()
+	configFilePath := "config.ini"
+	cfg, _ := goconfig.LoadConfigFile(configFilePath)
 	mqcfg, _ := cfg.GetSection("rabbitmq")
 	path := strings.Join([]string{"amqp://", mqcfg["user"], ":", mqcfg["password"], "@", mqcfg["host"], ":", mqcfg["port"], "/oj"}, "")
-	SetupRMQ(path)
+	fmt.Println(path)
+	err := SetupRMQ(path)
+	fmt.Println(err)
 }
 
 type Reader interface {
@@ -59,7 +61,7 @@ func Ping() (err error) {
 	msgContent := "ping.ping"
 	err = Channel.Publish("ping.ping", "ping.ping", false, false, amqp.Publishing{
 		ContentType: "text/plain",
-		Body:        []byte(msgContent),
+		Body:		[]byte(msgContent),
 	})
 	if err != nil {
 		return err
@@ -85,7 +87,7 @@ func Publish(exchange, routingKey string, msg []byte) (err error) {
 }
 
 // 监听接收到的消息
-func Receive(exchange, queue, routingKey string, reader func(msg *string)) (err error) {
+func Receive(exchange, queue, routingKey string, reader func(msg *[]byte)) (err error) {
 	if exchanges == "" || !strings.Contains(exchanges, exchange) {
 		err = Channel.ExchangeDeclare(exchange, "direct", true, false, false, true, nil)
 		if err != nil {
@@ -111,8 +113,8 @@ func Receive(exchange, queue, routingKey string, reader func(msg *string)) (err 
 	go func() {
 		//fmt.Println(*msgs)
 		for d := range msgs {
-			s := bytesToString(&(d.Body))
-			reader(s)
+			// s := bytesToString(&(d.Body))
+			reader(&(d.Body))
 		}
 	}()
 	return nil
@@ -125,8 +127,8 @@ func Close() {
 	hasMQ = false
 }
 
-func bytesToString(b *[]byte) *string {
-	s := bytes.NewBuffer(*b)
-	r := s.String()
-	return &r
-}
+// func bytesToString(b *[]byte) *string {
+// 	s := bytes.NewBuffer(*b)
+// 	r := s.String()
+// 	return &r
+// }

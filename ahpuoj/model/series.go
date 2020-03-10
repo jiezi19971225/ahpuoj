@@ -81,15 +81,3 @@ func (series *Series) AttachContestInfo() {
 	}
 	series.ContestInfos = contestInfos
 }
-
-func (series *Series) Response() map[string]interface{} {
-
-	return map[string]interface{}{
-		"id":           series.Id,
-		"name":         series.Name,
-		"defunct":      series.Defunct,
-		"description":  series.Description,
-		"team_mode":    series.TeamMode,
-		"contestinfos": series.ContestInfos,
-	}
-}

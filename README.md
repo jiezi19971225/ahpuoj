@@ -1,12 +1,15 @@
 # AHPUOJv2
 
+// todo
+说明文档待更新
+
 ### 准备
 
 项目部署采用 docker-compose 管理，首先需要构建 ahpuoj-judger 镜像
 
 ```bash
 cd docker
-docker build judger -t ahpuoj_judger:1.0.0
+docker build judger -t ahpuoj_judger:1.1.0
 ```
 
 如果构建下载阶段出错，请尝试更换 ubuntu 源解决

@@ -46,7 +46,7 @@ func ShowSeries(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
-		"series":  series.Response(),
+		"series":  series,
 	})
 }
 
@@ -119,7 +119,7 @@ func UpdateSeries(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "编辑系列赛成功",
-		"series":  series.Response(),
+		"series":  series,
 	})
 }
 

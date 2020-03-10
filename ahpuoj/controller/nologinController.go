@@ -259,11 +259,11 @@ func NologinGetSolutionList(c *gin.Context) {
 		return
 	}
 
-	solutions := make([]map[string]interface{}, 0)
+	solutions := []model.Solution{}
 	for rows.Next() {
 		var solution model.Solution
 		rows.StructScan(&solution)
-		solutions = append(solutions, solution.Response())
+		solutions = append(solutions, solution)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -325,16 +325,15 @@ func NologinGetSolution(c *gin.Context) {
 		DB.Get(&compileInfo, "select error from compileinfo where solution_id = ?", solution.Id)
 	}
 
-	responseData := make(map[string]interface{}, 0)
-	responseData["runtime_info"] = runtimeInfo
-	responseData["compile_info"] = compileInfo
-	responseData["source"] = source
-	for k, v := range solution.Response() {
-		responseData[k] = v
-	}
+	meta := make(map[string]interface{}, 0)
+	meta["runtime_info"] = runtimeInfo
+	meta["compile_info"] = compileInfo
+	meta["source"] = source
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "数据获取成功",
-		"solution": responseData,
+		"solution": solution,
+		"meta":	meta,
 		"seeable":  seeable,
 	})
 }
@@ -345,11 +344,11 @@ func NologinGetAllTags(c *gin.Context) {
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-	var tags []map[string]interface{}
+	tags := []model.Tag{}
 	for rows.Next() {
 		var tag model.Tag
 		rows.StructScan(&tag)
-		tags = append(tags, tag.Response())
+		tags = append(tags, tag)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
@@ -905,11 +904,11 @@ func NologinGetSeriesList(c *gin.Context) {
 		return
 	}
 
-	var serieses []map[string]interface{}
+	serieses := []model.Series{}
 	for rows.Next() {
 		var series model.Series
 		rows.StructScan(&series)
-		serieses = append(serieses, series.Response())
+		serieses = append(serieses, series)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -971,7 +970,7 @@ func NologinGetSeries(c *gin.Context) {
 	if contestCount == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"message":      "数据获取成功",
-			"series":       series.Response(),
+			"series":       series,
 			"userranklist": userSeriesRankInfoList,
 		})
 		return
@@ -1039,7 +1038,7 @@ func NologinGetSeries(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "数据获取成功",
-		"series":       series.Response(),
+		"series":       series,
 		"userranklist": userSeriesRankInfoList,
 	})
 }
@@ -1320,11 +1319,11 @@ func NologinGetRankList(c *gin.Context) {
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
-	var users []map[string]interface{}
+	users := []model.User{}
 	for rows.Next() {
 		var user model.User
 		rows.StructScan(&user)
-		users = append(users, user.Response())
+		users = append(users, user)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",

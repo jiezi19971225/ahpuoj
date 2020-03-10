@@ -4,6 +4,8 @@ import (
 	"ahpuoj/model"
 	"ahpuoj/request"
 	"ahpuoj/utils"
+	"ahpuoj/service/rabbitmq"
+	"encoding/json"
 	"crypto/sha1"
 	"fmt"
 	"net/http"
@@ -13,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
+	"github.com/gomodule/redigo/redis"
 	"github.com/gin-gonic/gin"
 )
 
@@ -100,8 +102,6 @@ func ResetPassword(c *gin.Context) {
 // 用户提交测试运行的接口
 func SubmitToTestRun(c *gin.Context) {
 	var err error
-
-	user, _ := GetUserInstance(c)
 	var req struct {
 		Language  int    `json:"language" binding:"gte=0,lte=17"`
 		InputText string `json:"input_text"  binding:"max=65535"`
@@ -112,73 +112,47 @@ func SubmitToTestRun(c *gin.Context) {
 		return
 	}
 
-	// 提交记录
-	solution := model.Solution{
-		ProblemId:  0,
-		TeamId:     0,
-		UserId:     user.Id,
-		ContestId:  0,
-		Num:        0,
-		IP:         c.ClientIP(),
-		Language:   req.Language,
-		CodeLength: len(req.Source),
-	}
-	err = solution.Save()
-	if utils.CheckError(c, err, "保存提交记录失败") != nil {
-		return
-	}
-	sourceCode := model.SourceCode{
-		SolutionId: solution.Id,
-		Source:     req.Source,
-	}
+	conn := REDISPOOL.Get()
+	defer conn.Close()
+	testrunCount,err := redis.Int(conn.Do("incr","testrun:count"))
+	testrunCountStr:= strconv.Itoa(testrunCount)
+	utils.Consolelog(testrunCount,err)
+	jsondata,_ := json.Marshal(gin.H{
+		"UserId": 0,
+		"TestrunCount": testrunCountStr,
+		"SolutionId": 0,
+		"ProblemId":  0,
+		"Language":   req.Language,
+		"TimeLimit":  1,
+		"MemoryLimit":	64,
+		"Source":req.Source,
+		"InputText":req.InputText,
+	})
 
-	err = sourceCode.Save()
-	if utils.CheckError(c, err, "保存代码记录失败") != nil {
-		return
-	}
-
-	// 保存用户输入
-	customInput := model.CustomInput{
-		SolutionId: solution.Id,
-		InputText:  req.InputText,
-	}
-	err = customInput.Save()
-	if utils.CheckError(c, err, "保存用户输入失败") != nil {
-		return
-	}
-
-	// 更新提交状态为等待评判
-	_, err = DB.Exec("update solution set result = 0 where solution_id = ?", solution.Id)
-
+	rabbitmq.Publish("oj","problem",jsondata)
 	// 等待评测机评判
-	var result int
+	var reinfo,ceinfo,costomOut string
+	queryTimes := 0
 	for {
-		DB.Get(&result, "select  result from solution where solution_id = ?", solution.Id)
-		if result >= 10 && result <= 13 {
+		queryTimes += 1
+		if(queryTimes > 100){
 			break
 		}
-		time.Sleep(time.Second)
+		exist,_ := redis.Int(conn.Do("exists","testrun:"+testrunCountStr))
+		if exist == 1{
+			values,_ :=redis.Values(conn.Do("hmget","testrun:"+testrunCountStr,"ceinfo","reinfo","custom_out"))
+			redis.Scan(values,&reinfo,&ceinfo,&costomOut)
+		}else{
+			time.Sleep(time.Second)
+		}
 	}
-
-	// 获取结果
-	var runtimeinfo string
-	var compileinfo string
-	var customOutput string
-
-	err = DB.Get(&runtimeinfo, "select error from runtimeinfo where solution_id = ?", solution.Id)
-	if err == nil {
-		customOutput = runtimeinfo
+	customOutput := reinfo
+	if len(ceinfo) > 0 {
+		customOutput = ceinfo
 	}
-	err = DB.Get(&compileinfo, "select error from compileinfo where solution_id = ?", solution.Id)
-	if err == nil {
-		customOutput = compileinfo
+	if len(costomOut) > 0 {
+		customOutput = costomOut
 	}
-
-	// 删除测试运行的记录
-	DB.Exec("delete from solution where solution_id = ?", solution.Id)
-	DB.Exec("delete from runtimeinfo where solution_id = ?", solution.Id)
-	DB.Exec("delete from compileinfo where solution_id = ?", solution.Id)
-	DB.Exec("delete from source_code where solution_id = ?", solution.Id)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "测试运行成功",
@@ -278,11 +252,23 @@ func SubmitToJudge(c *gin.Context) {
 			return
 		}
 
-		// 更新提交状态为等待评判
-		_, err = DB.Exec("update solution set result = 0 where solution_id = ?", solution.Id)
+		// 将判题任务推入消息队列
+		jsondata,_ := json.Marshal(gin.H{
+			"UserId": user.Id,
+			"TestrunCount": 0,
+			"SolutionId":	solution.Id,
+			"ProblemId":   req.ProblemId,
+			"Language":   req.Language,
+			"TimeLimit":  problem.TimeLimit,
+			"MemoryLimit":	problem.MemoryLimit,
+			"Source":req.Source,
+			"InputText": "",
+		})
+		rabbitmq.Publish("oj","problem",jsondata)
+
 		c.JSON(http.StatusOK, gin.H{
 			"message":  "提交成功",
-			"solution": solution.Response(),
+			"solution":solution,
 		})
 	} else {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{

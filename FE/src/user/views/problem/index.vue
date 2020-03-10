@@ -196,65 +196,62 @@ export default {
   },
   methods: {
     async init() {
-      const self = this;
       const res = await getLanguageList();
       this.langList = res.data.languages;
-      const id = Number.parseInt(self.$route.params.id, 10);
+      const id = Number.parseInt(this.$route.params.id, 10);
       try {
         // 如果是普通题目路由
-        if (self.$route.name === 'problem') {
+        if (this.$route.name === 'problem') {
           const res2 = await getProblem(id);
           const { data } = res2;
-          self.problem = data.problem;
-          self.form.problem_id = self.problem.id;
-          self.testRunForm.input_text = data.problem.sample_input;
-          self.outputText = `结果应为\n${data.problem.sample_output}`;
+          this.problem = data.problem;
+          this.form.problem_id = this.problem.id;
+          this.testRunForm.input_text = data.problem.sample_input;
+          this.outputText = `结果应为\n${data.problem.sample_output}`;
         } else {
           // 如果是比赛题目路由
-          const num = Number.parseInt(self.$route.params.num, 10);
+          const num = Number.parseInt(this.$route.params.num, 10);
           const res2 = await getContestProblem(id, num);
           console.log(res);
           const { data } = res2;
-          self.problem = data.problem;
-          self.form.problem_id = self.problem.id;
-          self.form.contest_id = id;
-          self.form.num = num;
-          self.testRunForm.input_text = data.problem.sample_input;
+          this.problem = data.problem;
+          this.form.problem_id = this.problem.id;
+          this.form.contest_id = id;
+          this.form.num = num;
+          this.testRunForm.input_text = data.problem.sample_input;
         }
         this.copyInputBtn = new Clipboard(this.$refs.copyInputBtn);
         this.copyOutputBtn = new Clipboard(this.$refs.copyOutputBtn);
       } catch (err) {
         console.log(err);
-        self.$router.replace({ name: '404Page' });
+        this.$router.replace({ name: '404Page' });
       }
     },
     handleCopyInput() {
-      const self = this;
-      const clipboard = self.copyInputBtn;
+      const clipboard = this.copyInputBtn;
       clipboard.on('success', () => {
-        self.$message({
+        this.$message({
           message: '复制成功',
           type: 'success',
         });
       });
       clipboard.on('error', () => {
-        self.$message({
+        this.$message({
           message: '复制失败，请手动复制',
           type: 'error',
         });
       });
     },
     handleCopyOutput() {
-      const self = this;
-      const clipboard = self.copyOutputBtn;
+      const clipboard = this.copyOutputBtn;
       clipboard.on('success', () => {
-        self.$message({
+        this.$message({
           message: '复制成功',
           type: 'success',
         });
       });
       clipboard.on('error', () => {
-        self.$message({
+        this.$message({
           message: '复制失败，请手动复制',
           type: 'error',
         });
@@ -295,42 +292,41 @@ export default {
       }
     },
     async submitToTestRun() {
-      const self = this;
-      if (self.form.source.length === 0) {
-        self.$message({
+      if (this.form.source.length === 0) {
+        this.$message({
           message: '代码不能为空',
           type: 'error',
         });
         return;
       }
-      self.testRunForm.source = self.form.source;
-      self.testRunForm.language = self.form.language;
-      self.outputText = '正在评测中，耐心请等待.......';
+      this.testRunForm.source = this.form.source;
+      this.testRunForm.language = this.form.language;
+      this.outputText = '正在评测中，耐心请等待.......';
 
       // 短暂时间内无法重复提交评测
       let countDown = testRunInterval;
-      self.testrunDisabled = true;
-      self.testrunButtonText = `测试运行（${countDown}）`;
+      this.testrunDisabled = true;
+      this.testrunButtonText = `测试运行（${countDown}）`;
       const t = setInterval(() => {
         if (countDown === 0) {
           clearInterval(t);
-          self.testrunDisabled = false;
-          self.testrunButtonText = '测试运行';
+          this.testrunDisabled = false;
+          this.testrunButtonText = '测试运行';
         } else {
           countDown -= 1;
-          self.testrunButtonText = `测试运行（${countDown}）`;
+          this.testrunButtonText = `测试运行（${countDown}）`;
         }
       }, 1000);
 
       try {
-        const res = await submitTestRunCode(self.testRunForm);
-        self.$message({
+        const res = await submitTestRunCode(this.testRunForm);
+        this.$message({
           message: res.data.message,
           type: 'success',
         });
-        self.outputText = res.data.custom_output;
+        this.outputText = res.data.custom_output;
       } catch (err) {
-        self.$message({
+        this.$message({
           message: err.response.data.message,
           type: 'error',
         });
@@ -338,35 +334,34 @@ export default {
       }
     },
     submitToJudge: debounce(500, async function debounced() {
-      const self = this;
-      self.submitButtonDisabled = true;
-      self.submitButtonInLoading = true;
-      if (self.form.source.length === 0) {
-        self.$message({
+      this.submitButtonDisabled = true;
+      this.submitButtonInLoading = true;
+      if (this.form.source.length === 0) {
+        this.$message({
           message: '代码不能为空',
           type: 'error',
         });
         return;
       }
       try {
-        const res = await submitJudgeCode(self.form);
-        self.$message({
+        const res = await submitJudgeCode(this.form);
+        this.$message({
           message: res.data.message,
           type: 'success',
         });
-        self.$router.push({
+        this.$router.push({
           name: 'solution',
-          params: { id: res.data.solution.id },
+          params: { id: res.data.solution.solution_id },
         });
       } catch (err) {
-        self.$message({
+        this.$message({
           message: err.response.data.message,
           type: 'error',
         });
         console.log(err);
       } finally {
-        self.submitButtonDisabled = false;
-        self.submitButtonInLoading = false;
+        this.submitButtonDisabled = false;
+        this.submitButtonInLoading = false;
       }
     }),
     jumpToIssues() {

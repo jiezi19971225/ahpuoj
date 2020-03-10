@@ -35,22 +35,22 @@
       .main
         h1.content__panel__title 评测记录
         el-table(:data="tableData", style="width: 100%", class="dataTable", v-loading="loading")
-          el-table-column(label="ID", prop="id", width="60")
+          el-table-column(label="ID", prop="solution_id", width="60")
           el-table-column(label="用户",min-width="70")
             template(slot-scope="scope")
-                router-link(:to="{name:'userinfo',params:{id:scope.row.user.id}}")
+                router-link(:to="{name:'userinfo',params:{id:scope.row.user_id}}")
                   .user__avatar__wrapper
-                    img(:src="imgUrl(scope.row.user.avatar)",class="user__avatar")
+                    img(:src="imgUrl(scope.row.avatar)",class="user__avatar")
           el-table-column( min-width="180")
             template(slot-scope="scope")
-              router-link(:to="{name:'userinfo',params:{id:scope.row.user.id}}")
-                span {{`${scope.row.user.nick}`}}
+              router-link(:to="{name:'userinfo',params:{id:scope.row.user_id}}")
+                span {{`${scope.row.nick}`}}
           el-table-column(label="问题", min-width="180")
             template(slot-scope="scope")
-              router-link(:to="{name:'problem',params:{id:scope.row.problem.id}}") {{ $route.name=="status"?`P${scope.row.problem.id} ${scope.row.problem.title}`:`${engNum(scope.row.num)} ${scope.row.problem.title}` }}
+              router-link(:to="{name:'problem',params:{id:scope.row.problem_id}}") {{ $route.name=="status"?`P${scope.row.problem_id} ${scope.row.problem_title}`:`${engNum(scope.row.num)} ${scope.row.problem_title}` }}
           el-table-column(label="评测状态", min-width="80")
             template(slot-scope="scope")
-              router-link(:to="{name:'solution',params:{id:scope.row.id}}")
+              router-link(:to="{name:'solution',params:{id:scope.row.solution_id}}")
                 el-button(size="mini",:type="calcRerultType(scope.row.result)") {{ resultList[scope.row.result]?resultList[scope.row.result].name:"" }}
           el-table-column(label="语言", min-width="80")
             template(slot-scope="scope")
@@ -160,21 +160,20 @@ export default {
 
   methods: {
     async fetchData() {
-      const self = this;
       try {
         const res = await getSolutionList(
-          self.currentPage,
-          self.perpage,
-          self.queryParam,
-          self.nick,
-          self.language,
-          self.result,
-          self.contestId,
+          this.currentPage,
+          this.perpage,
+          this.queryParam,
+          this.nick,
+          this.language,
+          this.result,
+          this.contestId,
         );
         const { data } = res;
         setTimeout(() => {
-          self.tableData = data.data;
-          self.total = data.total;
+          this.tableData = data.data;
+          this.total = data.total;
           this.loading = false;
         }, 200);
       } catch (err) {

@@ -2,11 +2,12 @@ version: "3.2"
 
 services:
   judger:
-    image: ahpuoj_judger:1.0.0
+    image: ahpuoj_judger:1.1.0
     container_name: ahpuojv2_judger
     tty: true
     volumes:
       - ${OJ_DATA_PATH_HOST}:${OJ_DATA_PATH_CONTAINER}${OJ_CODE_CONTAINER_FLAG}
+      - ${OJ_SCHEDULER_PATH_HOST}:${OJ_SCHEDULER_PATH_CONTAINER}${OJ_CODE_CONTAINER_FLAG}
     depends_on:
       - db
     # entrypoint: /usr/local/bin/docker-entrypoint.sh

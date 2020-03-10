@@ -20,7 +20,8 @@ RUN set -ex \
 	nano \
 	python3.7 \
 	wget \
-	busybox
+	busybox \
+	supervisor
 
 RUN set -ex \
 	&& ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
@@ -35,10 +36,10 @@ RUN set -ex \
 WORKDIR /home/judge/
 
 COPY ./assets/docker-entrypoint.sh /usr/local/bin/
-COPY ./core /home/judge/core
 COPY ./assets/judge.conf /home/judge/hustoj_core/etc/judge.conf
 COPY ./assets/java0.policy /home/judge/hustoj_core/etc/java0.policy
 COPY ./assets/install.sh /home/judge/install.sh
+COPY ./assets/supervisor_scheduler.conf /etc/supervisor/conf.d/supervisor_scheduler.conf
 
 RUN set -ex \
 	&& chmod +x /usr/local/bin/docker-entrypoint.sh \
@@ -46,5 +47,3 @@ RUN set -ex \
 
 RUN set -ex \
 	&& chmod a+x /home/judge/install.sh
-
-
