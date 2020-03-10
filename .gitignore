@@ -24,3 +24,7 @@ docker/compose/web/
 /ahpuoj/ahpuoj
 /ahpuoj/config/config.ini
 ahpuoj/.vscode/launch.json
+
+scheduler/config.ini
+scheduler/scheduler
+scheduler/log/
