@@ -364,6 +364,7 @@ $topbar-height: 50px;
 }
 
 .topbar__wrapper {
+  box-sizing: border-box;
   position: relative;
   background: $--color-blue-verydeep;
   border-bottom: 1px solid $--color-blue-deep;

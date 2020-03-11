@@ -3,7 +3,7 @@
     title {{$route.name=="issueList"?`讨论版 总版 - AHPUOJ`:`问题P${$route.params.id}的讨论版 - AHPUOJ`}}
     .content__main
       .one-main(v-if="issueEnable==true")
-        .link.fr
+        .link(style="position:absolute;right:10px;top:10px;")
           router-link(v-if="$route.name=='problemIssueList'",:to="{name:'problem',params:{id:$route.params.id}}") {{`转到问题`}}
         h1.content__panel__title {{$route.name=="issueList"?"讨论版 总版":`问题P${$route.params.id}的讨论版`}}
         .issue__box__list
@@ -24,10 +24,9 @@
                     router-link(v-if="item.problem_id>0",:to="{name:'problem',params:{id:item.problem_id}}") {{`In P${item.problem_id} ${item.problem.title}`}}
                     p(v-else) 总版
                     p.text-muted {{item.reply_count}}条回复 最后回复时间 {{item.updated_at}}
-        el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
-        .mt30
-        h1.content__panel__title 发表新讨论
+        el-pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
+        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        h1.mt30.content__panel__title 发表新讨论
         .post__box__wrapper
           .post__box(v-if="$store.getters.username")
             el-input(placeholder="请输入讨论标题",v-model="issueForm.title",:autofocus="true")
@@ -48,6 +47,12 @@ import { toggleIssueStatus } from 'user/api/admin';
 import { mapState } from 'vuex';
 
 export default {
+  props: {
+    isProblem: {
+      type: Boolean,
+      default: false,
+    },
+  },
   components: {
     TinymceEditor,
   },
@@ -76,7 +81,7 @@ export default {
       device: (state) => state.app.device,
     }),
   },
-  mounted() {
+  activated() {
     this.fetchData();
   },
   methods: {
@@ -175,11 +180,13 @@ export default {
 
 <style lang="scss" scoped>
 .link {
-  font-size: 0.24rem;
+  font-size: 16px;
   line-height: 0.5rem;
   padding-right: 0.2rem;
 }
-
+.issue__box__list{
+  min-height: 400px;
+}
 .issue__box {
   background: $--color-level15;
   position: relative;
@@ -207,12 +214,12 @@ export default {
   }
 
   .issue__user__name {
-    font-size: 0.14rem;
+    font-size: 12px;
   }
 
   .issue__content {
     a {
-      font-size: 0.18rem;
+      font-size: 16px;
     }
 
     box-sizing: border-box;
@@ -220,7 +227,7 @@ export default {
     margin-left: 1rem;
     min-height: 0.8rem;
     text-align: left;
-    font-size: 0.16rem;
+    font-size: 14px;
   }
 
   .issue-content--deleted {
@@ -231,7 +238,7 @@ export default {
   .issue__addon {
     .issue__addon__info {
       a {
-        font-size: 0.16rem;
+        font-size: 14px;
       }
 
       position: absolute;

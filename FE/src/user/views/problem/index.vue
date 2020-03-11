@@ -1,130 +1,83 @@
 <template lang="pug">
-  .content
-    title {{problem?`${problemTitle} - AHPUOJ`:''}}
-    .content__main
-      .siderbar
-        ul.siderbar__item__list
-          li
-            .header 题目信息
-          li
-            ul.submitinfo__list
-              li
-                p 通过
-                p
-                  span(v-if="problem") {{problem.accepted}}
-              li
-                p 提交
-                p
-                  span(v-if="problem") {{problem.submit}}
-          li.problem__infos
-            div
-              span(v-if="problem") {{`时间限制：${problem.time_limit}S`}}
-            div
-              span(v-if="problem") {{`内存限制：${problem.memory_limit}MB`}}
-            div(v-if="$route.name == 'problem'") 难度：
-              template(v-if="problem")
-                el-tag(v-if="problem.level==0", type="success",effect="dark") 简单
-                el-tag(v-if="problem.level==1", type="warnning",effect="dark") 中等
-                el-tag(v-if="problem.level==2", type="danger",effect="dark") 困难
-            li(v-if="$route.name == 'problem'")
-              .mb10 题目标签：
-              ul(class="button-list",v-if="problem")
-                template(v-for="tag in problem.tags")
-                  li
-                    el-button(size="mini",round,@click="handleSearchTag(tag.id)") {{tag.name}}
-
-        .button__wrapper
-          el-button(size="small",type="primary",@click="handleChangeView") {{ problemView?'提交':'返回'}}
-          el-button(size="small",type="primary",v-if="$route.name=='problem'",,@click="jumpToIssues") 讨论版
-          el-button(size="small",type="primary",@click="jumpToSolutions") 记录
-      .main
-        h1.content__panel__title {{problemTitle}}
-        transition(name="fade",mode="out-in",:duration="{ enter: 500, leave: 0 }")
-          .problem_view(v-if="problemView",key="problem")
-            .main__section
-              h3 问题描述
-              div(v-if="problem",v-html="problem.description")
-            .main__section
-              h3 输入
-              div(v-if="problem",v-html="problem.input")
-            .main__section
-              h3 输出
-              div(v-if="problem",v-html="problem.output")
-            .main__section
-              h3 样例输入
-                span(@click="handleCopyInput",ref="copyInputBtn",data-clipboard-action="copy",data-clipboard-target="#input_content",class="copyBtn") 复制
-              div(v-if="problem",id="input_content",style="white-space: pre-wrap;")  {{problem.sample_input}}
-            .main__section
-              h3 样例输出
-                span(@click="handleCopyOutput",ref="copyOutputBtn",data-clipboard-action="copy",data-clipboard-target="#output_content",class="copyBtn")  复制
-              div(v-if="problem",id="output_content",style="white-space: pre-wrap;") {{problem.sample_output}}
-            .main__section
-              h3 提示
-              div(v-if="problem",v-html="problem.hint")
-          .submit_view(v-else,key="submit")
-            el-form.mt5(ref="form",:model="form",class="submit__form romove__clearfix")
-              el-form-item.clearfix
-                el-select(v-model="form.language", placeholder="请选择")
-                  template(v-for="item,index in langList")
-                    el-option(v-if="item.available==true", :key="item.name", :label="item.name", :value="index")
-                el-button.ml10.mt15(type="primary",size="mini",@click="dialogVisible = true") 编辑器快捷键指南
-              el-form-item(style="height:550px;")
-                code-mirror(:code.sync="form.source",:language="form.language")
-              el-form-item
-                el-row
-                  el-col(:span="12")
-                    span 输入
-                    el-input(type="textarea",resize="none",:rows="5",v-model="testRunForm.input_text")
-                  el-col(:span="12")
-                    span 输出
-                    el-input(type="textarea",resize="none",:rows="5",v-model="outputText",disabled,cursor="text")
-              el-form-item
-                el-button(type="success",@click="submitToTestRun",:disabled="testrunDisabled") {{testrunButtonText}}
-                el-button(type="primary",:disabled="submitButtonDisabled",:loading="submitButtonInLoading",@click="submitToJudge") 提交
-    el-dialog.tal(title="快捷键指南",:visible.sync="dialogVisible",width="800px",:close-on-click-modal="false")
-      p 编辑器使用sublime风格的快捷键，部分快捷键可能与系统快捷键有冲突
-      p "Shift-Tab": "减少缩进",
-      p "Shift-Ctrl-K": "删除当前行",
-      p "Alt-Q": "换行",
-      p "Ctrl-T": "交换光标前后的字符",
-      p "Alt-Left": "向左单位性地移动光标",
-      p "Alt-Right": "向右单位性地移动光标",
-      p "Ctrl-Up": "向上移动卷轴",
-      p "Ctrl-Down": "向下移动卷轴",
-      p "Ctrl-L": "选中当前行",
-      p "Shift-Ctrl-L": "先选中多行，再按下快捷键，会在每行行尾插入光标，即可同时编辑这些行",
-      p "Ctrl-Enter": "向下插入新行",
-      p "Shift-Ctrl-Enter": "向上插入新行",
-      p "Ctrl-D": "选中光标所占的文本，继续操作则会选中下一个相同的文本",
-      p "Shift-Ctrl-Space": "选择代码块内的内容（继续选择父代码块）",
-      p "Shift-Ctrl-M": "选择括号内的内容（继续选择父括号）",
-      p "Ctrl-M": "光标移动至括号内结束或开始的位置",
-      p "Shift-Ctrl-Up": "将光标所在行和上一行代码互换",
-      p "Shift-Ctrl-Down": "将光标所在行和下一行代码互换",
-      p "Ctrl-F": "打开编辑器内置搜索工具，支持正则表达式",
-      p "Ctrl-H": "打开编辑器内置替换工具，支持正则表达式",
-      p "Ctrl-/": "单行注释",
-      p "Ctrl-J": "合并选中的多行代码为一行",
-      p "Shift-Ctrl-D": "复制光标所在整行，插入到下一行",
-      p "F9": "对选中的行进行排序",
-      p "Ctrl-F9": "对选中的行进行非大小写敏感排序",
-      p "Ctrl-K Ctrl-K": "删除当前行光标右侧内容",
-      p "Ctrl-K Ctrl-Backspace": "删除当前行光标左侧内容",
-      p "Ctrl-K Ctrl-U": "将光标所在单词转换为大写形式",
-      p "Ctrl-K Ctrl-L": "将光标所在单词转换为小写形式",
-      p "Ctrl-K Ctrl-0": "展开全部代码",
-      p "Ctrl-K Ctrl-J": "展开全部代码",
-      p "Ctrl-Alt-Up": "向上添加多行光标，可同时编辑多行",
-      p "Ctrl-Alt-Down": "向下添加多行光标，可同时编辑多行",
-      p "Ctrl-F3": "向下寻找匹配项",
-      p "Shift-Ctrl-F3": "向上寻找匹配项",
-      p "Alt-F3": "寻找全部匹配项",
-      p "Shift-Ctrl-[": "折叠代码",
-      p "Shift-Ctrl-]": "展开代码",
-      p "F3": "寻找下一个匹配项",
-      p "Shift-F3": "向上寻找下一个匹配项",
-      span(slot="footer" class="dialog-footer")
-        el-button(ref="submitBtn",type="primary",@click="dialogVisible = false") 确 定
+.problem__page
+  title {{problem?`${problemTitle} - AHPUOJ`:''}}
+  .problem__part(ref="problemPart")
+    .problem__header
+      h1.problem__title {{problemTitle}}
+      .header__right
+        el-button(plain,size="mini",type="success",v-if="$route.name=='problem'",,@click="jumpToIssues") 讨论版
+        el-button(plain,size="mini",type="success",@click="jumpToSolutions") 记录
+    .problem__info
+      .info__top
+        div
+          i(class="el-icon-circle-check")
+          span 通过:
+          span {{problem && problem.accepted}}
+        div
+          i(class="el-icon-s-promotion")
+          span 提交:
+          span {{problem && problem.submit}}
+        div
+          i(class="el-icon-time")
+          span 时间限制:
+          span {{problem && problem.time_limit}} S
+        div
+          i(class="el-icon-cpu")
+          span 内存限制:
+          span {{problem && problem.memory_limit}} MB
+        div
+          i(class="el-icon-stopwatch")
+          span 难度:
+          span(v-if="problem && problem.level==0",style="color:#85ce61;") 简单
+          span(v-if="problem && problem.level==1",style="color:#409eff;") 中等
+          span(v-if="problem && problem.level==2",style="color:#f78989;") 困难
+      .info__bottom
+        i(class="el-icon-collection-tag",style="margin-right:5px;")
+        span(style="margin-right:5px;") 标签:
+        template(v-if="problem")
+          el-button(v-for="tag in problem.tags",:key="tag.id",size="mini",round,@click="handleSearchTag(tag.id)") {{tag.name}}
+    .problem__content
+      .main__section
+        b 问题描述
+        div(v-if="problem",v-html="problem.description")
+      .main__section
+        b 输入
+        div(v-if="problem",v-html="problem.input")
+      .main__section
+        b 输出
+        div(v-if="problem",v-html="problem.output")
+      .main__section
+        b 样例输入
+        span.clipboard__btn(style="margin-left:0.04rem;",@click="handleCopyInput",ref="copyInputBtn",data-clipboard-action="copy",data-clipboard-target="#input_content",class="copyBtn") 复制
+        div(v-if="problem",id="input_content",style="white-space: pre-wrap;")  {{problem.sample_input}}
+      .main__section
+        b 样例输出
+        span.clipboard__btn(style="margin-left:0.04rem;",@click="handleCopyOutput",ref="copyOutputBtn",data-clipboard-action="copy",data-clipboard-target="#output_content",class="copyBtn")  复制
+        div(v-if="problem",id="output_content",style="white-space: pre-wrap;") {{problem.sample_output}}
+      .main__section
+        b 提示
+        div(v-if="problem",v-html="problem.hint")
+  .gutter(ref="gutter")
+  .editor__part(ref="editorPart")
+    .editor__header
+      el-select(size="mini",v-model="form.language", placeholder="请选择")
+        template(v-for="item,index in langList")
+          el-option(v-if="item.available==true", :key="item.name", :label="item.name", :value="index")
+      el-button(type="primary",size="mini",@click="dialogVisible = true",style="margin-left:5px;") 快捷键说明
+    .editor__content
+      code-mirror(:code.sync="form.source",:language="form.language")
+    .editor__console
+      .left
+        el-input(type="textarea",resize="none",:rows="4",v-model="testRunForm.input_text",placeholder="在这里输入测试用例")
+      .right
+        el-input(type="textarea",resize="none",:rows="4",v-model="outputText",disablecursor="text",placeholder="这里显示代码运行结果",readonly)
+  .page_footer
+    el-button(plain,size="medium",type="success",@click="submitToTestRun",:disabled="testrunDisabled") {{testrunButtonText}}
+    el-button(size="medium",type="success",:disabled="submitButtonDisabled",:loading="submitButtonInLoading",@click="submitToJudge") 提交
+  el-dialog.tal(title="快捷键指南",:visible.sync="dialogVisible",width="800px",:close-on-click-modal="false")
+    pre {{helpText}}
+    span(slot="footer" class="dialog-footer")
+      el-button(ref="submitBtn",type="primary",@click="dialogVisible = false") 确 定
 </template>
 
 <script>
@@ -143,19 +96,20 @@ import {
 } from 'user/api/user';
 import { throttle, debounce } from 'throttle-debounce';
 import { setInterval, clearInterval } from 'timers';
+import helpText from './shortcutHelp';
 
 export default {
+  name: 'problem',
   components: {
     CodeMirror,
   },
   data() {
     return {
+      helpText,
       testrunDisabled: false,
       testrunButtonText: '测试运行',
-
       submitButtonInLoading: false,
       submitButtonDisabled: false,
-
       outputText: '',
       dialogVisible: false,
       problemView: true,
@@ -163,7 +117,6 @@ export default {
       copyInputBtn: null,
       copyOutputBtn: null,
       langList: [],
-      isFetchedLatestSource: false,
       form: {
         language: 0,
         problem_id: 0,
@@ -193,17 +146,48 @@ export default {
   },
   mounted() {
     this.init();
+    this.$refs.gutter.addEventListener('mousedown', () => {
+      document.onmousemove = (e) => {
+        e = e || window.event;
+        const { clientWidth } = document.documentElement;
+        // clientWidth += 10;
+        // 计算比率
+        const rate = (e.clientX / clientWidth) * 2;
+        this.$refs.problemPart.style.flexGrow = rate;
+        this.$refs.editorPart.style.flexGrow = 2 - rate;
+      };
+      document.onmouseup = (e) => {
+        e = e || window.event;
+        const { clientWidth } = document.documentElement;
+        document.onmousemove = null;
+        document.onmouseup = null;
+      };
+    });
   },
   methods: {
     async init() {
-      const res = await getLanguageList();
-      this.langList = res.data.languages;
+      getLanguageList().then((res) => {
+        this.langList = res.data.languages;
+      });
       const id = Number.parseInt(this.$route.params.id, 10);
       try {
+        // 拉取最近一次提交的代码
+        if (this.$route.name === 'problem') {
+          getLatestSource(id).then((res) => {
+            this.form.language = res.data.sourcecode.language;
+            this.form.source = res.data.sourcecode.source;
+          });
+        } else {
+          const num = Number.parseInt(this.$route.params.num, 10);
+          getLatestContestSource(id, num).then((res) => {
+            this.form.language = res.data.sourcecode.language;
+            this.form.source = res.data.sourcecode.source;
+          });
+        }
         // 如果是普通题目路由
         if (this.$route.name === 'problem') {
-          const res2 = await getProblem(id);
-          const { data } = res2;
+          const res = await getProblem(id);
+          const { data } = res;
           this.problem = data.problem;
           this.form.problem_id = this.problem.id;
           this.testRunForm.input_text = data.problem.sample_input;
@@ -211,9 +195,8 @@ export default {
         } else {
           // 如果是比赛题目路由
           const num = Number.parseInt(this.$route.params.num, 10);
-          const res2 = await getContestProblem(id, num);
-          console.log(res);
-          const { data } = res2;
+          const res = await getContestProblem(id, num);
+          const { data } = res;
           this.problem = data.problem;
           this.form.problem_id = this.problem.id;
           this.form.contest_id = id;
@@ -260,36 +243,6 @@ export default {
     handleSearchTag(tagId) {
       this.$store.dispatch('bus/setTag', tagId);
       this.$router.push({ name: 'problemSet' });
-    },
-    async handleChangeView() {
-      if (this.problemView === true) {
-        // 切换到提交视图，需要检查是否登录
-        if (this.$store.getters.username.length === 0) {
-          EventBus.$emit('goLogin');
-          this.$message({
-            message: '请登录后提交评测',
-            type: 'info',
-          });
-        } else {
-          // 拉取最近一次提交的代码
-          const id = Number.parseInt(this.$route.params.id, 10);
-          if (!this.isFetchedLatestSource) {
-            let res;
-            if (this.$route.name === 'problem') {
-              res = await getLatestSource(id);
-            } else {
-              const num = Number.parseInt(this.$route.params.num, 10);
-              res = await getLatestContestSource(id, num);
-            }
-            this.form.language = res.data.sourcecode.language;
-            this.form.source = res.data.sourcecode.source;
-            this.isFetchedLatestSource = true;
-          }
-          this.problemView = false;
-        }
-      } else {
-        this.problemView = true;
-      }
     },
     async submitToTestRun() {
       if (this.form.source.length === 0) {
@@ -398,24 +351,118 @@ export default {
 };
 </script>
 <style lang="scss" scoped>
-.siderbar__item__list {
-  .submitinfo__list {
-    display: flex;
 
-    li {
-      text-align: center;
-      width: 50%;
-      flex: 0 1 auto;
-
-      p {
-        font-size: 18px;
+.problem__page{
+  .problem__title{
+    font-size: 16px;
+    color:#333;
+  }
+  position: relative;
+  height: calc(100vh - 50px);
+  text-align: left;
+  border-radius: 10px;
+  background: $--color-level15;
+  display: flex;
+  .problem__part,.editor__part{
+    box-sizing: border-box;
+    flex: 1 0 0px;
+    overflow-y: auto;
+  }
+  .dragbar{
+    height: 100%;
+  }
+  .problem__part{
+    padding-left: .2rem;
+    padding-top: .1rem;
+    overflow-y: auto;
+    margin-bottom: 50px;
+    .problem__header{
+      display: flex;
+      .header__right{
+        text-align:right;
+        width: 140px;
+        flex-shrink: 0;
+        margin-right: 0.05rem;
+        margin-left: auto;
+      }
+    }
+    .problem__info{
+      min-height: .3rem;
+      .info__top{
+        display: flex;
+        flex-wrap: wrap;
+        &>*{
+          i{
+            margin-right: .05rem;
+          }
+          margin-right: .2rem;
+        }
+      }
+      .info__bottom{
+        margin-top: .1rem;
+        min-height: .3rem;
+      }
+    }
+    .problem__content{
+      margin-top: .1rem;
+    }
+    .main__section{
+      padding-top: .1rem;
+      border-top: 1px solid #ddd;
+      margin-bottom: .2rem;
+      color:#333;
+    }
+  }
+  .editor__part{
+    padding: 0 .1rem;
+    position: relative;
+    .editor__header{
+      position: absolute;
+      top: 0;
+      width: 100%;
+      height: 50px;
+      box-sizing: border-box;
+      padding: 10px 0;
+    }
+    .editor__content{
+      margin-top: 50px;
+      height: calc(100% - 210px);
+    }
+    .editor__console{
+      height:110px;
+      padding: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      .left,.right{
+        width: 49%;
       }
     }
   }
-
-  .problem__infos {
-    div {
-      margin: 0.1rem 0;
+  .gutter{
+    z-index: 500;
+    cursor: col-resize;
+    width: 10px;
+    height: 100%;
+    box-sizing: border-box;
+    background-color:#eee;
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+    &:hover{
+      background-color:#2d6db3;;
+    }
+  }
+  .page_footer{
+    text-align: right;
+    z-index: 1000;
+    background: #fff;
+    width: 100%;
+    height: 50px;
+    line-height: 50px;
+    border-top: 1px solid #ddd;
+    position: absolute;
+    bottom: 0;
+    .el-button{
+      margin-right: .2rem;
     }
   }
 }

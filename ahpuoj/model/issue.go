@@ -13,7 +13,7 @@ type Issue struct {
 	UserId    int    `db:"user_id" json:"user_id"`
 	CreatedAt string `db:"created_at" json:"created_at"`
 	UpdatedAt string `db:"updated_at" json:"updated_at"`
-	IsDeleted int    `db:"is_deleted"`
+	IsDeleted int    `db:"is_deleted" json:"is_deleted"`
 	// 附加信息
 	Username     string         `db:"username" json:"username"`
 	Nick         string         `db:"nick" json:"nick"`

@@ -94,7 +94,7 @@ export default {
             message: res.data.message,
           });
 
-          row.defunct = !row.defunct;
+          row.defunct = 1 - row.defunct;
         } catch (err) {
           this.$message({
             type: 'error',

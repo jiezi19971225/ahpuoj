@@ -1,7 +1,7 @@
 <template lang="pug">
   .content
     .content__main
-      .one-main
+      .one-main.has__pagination
         h1.content__panel__title 回复列表
         div(v-if="replys&&replys.length==0")
           .reply__box
@@ -15,8 +15,8 @@
               span 中回复了你
               br
               .reply__content(v-html="calcContent(item.content)")
-        el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
+        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
+        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
 </template>
 
 <script>
@@ -56,7 +56,6 @@ export default {
       try {
         const res = await getMyReplys(this.currentPage, this.perpage);
         const { data } = res;
-        console.log(res);
         this.replys = data.replys;
         this.total = data.total;
       } catch (err) {
@@ -78,7 +77,6 @@ export default {
   padding: 0 0.1rem 0.1rem 0.1rem;
   border-bottom: 1px solid $--color-level13;
   text-align: left;
-
   .reply__content {
     border-radius: 5px;
     background: $--color-level14;

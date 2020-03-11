@@ -3,9 +3,9 @@
     title {{contest?`竞赛团队排名 -- ${contest.name} - AHPUOJ`:''}}
     .content__main
       .one-main
-        el-button.fr.mr10(type="primary",@click="exportExcel") 下载excel
         h1.content__panel__title {{contest?`竞赛团队排名 -- ${contest.name}`:""}}
-        el-table(v-if="seeable",:data="tableData", style="width: 100%", class="dataTable",:cell-style="cellStyle")
+        el-button(style="position:absolute;right:10px;top:10px;",plain,size="small",type="primary",@click="exportExcel") 下载excel
+        el-table(size="small",v-if="seeable",:data="tableData",:cell-style="cellStyle")
           el-table-column(label="排名", type="index",min-width="40")
           el-table-column(label="团队名",min-width="160",prop="team.name")
           el-table-column( label="总通过",min-width="70",prop="solved")
@@ -50,18 +50,17 @@ export default {
   },
   methods: {
     async fetctContestTeamRankList() {
-      const self = this;
-      self.loading = true;
+      this.loading = true;
       try {
-        const res = await getContestTeamRankList(self.$route.params.id);
+        const res = await getContestTeamRankList(this.$route.params.id);
         console.log(res);
         const { data } = res;
-        self.tableData = data.teamranklist;
-        self.seeable = data.seeable;
-        self.reason = data.reason;
-        self.contest = data.contest;
+        this.tableData = data.teamranklist;
+        this.seeable = data.seeable;
+        this.reason = data.reason;
+        this.contest = data.contest;
       } catch (err) {
-        self.$router.replace({ name: '404Page' });
+        this.$router.replace({ name: '404Page' });
         console.log(err);
       }
     },
@@ -96,19 +95,11 @@ export default {
         }
       }
     },
-    jumpToContestStatus(row) {
-      this.$store.dispatch('bus/setSolutionFilter', { nick: row.user.nick });
-      this.$router.push({
-        name: 'contestStatus',
-        params: { id: this.contest.id },
-      });
-    },
   },
-
   exportExcel() {
     /* generate workbook object from table */
-    const wb = XLSX.utils.table_to_book(document.querySelector('#ranktable'),{
-      raw:true
+    const wb = XLSX.utils.table_to_book(document.querySelector('#ranktable'), {
+      raw: true,
     });
     /* get binary string as output */
     const wbout = XLSX.write(wb, {
@@ -128,9 +119,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss" scoped>
-.link {
-  padding: 0 0.1rem;
-}
-</style>

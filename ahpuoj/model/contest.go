@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"encoding/json"
 	"time"
 )
 
@@ -26,6 +27,13 @@ type Contest struct {
 	Status       int        `json:"status"` // 1代表未开始 2代表进行中 3代表已结束`
 	ProblemInfos []map[string]interface{}
 }
+
+func (contest *Contest) MarshalJSON() ([]byte, error) {
+	type Alias Contest
+	contest.Description.String = utils.ConvertTextImgUrl(contest.Description.String)
+	return json.Marshal((*Alias)(contest))
+}
+
 
 func (contest *Contest) Save() error {
 	result, err := DB.Exec(`insert into contest

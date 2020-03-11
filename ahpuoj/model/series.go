@@ -16,7 +16,7 @@ type Series struct {
 	UpdatedAt   string `db:"updated_at" json:"updated_at"`
 	IsDeleted   int    `db:"is_deleted" json:"is_deleted"`
 	// 附加信息
-	ContestInfos []map[string]interface{}
+	ContestInfos []map[string]interface{} `json:"contestinfos"`
 }
 
 func (series *Series) Save() error {

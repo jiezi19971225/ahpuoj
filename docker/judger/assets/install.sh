@@ -19,6 +19,7 @@ chown -r judge -R /home/judge/hustoj_core/data
 
 # supervisorctl
 mkdir /home/judge/scheduler/log
+chown judge /home/judge/scheduler/log
 supervisord
 
 # 修改配置文件

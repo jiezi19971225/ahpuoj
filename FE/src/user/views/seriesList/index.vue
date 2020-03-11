@@ -7,19 +7,19 @@
             li
               .section__title 查找系列赛：
               .siderbar__searchbar__wrapper
-                el-input(style="max-width:20em", placeholder="请输入系列赛名称", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
+                el-input(size="small",style="max-width:20em", placeholder="请输入系列赛名称", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
                   el-button(slot="append" icon="el-icon-search", @click="handleSearchByParam")
-      .main
+      .main.has__pagination
         h1.content__panel__title 系列赛列表
-        el-table(:data="tableData", style="width: 100%", class="dataTable")
+        el-table(size="small",:data="tableData")
           el-table-column(label="名称", min-width="180")
             template(slot-scope="scope")
               router-link(:to="{name:'series',params:{id:scope.row.id}}") {{scope.row.name}}
           el-table-column(label="模式", min-width="150")
             template(slot-scope="scope")
-              el-tag(:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark") {{ scope.row.team_mode == 0?"个人系列赛":"团体系列赛" }}
-        el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
+              el-tag(size="small",:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark") {{ scope.row.team_mode == 0?"个人系列赛":"团体系列赛" }}
+        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
+        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
 </template>
 
 <script>
@@ -29,6 +29,7 @@ import { mapState } from 'vuex';
 export default {
   data() {
     return {
+      loading: false,
       currentPage: 1,
       perpage: 10,
       queryParam: '',
@@ -47,38 +48,28 @@ export default {
   },
   methods: {
     async fetchData() {
-      console.log('??');
-      const self = this;
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      this.loading = true;
       try {
         const res = await getSeriesList(
-          self.currentPage,
-          self.perpage,
-          self.queryParam,
+          this.currentPage,
+          this.perpage,
+          this.queryParam,
         );
-        console.log(res);
         const { data } = res;
-        self.tableData = data.data;
-        self.total = data.total;
+        this.tableData = data.data;
+        this.total = data.total;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
     },
     handleSearchByParam() {
       this.currentPage = 1;
-      this.loading = true;
       this.fetchData();
-    },
-    spliteDate(dateTimeString) {
-      return dateTimeString.split(' ')[0];
-    },
-    spliteTime(dateTimeString) {
-      return dateTimeString.split(' ')[1];
     },
   },
 };
 </script>
-<style lang="scss" scoped>
-</style>

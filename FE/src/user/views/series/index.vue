@@ -8,7 +8,7 @@
             .header 系列赛信息
           li 模式：
               template(v-if="series")
-                el-tag(:type="series.team_mode == 0 ? 'success':'primary'",effect="dark")  {{ series.team_mode == 0?"个人系列赛":"团体系列赛" }}
+                el-tag(size="small",:type="series.team_mode == 0 ? 'success':'primary'",effect="dark")  {{ series.team_mode == 0?"个人系列赛":"团体系列赛" }}
 
       .main
         h1.content__panel__title {{series?series.name:''}}
@@ -17,7 +17,7 @@
           div(v-if="series",v-html="series.description")
         .main__section
           h3 竞赛列表
-          el-table.dataTable(v-if="series",:data="series.contestinfos", style="width: 100%")
+          el-table(size="small",v-if="series",:data="series.contestinfos")
             el-table-column(width="90")
               template(slot-scope="scope")
                 el-tag(v-if="scope.row.status==1", type="success",effect="dark") 未开始
@@ -28,7 +28,7 @@
                 router-link(:to="{name:'contest',params:{id:scope.row.id}}") {{scope.row.name}}
         .main__section
           h3 参赛人员信息
-          el-table.dataTable(v-if="series",:data="userRankList", style="width: 100%")
+          el-table(size="small",v-if="series",:data="userRankList")
             el-table-column(label="用户名",min-width="160")
               template(slot-scope="scope")
                   router-link(:to="{name:'userinfo',params:{id:scope.row.user.id}}")  {{scope.row.user.username}}
@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import { getSeries, getLanguageList } from 'user/api/nologin';
+import { getSeries } from 'user/api/nologin';
 
 import EventBus from 'common/eventbus';
 import { submitJudgeCode } from 'user/api/user';
@@ -56,7 +56,6 @@ export default {
       reason: '',
       series: null,
       userRankList: [],
-      langList: [],
     };
   },
   mounted() {
@@ -64,26 +63,17 @@ export default {
   },
   methods: {
     async init() {
-      console.log('initing');
-      const self = this;
-      const res = await getLanguageList();
-      this.langList = res.data.languages;
-      const { id } = self.$route.params;
+      const { id } = this.$route.params;
       try {
-        const res2 = await getSeries(id);
-        const { data } = res2;
-        self.series = data.series;
-        self.userRankList = data.userranklist;
+        const res = await getSeries(id);
+        const { data } = res;
+        this.series = data.series;
+        this.userRankList = data.userranklist;
       } catch (err) {
         console.log(err);
-        self.$router.replace({ name: '404Page' });
+        this.$router.replace({ name: '404Page' });
       }
     },
-  },
-  beforeRouteUpdate(to, from, next) {
-    console.log('beforeRouteUpdate!!');
-    this.init();
-    next();
   },
 };
 </script>

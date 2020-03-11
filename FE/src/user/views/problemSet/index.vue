@@ -8,7 +8,7 @@
           li
             .section__title 查找问题：
             .siderbar__searchbar__wrapper
-              el-input(style="max-width:20em", placeholder="请输入问题名或ID", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
+              el-input(size="small",style="max-width:20em", placeholder="请输入问题名或ID", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
                 el-button(slot="append" icon="el-icon-search", @click="handleSearchByParam")
             .tags__wrapper
           li
@@ -30,9 +30,9 @@
               template(v-for="tag in tags")
                 li
                   el-button(size="mini",round,:class="[tagId == tag.id?'is-active':'']",@click="handleSearchByTag(tag.id)") {{tag.name}}
-      .main
+      .main.has__pagination
         h1.content__panel__title 问题列表
-        el-table(:data="tableData", style="width: 100%", class="dataTable", v-loading="loading")
+        el-table(size="small",:data="tableData",v-loading="loading")
           el-table-column(width="40")
             template(slot-scope="scope")
               svg-icon(name="ok",v-if="scope.row.status == 1")
@@ -43,18 +43,18 @@
               router-link(:to="{name:'problem',params:{id:scope.row.id}}") {{scope.row.title}}
           el-table-column(label="难度", min-width="60",align="center")
             template(slot-scope="scope")
-              el-tag(v-if="scope.row.level==0",type="success",effect="dark") 简单
-              el-tag(v-if="scope.row.level==1",type="warnning",effect="dark") 中等
-              el-tag(v-if="scope.row.level==2",type="danger",effect="dark") 困难
+              el-tag(size="small",v-if="scope.row.level==0",type="success",effect="dark") 简单
+              el-tag(size="small",v-if="scope.row.level==1",type="warnning",effect="dark") 中等
+              el-tag(size="small",v-if="scope.row.level==2",type="danger",effect="dark") 困难
           el-table-column(label="标签", min-width="160",align="center")
             template(slot-scope="scope")
-              el-tag(v-for="tag in scope.row.tags",type="info",:key="tag.id",style="margin-left:3px;",effect="dark") {{tag.name}}
+              el-tag(size="small",v-for="tag in scope.row.tags",type="info",:key="tag.id",style="margin-left:3px;",effect="dark") {{tag.name}}
           el-table-column(label="通过率", min-width="80",align="center")
             template(slot-scope="scope") {{calcRate(scope.row)}}
           el-table-column(label="通过", prop="accepted", min-width="60",align="center")
           el-table-column(label="提交", prop="submit", min-width="60",align="center")
-        el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
+        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
+        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
 </template>
 
 <script>
@@ -62,11 +62,12 @@ import { getProblemList, getAllTags } from 'user/api/nologin';
 import { mapState } from 'vuex';
 
 export default {
+  name: 'problemSet',
   data() {
     return {
       loading: false,
       currentPage: 1,
-      perpage: 20,
+      perpage: 50,
       queryParam: '',
       tableData: [],
       total: 0,
@@ -88,7 +89,6 @@ export default {
     this.tags = res.data.tags;
   },
   activated() {
-    console.log(this.$store.getters.tagId);
     if (this.$store.getters.tagId !== -1) {
       this.tagId = this.$store.getters.tagId;
       this.fetchData();
@@ -97,32 +97,28 @@ export default {
   },
   methods: {
     async fetchData() {
-      const self = this;
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      self.loading = true;
+      this.loading = true;
       try {
         const res = await getProblemList(
-          self.currentPage,
-          self.perpage,
-          self.queryParam,
-          self.level,
-          self.tagId,
+          this.currentPage,
+          this.perpage,
+          this.queryParam,
+          this.level,
+          this.tagId,
         );
         const { data } = res;
-        setTimeout(() => {
-          self.tableData = data.data;
-          self.total = data.total;
-          self.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
       this.$store.dispatch('bus/resetTag');
     },
     handleSearchByResetConf() {
-      this.loading = true;
       this.level = -1;
       this.tagId = -1;
       this.queryParam = '';
@@ -130,24 +126,21 @@ export default {
     },
     handleSearchByParam() {
       this.currentPage = 1;
-      this.loading = true;
       this.fetchData();
     },
     handleSearchByLevel(level) {
       this.currentPage = 1;
-      this.loading = true;
       this.level = level;
       this.fetchData();
     },
     handleSearchByTag(tagId) {
       this.currentPage = 1;
-      this.loading = true;
       this.tagId = tagId;
       this.fetchData();
     },
     calcRate(row) {
       const rate = row.submit === 0 ? 0 : row.accepted / row.submit;
-      return `${Number(rate * 100).toFixed(2)}%`;
+      return `${(rate * 100).toFixed(2)}%`;
     },
   },
 };

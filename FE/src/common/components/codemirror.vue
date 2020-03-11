@@ -1,5 +1,5 @@
 <template lang="pug">
-    codemirror(v-model="mycode", :options="cmOptions", @input="onCmCodeChange")
+  codemirror(v-model="mycode", :options="cmOptions", @input="onCmCodeChange",style="height:100%;")
 </template>
 
 <script>
@@ -85,10 +85,11 @@ export default {
     };
   },
   watch: {
-    language() {
-      console.log(this.map.get(this.language));
-      this.cmOptions.mode = this.map.get(this.language);
-      console.log(this.cmOptions.mode);
+    language(val) {
+      this.cmOptions.mode = this.map.get(val);
+    },
+    code(val) {
+      this.mycode = val;
     },
   },
   mounted() {
@@ -122,10 +123,10 @@ export default {
 
 .CodeMirror {
   line-height: 20px;
-  height: 550px;
+  height: 100%;
 }
 
 .CodeMirror-sizer {
-  margin-left: 50px !important;
+  // margin-left: 50px !important;
 }
 </style>

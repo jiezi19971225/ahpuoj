@@ -3,7 +3,7 @@
     title {{issue?`${issue.title} - AHPUOJ`:''}}
     .content__main
       .one-main(v-if="issueEnable==true")
-        .link.fr(v-if="issue")
+        .link(v-if="issue",style="position:absolute;right:10px;top:10px;")
           span 板块&nbsp;
           router-link(v-if="issue.problem_id == 0",:to="{name:'issueList'}") {{`总板`}}
           router-link(v-else,:to="{name:'problemIssueList',params:{id:issue.problem_id}}") {{`问题P ${issue.ptitle}`}}
@@ -47,7 +47,7 @@
         el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
         :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
 
-        h1.content__panel__title 发表新回复
+        h1.mt20.content__panel__title 发表新回复
         .post__box__wrapper
           .post__box(v-if="$store.getters.username")
             tinymce-editor.mt10(v-model="replyContent",:height="300")
@@ -56,10 +56,10 @@
       div(v-else-if="issueEnable==false")
         p 讨论版功能已经被管理员关闭
       div(v-else)
-    el-dialog(title="回复内容", :visible.sync="dialogFormVisible", @closed="closeDialog", @opened="openDialog", width="8rem",:close-on-click-modal="false")
-      tinymce-editor.mt10(v-model="subReplyContent",:height="300")
+    el-dialog(title="回复内容", :visible.sync="dialogFormVisible", @closed="closeDialog", width="8rem",:close-on-click-modal="false")
+      tinymce-editor(v-model="subReplyContent",:height="300")
       .dialog-footer(slot="footer")
-        el-button(@click="this.dialogFormVisible = false") 取消
+        el-button(@click="dialogFormVisible = false") 取消
         el-button(type="primary", native-type="submit", @click="reply(2)") 确定
 </template>
 
@@ -122,9 +122,6 @@ export default {
       } catch (err) {
         console.log(err);
       }
-    },
-    openDialog() {
-      console.log('open');
     },
     closeDialog() {
       this.subReplyContent = '';

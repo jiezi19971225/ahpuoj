@@ -1,7 +1,7 @@
 <template lang="pug">
   .content
     .content__main
-      .one-main
+      .one-main(style="text-align:center;")
         p(class="welcome__title") 欢迎使用AHPUOJ
         .carousel__wrapper
           el-carousel(trigger="click",height="400px", indicator-position="outside")
@@ -45,13 +45,12 @@ export default {
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      const self = this;
       try {
-        const res = await getNewList(self.currentPage, self.perpage);
+        const res = await getNewList(this.currentPage, this.perpage);
         console.log(res);
         const { data } = res;
-        self.newList = data.data;
-        self.total = data.total;
+        this.newList = data.data;
+        this.total = data.total;
       } catch (err) {
         console.log(err);
       }

@@ -48,31 +48,30 @@ export default {
   },
   mounted() {},
   methods: {
-    sendEmail: debounce(500, () => {
-      const self = this;
-      self.submitButtonDisabled = true;
-      self.submitButtonInLoading = true;
-      self.$refs.form.validate(async (valid) => {
+    sendEmail: debounce(500, function debounced() {
+      this.submitButtonDisabled = true;
+      this.submitButtonInLoading = true;
+      this.$refs.form.validate(async (valid) => {
         if (valid) {
           try {
-            const res = await sendFindPassEmail(self.form);
-            self.$message({
+            const res = await sendFindPassEmail(this.form);
+            this.$message({
               message: res.data.message,
               type: 'success',
             });
           } catch (err) {
             console.log(err);
-            self.$message({
+            this.$message({
               message: err.response.data.message,
               type: 'error',
             });
           } finally {
-            self.submitButtonDisabled = false;
-            self.submitButtonInLoading = false;
+            this.submitButtonDisabled = false;
+            this.submitButtonInLoading = false;
           }
         } else {
-          self.submitButtonDisabled = false;
-          self.submitButtonInLoading = false;
+          this.submitButtonDisabled = false;
+          this.submitButtonInLoading = false;
           return false;
         }
       });

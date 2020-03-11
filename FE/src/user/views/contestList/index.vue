@@ -7,33 +7,27 @@
             .tags__wrapper
               .section__title 查找竞赛：
               .siderbar__searchbar__wrapper
-                el-input(style="max-width:20em", placeholder="请输入竞赛名称", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
+                el-input(size="small",style="max-width:20em", placeholder="请输入竞赛名称", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
                   el-button(slot="append" icon="el-icon-search", @click="handleSearchByParam")
-      .main
+      .main.has__pagination
         h1.content__panel__title 竞赛列表
-        el-table(:data="tableData", style="width: 100%", class="dataTable")
+        el-table(size="small",:data="tableData",v-loading="loading")
           el-table-column(width="90")
             template(slot-scope="scope")
-              el-tag(v-if="scope.row.status==1",type="success",effect="dark") 未开始
-              el-tag(v-if="scope.row.status==2",type="primary",effect="dark") 进行中
-              el-tag(v-if="scope.row.status==3",type="danger",effect="dark") 已结束
+              el-tag(size="small",v-if="scope.row.status==1",type="success",effect="dark") 未开始
+              el-tag(size="small",v-if="scope.row.status==2",type="primary",effect="dark") 进行中
+              el-tag(size="small",v-if="scope.row.status==3",type="danger",effect="dark") 已结束
           el-table-column(label="名称", min-width="180")
             template(slot-scope="scope")
               router-link(:to="{name:'contest',params:{id:scope.row.id}}") {{scope.row.name}}
           el-table-column(label="模式", min-width="150")
             template(slot-scope="scope")
-              el-tag(:type="scope.row.private == 0 ? 'success':'danger'",effect="dark") {{ scope.row.private == 0?"公开赛":"私有赛" }}
-              el-tag(:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark",style="margin-left:3px;") {{ scope.row.team_mode == 0?"个人赛":"团体赛" }}
-          el-table-column(label="开始时间", min-width="100")
-            template(slot-scope="scope")
-              span(class="contestlist__time__tag") {{spliteDate(scope.row.start_time)}}&nbsp
-              span(class="contestlist__time__tag") {{spliteTime(scope.row.start_time)}}
-          el-table-column(label="结束时间", min-width="100")
-            template(slot-scope="scope")
-              span(class="contestlist__time__tag") {{spliteDate(scope.row.end_time)}}&nbsp
-              span(class="contestlist__time__tag") {{spliteTime(scope.row.end_time)}}
-        el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
+              el-tag(size="small",:type="scope.row.private == 0 ? 'success':'danger'",effect="dark") {{ scope.row.private == 0?"公开赛":"私有赛" }}
+              el-tag(size="small",:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark",style="margin-left:3px;") {{ scope.row.team_mode == 0?"个人赛":"团体赛" }}
+          el-table-column(label="开始时间", min-width="100",prop="start_time")
+          el-table-column(label="结束时间", min-width="100",prop="end_time")
+        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
+        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
 </template>
 
 <script>
@@ -43,8 +37,9 @@ import { mapState } from 'vuex';
 export default {
   data() {
     return {
+      loading: false,
       currentPage: 1,
-      perpage: 10,
+      perpage: 20,
       queryParam: '',
       tableData: [],
       total: 0,
@@ -61,20 +56,20 @@ export default {
   },
   methods: {
     async fetchData() {
-      console.log('??');
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+      this.loading = true;
       try {
         const res = await getContestList(
           this.currentPage,
           this.perpage,
           this.queryParam,
         );
-        console.log(res);
         const { data } = res;
-        this.tableData = data.data.filter(x => x.defunct === 0)
-        this.total = this.tableData.total;
+        this.tableData = data.data.filter((x) => x.defunct === 0);
+        this.total = this.tableData.length;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }

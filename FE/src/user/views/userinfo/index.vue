@@ -53,7 +53,7 @@ export default {
   data() {
     return {
       user: null,
-      chartData:[],
+      chartData: [],
       renderFlag: false,
     };
   },
@@ -71,14 +71,14 @@ export default {
         this.renderFlag = true;
         this.chartData = [
           {
-            legend:'累计通过',
-            data:this.user.recent_solved_statistic
+            legend: '累计通过',
+            data: this.user.recent_solved_statistic,
           },
           {
-            legend:'累计提交',
-            data:this.user.recent_submit_statistic
+            legend: '累计提交',
+            data: this.user.recent_submit_statistic,
           },
-        ]
+        ];
       } catch (err) {
         console.log(err);
       }
@@ -106,12 +106,6 @@ export default {
         },
       });
     },
-  },
-  beforeRouteUpdate(to, from, next) {
-    console.log('beforeRouteUpdate!!');
-    // 必须在下一次生命周期调用，因为当前路由参数还未改变，获取的路由参数还是之前的路由参数
-    this.$nextTick(() => this.init());
-    next();
   },
 };
 </script>

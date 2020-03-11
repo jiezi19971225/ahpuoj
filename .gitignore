@@ -30,3 +30,7 @@ ahpuoj/.vscode/launch.json
 /scheduler/config.ini
 /scheduler/log/
 /scheduler/scheduler
+
+
+# mysql model
+/model/oj.mwb.bak

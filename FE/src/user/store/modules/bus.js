@@ -45,7 +45,6 @@ const bus = {
         queryParam = 0, nick = '', language = -1, result = -1,
       },
     ) {
-      console.log(nick);
       commit('SET_SOLUTION_FILTER', {
         queryParam,
         nick,

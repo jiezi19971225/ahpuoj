@@ -156,7 +156,6 @@ export default {
       this.show = !this.show;
     },
     cropUploadSuccess(res, field) {
-      console.log(res);
       this.$store.dispatch('user/UpdateUserAvatar', res.url);
       this.$message({
         message: '更新头像成功',
@@ -170,25 +169,24 @@ export default {
       });
     },
     submitResetNick() {
-      const self = this;
-      self.$refs.resetNickForm.validate(async (valid) => {
+      this.$refs.resetNickForm.validate(async (valid) => {
         if (valid) {
           try {
-            const res = await resetNick(self.resetNickForm);
-            self.$message({
+            const res = await resetNick(this.resetNickForm);
+            this.$message({
               message: res.data.message,
               type: 'success',
             });
-            self.$store.dispatch('user/UpdateUserInfo', res.data.user);
+            this.$store.dispatch('user/UpdateUserInfo', res.data.user);
           } catch (err) {
             console.log(err);
-            self.$message({
+            this.$message({
               message: err.response.data.message,
               type: 'error',
             });
           }
         } else {
-          self.$message({
+          this.$message({
             message: '昵称不符合要求',
             type: 'error',
           });
@@ -197,25 +195,24 @@ export default {
       });
     },
     submitResetPassword() {
-      const self = this;
-      self.$refs.resetPasswordForm.validate(async (valid) => {
+      this.$refs.resetPasswordForm.validate(async (valid) => {
         if (valid) {
           try {
-            const res = await resetPassword(self.resetPasswordForm);
-            self.$message({
+            const res = await resetPassword(this.resetPasswordForm);
+            this.$message({
               message: res.data.message,
               type: 'success',
             });
-            self.$store.dispatch('user/UpdateUserInfo', res.data.user);
+            this.$store.dispatch('user/UpdateUserInfo', res.data.user);
           } catch (err) {
             console.log(err);
-            self.$message({
+            this.$message({
               message: err.response.data.message,
               type: 'error',
             });
           }
         } else {
-          self.$message({
+          this.$message({
             message: '请检查输入',
             type: 'error',
           });

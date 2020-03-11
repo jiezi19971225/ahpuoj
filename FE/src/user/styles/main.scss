@@ -2,6 +2,23 @@
 @import "~common/styles/variables.scss";
 @import "~common/styles/utils.scss";
 
+// 美化滚动条
+::-webkit-scrollbar-track-piece { //滚动条凹槽的颜色，还可以设置边框属性
+  background-color:#f8f8f8;
+}
+::-webkit-scrollbar {//滚动条的宽度
+  width:9px;
+  height:9px;
+}
+::-webkit-scrollbar-thumb {//滚动条的设置
+  background-color:#dddddd;
+  background-clip:padding-box;
+  min-height:28px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color:#2d6db3;;
+}
+
 html {
   position: relative;
   background: #f0f2f5;
@@ -9,12 +26,14 @@ html {
 }
 
 body {
+  color:#333;
+  font-family: "Microsoft YaHei", sans-serif;
   height: 100%;
-  font-size: 0.16rem;
+  font-size: 0.14rem;
 }
 
 h3 {
-  font-size: 0.2rem;
+  font-size: 18px;
 }
 
 //  修复 导致 vue-image-crop-upload 出现bug 的样式
@@ -33,6 +52,10 @@ h3 {
   border-radius: 0.03rem;
 }
 
+.user__pagination{
+  margin-top: 10px;
+}
+
 .content {
   margin: 0 auto;
 
@@ -44,7 +67,6 @@ h3 {
   padding: 0.2rem 0;
 
   @media screen and (min-width: 1300px) {
-    width: 90%;
     padding: 0.1rem 0.2rem;
   }
 
@@ -54,10 +76,15 @@ h3 {
     margin-bottom: .3rem;
 
     .one-main {
+      position: relative;
       padding: 0.2rem;
       border-radius: 10px;
       background: $--color-level15;
       min-height: 600px;
+      text-align: left;
+      &.has__pagination{
+        padding-bottom: 50px;
+      }
     }
 
     .content__searchbar__wrapper {
@@ -68,20 +95,23 @@ h3 {
     h1.content__panel__title {
       color: $--title-color;
       text-align: left;
-      font-size: 0.26rem;
-      line-height: 0.26rem;
-      padding: 0.1rem 0.1rem 0.1rem 0;
+      font-size: 20px;
+      line-height: 20px;
+      padding: 0 10px 10px 0;
       border-bottom: 1px solid $--color-level13;
     }
 
     .main {
+      position: relative;
       padding: 0.2rem;
       text-align: left;
       border-radius: 10px;
       background: $--color-level15;
       margin-right: 250px;
       min-height: 600px;
-
+      &.has__pagination{
+        padding-bottom: 50px;
+      }
       @media screen and (max-width: 960px) {
         margin-right: 0;
       }
@@ -92,6 +122,12 @@ h3 {
         vertical-align: 0;
         height: 14px;
       }
+    }
+
+    .user__pagination{
+      position: absolute;
+      width: 100%;
+      bottom: 5px;
     }
 
     .main__section {
@@ -174,6 +210,9 @@ h3 {
         position: absolute;
         left: 0;
         bottom: 20px;
+        &>*{
+          margin-left: 10px;
+        }
       }
     }
   }
@@ -213,4 +252,19 @@ h3 {
 .m__svg {
   width: 25px !important;
   height: 25px !important;
+}
+
+.clipboard__btn{
+  cursor: pointer;
+  padding: 4px;
+  color: #67c23a;
+  background: #f0f9eb;
+  border-color: #c2e7b0;
+  border-radius: 3px;
+  text-align: center;
+  &:hover{
+    background: #67c23a;
+    border-color: #67c23a;
+    color: #fff;
+  }
 }

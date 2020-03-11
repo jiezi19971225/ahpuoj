@@ -1,9 +1,9 @@
 <template lang="pug">
   .content
     .content__main
-      .one-main
+      .one-main.has__pagination
         h1.content__panel__title 排名
-        el-table(:data="tableData", style="width: 100%", class="dataTable", v-loading="loading")
+        el-table(size="small",:data="tableData",v-loading="loading")
           el-table-column(label="排名", width="60")
             template(slot-scope="scope")
               span {{ (currentPage-1) * 50 + scope.$index + 1}}
@@ -21,8 +21,8 @@
           el-table-column(label="解决",width="70",prop="solved")
           el-table-column(label="提交",width="70",prop="submit")
 
-        el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
+        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
+        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
 </template>
 
 <script>
@@ -80,9 +80,9 @@ export default {
 <style lang="scss" scoped>
 .user__avatar__wrapper {
   img {
-    width: 50px;
-    height: 50px;
-    border-radius: 25px;
+    width: 40px;
+    height: 40px;
+    border-radius: 40px;
   }
 }
 </style>

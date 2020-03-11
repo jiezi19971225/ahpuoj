@@ -1,8 +1,5 @@
 # AHPUOJv2
 
-// todo
-说明文档待更新
-
 ### 准备
 
 项目部署采用 docker-compose 管理，首先需要构建 ahpuoj-judger 镜像
@@ -13,8 +10,8 @@ docker build judger -t ahpuoj_judger:1.1.0
 ```
 
 如果构建下载阶段出错，请尝试更换 ubuntu 源解决
-
 添加后端配置文件，将 ahpuoj/config/config.ini.example 复制一份，文件名设置为 config.ini，默认不需要更改配置
+添加判题机配置文件 将 scheduler/config.ini.example 复制一份，文件名设置为 config.ini，默认不需要更改配置
 
 ### 开发环境部署
 
@@ -25,6 +22,13 @@ cd docker/compose
 docker-compose up -d
 ```
 
+然后进入 ahpuojv2_judger 容器，运行 install.sh 脚本
+```bash
+docker exec -it ahpuojv2_judger bash
+# 进入容器后 默认在 /home/judge 目录
+bash install.sh
+```
+
 在 windows 系统下，shell 脚本的换行方式应该手动设置为 LF，否则会报错！
 
 #### 启动后端
@@ -32,6 +36,7 @@ docker-compose up -d
 ```bash
 cd ahpuoj
 go run main.go
+# 推荐使用 gowatch 热编译
 ```
 
 #### 启动前端
@@ -39,7 +44,7 @@ go run main.go
 ```bash
 cd FE
 yarn install
-yarn run dev
+yarn run serve
 ```
 
 ### 生产环境部署
@@ -68,12 +73,27 @@ cd FE
 yarn run build
 ```
 
-#### 后端打包
+#### 后端编译
 
 ```bash
 cd ahpuoj
 go build
 ```
+windows 下需要交叉编译 
+
+```bash
+# cmd下
+SET GOOS=linux
+SET GOARCH=amd64
+# powershell下
+$env:CGO_ENABLED=0
+$env:GOOS="linux"
+$env:GOARCH="amd64"
+```
+
+#### 判题机编译
+
+目前阶段判题及采用 cgo 整合, 据我所查 cgo 不支持交叉编译，请在 linux 环境下编译
 
 #### 上传文件
 
@@ -83,8 +103,8 @@ go build
 web
     ├── ahpuoj
     ├── config
-    ├── dist
     └── upload
+    └── js,css,html 等文件
 ```
 
 #### 后端配置

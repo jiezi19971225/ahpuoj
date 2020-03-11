@@ -176,12 +176,12 @@ func NologinGetContestList(c *gin.Context) {
 		return
 	}
 
-	var contests []map[string]interface{}
+	contests := []model.Contest{}
 	for rows.Next() {
 		var contest model.Contest
 		rows.StructScan(&contest)
 		contest.CalcStatus()
-		contests = append(contests, contest.ResponseToUser())
+		contests = append(contests, contest)
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
@@ -578,7 +578,7 @@ func NologinGetContest(c *gin.Context) {
 		"message": "数据获取成功",
 		"seeable": seeable,
 		"reason":  reason,
-		"contest": contest.ResponseToUser(),
+		"contest": contest,
 	})
 }
 

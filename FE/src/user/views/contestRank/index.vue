@@ -3,9 +3,9 @@
     title {{contest?`竞赛排名 -- ${contest.name} - AHPUOJ`:''}}
     .content__main
       .one-main
-        el-button.fr.mr10(type="primary",@click="exportExcel") 下载excel
         h1.content__panel__title {{contest?`竞赛排名 -- ${contest.name}`:""}}
-        el-table(v-if="seeable",:data="tableData", style="width: 100%", class="dataTable",:cell-style="cellStyle",:row-style="rowStyle",id="ranktable")
+        el-button(style="position:absolute;right:10px;top:10px;",plain,size="small",type="primary",@click="exportExcel") 下载excel
+        el-table(size="small",v-if="seeable",:data="tableData",:cell-style="cellStyle",:row-style="rowStyle",id="ranktable")
           el-table-column(label="排名", type="index",min-width="40")
           el-table-column(label="用户名",min-width="160")
             template(slot-scope="scope")
@@ -13,9 +13,9 @@
           el-table-column(label="昵称",min-width="160")
             template(slot-scope="scope")
                 router-link(:to="{name:'userinfo',params:{id:scope.row.user.id}}")  {{scope.row.user.nick}}
-          el-table-column( label="通过",min-width="70")
+          el-table-column( label="通过",min-width="70",align="center")
             template(slot-scope="scope")
-             a.link(@click="jumpToContestStatus(scope.row)") {{scope.row.solved}}
+             a(@click="jumpToContestStatus(scope.row)") {{scope.row.solved}}
           el-table-column(label="罚时", min-width="100")
             template(slot-scope="scope") {{secToTimeStr(scope.row.time)}}
           template(v-if="contest")
@@ -41,7 +41,7 @@ export default {
       timer: 0,
       seeable: false,
       reason: '',
-      firstBloods:[]
+      firstBloods: [],
     };
   },
   beforeDestroy() {
@@ -68,25 +68,23 @@ export default {
         this.reason = data.reason;
         this.contest = data.contest;
 
-        this.firstBloods = []
+        this.firstBloods = [];
         // 计算每个题目的一血
-        this.tableData.forEach((item,i) => {
-          item.ac_time.forEach((time,j) => {
-            if(time > 0){
-              if(!this.firstBloods[j]){
+        this.tableData.forEach((item, i) => {
+          item.ac_time.forEach((time, j) => {
+            if (time > 0) {
+              if (!this.firstBloods[j]) {
                 this.firstBloods[j] = {
-                  index:i,
-                  time
+                  index: i,
+                  time,
                 };
-              }else{
-                if(time < this.firstBloods[j].time){
-                  this.firstBloods[j].index = i
-                  this.firstBloods[j].time = time
-                  }
-                }
+              } else if (time < this.firstBloods[j].time) {
+                this.firstBloods[j].index = i;
+                this.firstBloods[j].time = time;
               }
-            })
-        })
+            }
+          });
+        });
       } catch (err) {
         this.$router.replace({ name: '404Page' });
         console.log(err);
@@ -105,9 +103,9 @@ export default {
     cellStyle({
       row, column, rowIndex, columnIndex,
     }) {
-      const {problemColumnIOffset} = this
-      if(columnIndex >= problemColumnIOffset && this.firstBloods[columnIndex - problemColumnIOffset] && this.firstBloods[columnIndex - problemColumnIOffset].index === rowIndex){ this
-        return `background:#CCCCFF;`
+      const { problemColumnIOffset } = this;
+      if (columnIndex >= problemColumnIOffset && this.firstBloods[columnIndex - problemColumnIOffset] && this.firstBloods[columnIndex - problemColumnIOffset].index === rowIndex) {
+        return 'background:#CCCCFF;';
       }
 
       // 从题目的列开始计算 这一段算法照搬的hustoj的
@@ -141,22 +139,9 @@ export default {
     },
     exportExcel() {
       /* generate workbook object from table */
-      const wb = XLSX.utils.table_to_book(document.querySelector('#ranktable'),{
-        raw:true
+      const wb = XLSX.utils.table_to_book(document.querySelector('#ranktable'), {
+        raw: true,
       });
-      // 格式化 excel
-      // const types = ['n','s','s','n','s']
-      // const [SheetName] = wb.SheetNames
-      // const Sheet1 = wb.Sheets[SheetName]
-      // console.log(Sheet1)
-      // Object.keys(Sheet1).forEach(key => {
-      //   if(typeof Sheet1[key] === 'object' && !Array.isArray(Sheet1[key])){
-      //     const {c:columnIndex,r:rowIndex} = XLSX.utils.decode_cell(key)
-      //     if(columnIndex < types.length && rowIndex > 0){
-      //       Sheet1[key].t = types[columnIndex]
-      //     }
-      //   }
-      // })
 
       /* get binary string as output */
       const wbout = XLSX.write(wb, {
@@ -177,9 +162,3 @@ export default {
   },
 };
 </script>
-
-<style lang="scss" scoped>
-.link {
-  padding: 0 0.1rem;
-}
-</style>

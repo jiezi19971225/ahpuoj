@@ -99,7 +99,7 @@ export default {
             message: res.data.message,
           });
 
-          row.defunct = !row.defunct;
+          row.defunct = 1 - row.defunct;
         } catch (err) {
           self.$message({
             type: 'error',

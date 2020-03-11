@@ -9,7 +9,6 @@ export default [
         path: '',
         name: 'index',
         meta: {
-          keepAlive: true,
           title: '首页 - AHPUOJ',
         },
         component: () => import('../views/home'),
@@ -18,7 +17,6 @@ export default [
         path: 'findpass',
         name: 'findpass',
         meta: {
-          keepAlive: true,
           title: '找回密码 - AHPUOJ',
         },
         component: () => import('../views/findpass'),
@@ -27,7 +25,6 @@ export default [
         path: 'resetpass',
         name: 'resetpass',
         meta: {
-          keepAlive: true,
           title: '重设密码 - AHPUOJ',
         },
         component: () => import('../views/resetpass'),
@@ -39,32 +36,29 @@ export default [
           keepAlive: true,
           title: '问题集 - AHPUOJ',
         },
-        component: () => import('../views/problem_set'),
+        component: () => import('../views/problemSet'),
       },
       {
         path: 'issues',
         name: 'issueList',
         meta: {
-          keepAlive: false,
+          keepAlive: true,
           title: '讨论区 - AHPUOJ',
         },
-        component: () => import('../views/issue_list'),
+        component: () => import('../views/issueList/mainIssueList'),
       },
       {
         path: 'issue/:id',
         name: 'issue',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/issue'),
       },
       {
         path: 'problem/:id/issues',
         name: 'problemIssueList',
         meta: {
-          keepAlive: false,
+          keepAlive: true,
         },
-        component: () => import('../views/issue_list'),
+        component: () => import('../views/issueList/problemIssutList'),
       },
       {
         path: 'status',
@@ -73,7 +67,7 @@ export default [
           keepAlive: true,
           title: '评测机 - AHPUOJ',
         },
-        component: () => import('../views/status'),
+        component: () => import('../views/status/normalStatus'),
       },
       {
         path: 'contest/:id/status',
@@ -82,38 +76,26 @@ export default [
           keepAlive: true,
           title: '评测机 - AHPUOJ',
         },
-        component: () => import('../views/status'),
+        component: () => import('../views/status/contestStatus'),
       },
       {
         path: 'contest/:id/rank',
         name: 'contestRank',
-        meta: {
-          keepAlive: false,
-        },
-        component: () => import('../views/contest_rank'),
+        component: () => import('../views/contestRank'),
       },
       {
         path: 'contest/:id/teamrank',
         name: 'contestTeamRank',
-        meta: {
-          keepAlive: false,
-        },
-        component: () => import('../views/contest_team_rank'),
+        component: () => import('../views/contestTeamRank'),
       },
       {
         path: 'problem/:id',
         name: 'problem',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/problem'),
       },
       {
         path: 'contest/:id/problem/:num',
         name: 'contestProblem',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/problem'),
       },
       {
@@ -123,14 +105,11 @@ export default [
           keepAlive: true,
           title: '竞赛&作业 - AHPUOJ',
         },
-        component: () => import('../views/contest_list'),
+        component: () => import('../views/contestList'),
       },
       {
         path: 'series/:id',
         name: 'series',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/series'),
       },
       {
@@ -140,7 +119,7 @@ export default [
           keepAlive: true,
           title: '系列赛 - AHPUOJ',
         },
-        component: () => import('../views/series_list'),
+        component: () => import('../views/seriesList'),
       },
       {
         path: 'ranklist',
@@ -154,33 +133,25 @@ export default [
       {
         path: 'contest/:id',
         name: 'contest',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/contest'),
       },
       {
         path: 'solution/:id',
         name: 'solution',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/solution'),
       },
       {
         path: 'account',
         name: 'account',
         meta: {
-          keepAlive: false,
           title: '账号设置 - AHPUOJ',
         },
-        component: () => import('../views/account_setting'),
+        component: () => import('../views/accountSetting'),
       },
       {
         path: 'myreplys',
         name: 'myreplys',
         meta: {
-          keepAlive: false,
           title: '查看回复 - AHPUOJ',
         },
         component: () => import('../views/myreplys'),
@@ -188,18 +159,12 @@ export default [
       {
         path: 'userinfo/:id',
         name: 'userinfo',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/userinfo'),
       },
       // hack方法 只刷新路由
       {
         path: 'refresh',
         name: 'refresh',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/refresh'),
       },
 
@@ -207,17 +172,11 @@ export default [
       {
         path: '404',
         name: '404Page',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/404'),
       },
       {
         path: '*',
         name: '404',
-        meta: {
-          keepAlive: false,
-        },
         component: () => import('../views/404'),
       },
     ],

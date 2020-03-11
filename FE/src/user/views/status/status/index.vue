@@ -9,12 +9,12 @@
           li
             .section__title 按问题检索：
             .siderbar__searchbar__wrapper
-              el-input(style="max-width:20em", :placeholder=" $route.name=='status'?'请输入问题名/ID':'请输入题号(如A)'", @keyup.enter.native="handleSearchByProblem", v-model="queryParam", maxlength="20", clearable)
+              el-input(size="small",style="max-width:20em", :placeholder="!isContest?'请输入问题名/ID':'请输入题号(如A)'", @keyup.enter.native="handleSearchByProblem", v-model="queryParam", maxlength="20", clearable)
                 el-button(slot="append" icon="el-icon-search", @click="handleSearchByParam")
           li
             .section__title 按用户检索：
             .siderbar__searchbar__wrapper
-              el-input(style="max-width:20em", placeholder="请输入用户昵称", @keyup.enter.native="handleSearchByNick", v-model="nick", maxlength="20", clearable)
+              el-input(size="small",style="max-width:20em", placeholder="请输入用户昵称", @keyup.enter.native="handleSearchByNick", v-model="nick", maxlength="20", clearable)
                 el-button(slot="append" icon="el-icon-search", @click="handleSearchByNick")
           li
             .section__title 按语言检索：
@@ -32,9 +32,9 @@
               template(v-for="item in searchableResultList")
                 li
                   el-button(size="mini",round,:class="[result==item.code?'is-active':'']", @click="handleSearchByResult(item.code)") {{item.name}}
-      .main
+      .main.has__pagination
         h1.content__panel__title 评测记录
-        el-table(:data="tableData", style="width: 100%", class="dataTable", v-loading="loading")
+        el-table(size="small",:data="tableData", v-loading="loading")
           el-table-column(label="ID", prop="solution_id", width="60")
           el-table-column(label="用户",min-width="70")
             template(slot-scope="scope")
@@ -47,7 +47,7 @@
                 span {{`${scope.row.nick}`}}
           el-table-column(label="问题", min-width="180")
             template(slot-scope="scope")
-              router-link(:to="{name:'problem',params:{id:scope.row.problem_id}}") {{ $route.name=="status"?`P${scope.row.problem_id} ${scope.row.problem_title}`:`${engNum(scope.row.num)} ${scope.row.problem_title}` }}
+              router-link(:to="{name:'problem',params:{id:scope.row.problem_id}}") {{ !isContest?`P${scope.row.problem_id} ${scope.row.problem_title}`:`${engNum(scope.row.num)} ${scope.row.problem_title}` }}
           el-table-column(label="评测状态", min-width="80")
             template(slot-scope="scope")
               router-link(:to="{name:'solution',params:{id:scope.row.solution_id}}")
@@ -64,12 +64,14 @@
           el-table-column(label="代码长度", min-width="80")
             template(slot-scope="scope")
               span {{ calcCodeLength(scope.row.code_length)}}
-          el-table-column(label="评测时间", min-width="75",prop="judgetime")
-          el-table-column(label="公开", min-width="60",v-if="$route.name=='status'")
+          el-table-column(label="评测时间", min-width="75")
+            template(slot-scope="scope")
+              div(style="word-break:break-word;white-space:pre-line;") {{scope.row.judgetime}}
+          el-table-column(label="公开", min-width="60",v-if="!isContest")
             template(slot-scope="scope")
               span {{ scope.row.public == 1?"是":"否"}}
-        el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
+        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
+        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
 </template>
 
 <script>
@@ -78,11 +80,17 @@ import { resultList } from 'common/const';
 import { mapState } from 'vuex';
 
 export default {
+  prop: {
+    isContest: {
+      type: Boolean,
+      default: false,
+    },
+  },
   data() {
     return {
       loading: false,
       currentPage: 1,
-      perpage: 20,
+      perpage: 30,
       tableData: [],
       queryParam: '',
       contestId: 0,
@@ -104,16 +112,6 @@ export default {
       return this.resultList.filter((val, index, arr) => val.code >= 4 && val.code <= 11);
     },
   },
-  watch: {
-    $route(to, from) {
-      if (
-        (from.name === 'contestStatus' && to.name === 'status')
-        || (to.name === 'contestStatus' && from.name === 'status')
-      ) {
-        this.$router.replace({ name: 'refresh' });
-      }
-    },
-  },
   async mounted() {
     const res = await getLanguageList();
     this.resultList = resultList;
@@ -126,7 +124,7 @@ export default {
     }
   },
   activated() {
-    if (this.$route.name === 'contestStatus') {
+    if (this.isContest) {
       this.contestId = this.$route.params.id;
     } else {
       this.contestId = 0;
@@ -157,7 +155,6 @@ export default {
       clearInterval(this.timer);
     }
   },
-
   methods: {
     async fetchData() {
       try {
@@ -246,9 +243,9 @@ export default {
 <style lang="scss" scoped>
 .user__avatar__wrapper {
   img {
-    width: 50px;
-    height: 50px;
-    border-radius: 25px;
+    width: 40px;
+    height: 40px;
+    border-radius: 40px;
   }
 }
 </style>
