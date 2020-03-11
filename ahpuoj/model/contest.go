@@ -25,7 +25,7 @@ type Contest struct {
 	CreatorId    string     `db:"creator_id" json:"creator_id"`
 	Problems     string     `json:"problems"`
 	Status       int        `json:"status"` // 1代表未开始 2代表进行中 3代表已结束`
-	ProblemInfos []map[string]interface{}
+	ProblemInfos []map[string]interface{} `json:"probleminfos"`
 }
 
 func (contest *Contest) MarshalJSON() ([]byte, error) {

@@ -80,7 +80,7 @@ import { resultList } from 'common/const';
 import { mapState } from 'vuex';
 
 export default {
-  prop: {
+  props: {
     isContest: {
       type: Boolean,
       default: false,

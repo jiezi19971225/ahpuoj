@@ -5,8 +5,9 @@
     .problem__header
       h1.problem__title {{problemTitle}}
       .header__right
-        el-button(plain,size="mini",type="success",v-if="$route.name=='problem'",,@click="jumpToIssues") 讨论版
-        el-button(plain,size="mini",type="success",@click="jumpToSolutions") 记录
+        router-link(:to="{name: 'problemIssueList',params: {id: problem && problem.id}}",target="_blank")
+          el-button(plain,size="mini",type="success",v-if="$route.name=='problem'") 讨论版
+        el-button(plain,size="mini",type="success",@click="jumpToSolutions",style="margin-left:10px;") 记录
     .problem__info
       .info__top
         div
@@ -81,12 +82,11 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import CodeMirror from 'common/components/codemirror.vue';
-
 import Clipboard from 'clipboard';
 import { testRunInterval } from 'common/const';
 import { getProblem, getContestProblem, getLanguageList } from 'user/api/nologin';
-
 import EventBus from 'common/eventbus';
 import {
   submitJudgeCode,
@@ -133,6 +133,7 @@ export default {
     };
   },
   computed: {
+    ...mapState(['user']),
     problemTitle() {
       if (this.$route.name === 'problem' && this.problem != null) {
         return `P${this.problem.id}  ${this.problem.title}`;
@@ -171,18 +172,20 @@ export default {
       });
       const id = Number.parseInt(this.$route.params.id, 10);
       try {
-        // 拉取最近一次提交的代码
-        if (this.$route.name === 'problem') {
-          getLatestSource(id).then((res) => {
-            this.form.language = res.data.sourcecode.language;
-            this.form.source = res.data.sourcecode.source;
-          });
-        } else {
-          const num = Number.parseInt(this.$route.params.num, 10);
-          getLatestContestSource(id, num).then((res) => {
-            this.form.language = res.data.sourcecode.language;
-            this.form.source = res.data.sourcecode.source;
-          });
+        // 如果已经登录 拉取最近一次提交的代码
+        if (this.user.username) {
+          if (this.$route.name === 'problem') {
+            getLatestSource(id).then((res) => {
+              this.form.language = res.data.sourcecode.language;
+              this.form.source = res.data.sourcecode.source;
+            });
+          } else {
+            const num = Number.parseInt(this.$route.params.num, 10);
+            getLatestContestSource(id, num).then((res) => {
+              this.form.language = res.data.sourcecode.language;
+              this.form.source = res.data.sourcecode.source;
+            });
+          }
         }
         // 如果是普通题目路由
         if (this.$route.name === 'problem') {
@@ -270,7 +273,6 @@ export default {
           this.testrunButtonText = `测试运行（${countDown}）`;
         }
       }, 1000);
-
       try {
         const res = await submitTestRunCode(this.testRunForm);
         this.$message({
@@ -287,6 +289,10 @@ export default {
       }
     },
     submitToJudge: debounce(500, async function debounced() {
+      if (!this.user.username) {
+        EventBus.$emit('goLogin');
+        return;
+      }
       this.submitButtonDisabled = true;
       this.submitButtonInLoading = true;
       if (this.form.source.length === 0) {
@@ -317,15 +323,6 @@ export default {
         this.submitButtonInLoading = false;
       }
     }),
-    jumpToIssues() {
-      const routerResolve = this.$router.resolve({
-        name: 'problemIssueList',
-        params: {
-          id: this.problem.id,
-        },
-      });
-      window.open(routerResolve.href, '_blank');
-    },
     jumpToSolutions() {
       if (this.$route.name === 'problem') {
         this.$store.dispatch('bus/setSolutionFilter', {
