@@ -10,7 +10,6 @@
                 el-input(size="small",style="max-width:20em", placeholder="请输入竞赛名称", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
                   el-button(slot="append" icon="el-icon-search", @click="handleSearchByParam")
       .main.has__pagination
-        h1.content__panel__title 竞赛列表
         el-table(size="small",:data="tableData",v-loading="loading")
           el-table-column(width="90")
             template(slot-scope="scope")

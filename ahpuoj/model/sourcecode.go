@@ -5,8 +5,9 @@ import (
 )
 
 type SourceCode struct {
-	SolutionId int    `db:"soulution_id"`
+	SolutionId int    `db:"solution_id"`
 	Source     string `db:"source"`
+	Public int `db:"public"`
 }
 
 func (sourceCode *SourceCode) Save() error {
@@ -19,7 +20,7 @@ func (sourceCode *SourceCode) Save() error {
 }
 
 func (sourceCode *SourceCode) Delete() error {
-	result, err := DB.Exec(`delete from source_code where soulution_id = ?`, sourceCode.SolutionId)
+	result, err := DB.Exec(`delete from source_code where solution_id = ?`, sourceCode.SolutionId)
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
 		return errors.New("数据不存在")

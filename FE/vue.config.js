@@ -83,7 +83,7 @@ module.exports = {
     }
     return {
       resolve: {
-      // 引入路径是不用写对应的后缀名
+        // 引入路径是不用写对应的后缀名
         extensions: ['.js', '.vue', '.json'],
         alias: {
           '@': path.resolve(__dirname, 'src'),
@@ -101,8 +101,7 @@ module.exports = {
     port: '8888',
     disableHostCheck: true,
     historyApiFallback: {
-      rewrites: [
-        {
+      rewrites: [{
           from: /^\/$/,
           to: '/index.html',
         },

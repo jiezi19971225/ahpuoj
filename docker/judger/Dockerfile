@@ -19,6 +19,7 @@ RUN set -ex \
 	mysql-client-5.7 \
 	nano \
 	python3.7 \
+	nodejs \
 	wget \
 	busybox \
 	supervisor

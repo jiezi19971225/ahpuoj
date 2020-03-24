@@ -5,7 +5,7 @@
       .siderbar
         ul.siderbar__item__list
           li
-            .header 评测信息
+            .section__title 评测信息
           li(class="userinfo__wrapper align__center")
             div
               router-link(:to="{name:'userinfo',params:{id:solution?solution.user_id:0}}")
@@ -14,10 +14,10 @@
               router-link(:to="{name:'userinfo',params:{id:solution?solution.user_id:0}}") {{solution?solution.nick:""}}
           li
             div.mt10
-              strong 代码
+            span(style="color:#409eff;") 代码
               span(class="fr") {{solution && (langList[solution.language] + " " + solution.code_length+"kb")}}
             div.mt10
-              strong 提交时间
+              span(style="color:#409eff;") 提交时间
               span(class="fr") {{solution && solution.in_date}}
       .main(ref="solutionContent")
         h1.content__panel__title(style="padding-left:0;") 评测详情
@@ -52,7 +52,7 @@
           el-button.mt10(:type="solution.public == 1?'danger':'primary'", @click="handleToggleSolutionStatus") {{solution.public == 1?'隐藏代码':'公开代码'}}
         .main__section
           h3 代码
-          code-mirror(v-if="seeable",:code.sync="meta.source",:language="solution.language",:readonly="true")
+          code-mirror(v-if="seeable",:code.sync="meta.source",:language="solution.language",:readonly="true",style="height:500px;")
           p(v-else) 你没有查看这份代码的权限
 </template>
 
@@ -112,7 +112,9 @@ export default {
   },
   beforeDestroy() {
     // 关闭定时器
-    this.loading.close();
+    if (this.loading) {
+      this.loading.close();
+    }
     if (this.timer) {
       clearInterval(this.timer);
     }
@@ -138,7 +140,7 @@ export default {
           });
           this.timer = setInterval(async () => {
             const res2 = await getSolution(id);
-            const { data:data2 } = res2;
+            const { data: data2 } = res2;
             this.seeable = data2.seeable;
             this.solution = data2.solution;
             this.meta = data2.meta;

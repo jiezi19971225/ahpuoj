@@ -4,7 +4,6 @@
     el-col(:xs="24" :md="12")
       el-card(class="content__card__item")
         h2(class="content__card__title") 重判问题
-        el-alert(title="由于OJ前台和后台管理系统是的两个独立系统，请手动搜索重判结果。" ,type="info", :closable="false",style="margin-bottom:.12rem;")
         el-form(:inline="true",:model="rejudgeSolutionForm",ref="rejudgeSolutionForm",:rules="rejudgeSolutionFormRules",@submit.native.prevent)
           el-form-item(label="重判提交",prop="id")
             el-input(v-model.number="rejudgeSolutionForm.id",@keyup.enter.native="submitRejudgeSolution",placeholder="请输入提交ID")
@@ -32,7 +31,7 @@
 import { rejudgeSolution, rejudgeProblem, reassignProblem } from 'admin/api/problem';
 
 export default {
-  name:"adminRejudgeAndReassignProblem",
+  name: 'adminRejudgeAndReassignProblem',
   data() {
     return {
       rejudgeSolutionForm: {
@@ -88,21 +87,14 @@ export default {
       this.$refs.rejudgeSolutionForm.validate(async (valid) => {
         if (valid) {
           try {
-            console.log(this.rejudgeSolutionForm);
             const res = await rejudgeSolution(this.rejudgeSolutionForm.id);
-            console.log(res);
             this.$message({
               message: res.data.message,
               type: 'success',
             });
 
-            const routerResolve = this.$router.resolve({
-              name: 'solution',
-              params: {
-                id: this.rejudgeSolutionForm.id,
-              },
-            });
-            window.open(routerResolve.href, '_blank');
+            const pageUrl = `${window.location.protocol}//${window.location.host}/solution/${this.rejudgeSolutionForm.id}`;
+            window.open(pageUrl, '_blank');
           } catch (err) {
             console.log(err);
             this.$message({

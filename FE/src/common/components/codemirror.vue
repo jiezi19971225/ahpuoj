@@ -7,6 +7,7 @@
 import 'codemirror/mode/clike/clike';
 import 'codemirror/mode/go/go';
 import 'codemirror/mode/python/python';
+import 'codemirror/mode/javascript/javascript';
 // theme css
 import 'codemirror/theme/monokai.css';
 // auto close brackets
@@ -39,6 +40,11 @@ import 'codemirror/addon/fold/indent-fold';
 import 'codemirror/addon/fold/markdown-fold';
 import 'codemirror/addon/fold/xml-fold';
 
+// hint
+// import 'codemirror/addon/hint/show-hint.css'
+// import 'codemirror/addon/hint/show-hint'
+// import 'codemirror/addon/hint/javascript-hint'
+
 export default {
   props: {
     code: {
@@ -61,6 +67,7 @@ export default {
         [1, 'text/x-c++src'],
         [3, 'text/x-java'],
         [6, 'text/x-python'],
+        [16, 'text/javascript'],
         [17, 'text/x-go'],
       ]),
       cmOptions: {

@@ -10,7 +10,6 @@
                 el-input(size="small",style="max-width:20em", placeholder="请输入系列赛名称", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
                   el-button(slot="append" icon="el-icon-search", @click="handleSearchByParam")
       .main.has__pagination
-        h1.content__panel__title 系列赛列表
         el-table(size="small",:data="tableData")
           el-table-column(label="名称", min-width="180")
             template(slot-scope="scope")

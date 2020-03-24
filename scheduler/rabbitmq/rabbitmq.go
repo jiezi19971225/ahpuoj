@@ -114,7 +114,9 @@ func Receive(exchange, queue, routingKey string, reader func(msg *[]byte)) (err 
 		//fmt.Println(*msgs)
 		for d := range msgs {
 			// s := bytesToString(&(d.Body))
+			
 			reader(&(d.Body))
+			
 		}
 	}()
 	return nil

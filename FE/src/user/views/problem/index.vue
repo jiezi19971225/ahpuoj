@@ -39,24 +39,24 @@
           el-button(v-for="tag in problem.tags",:key="tag.id",size="mini",round,@click="handleSearchTag(tag.id)") {{tag.name}}
     .problem__content
       .main__section
-        b 问题描述
+        span.title 问题描述
         div(v-if="problem",v-html="problem.description")
       .main__section
-        b 输入
+        span.title 输入
         div(v-if="problem",v-html="problem.input")
       .main__section
-        b 输出
+        span.title 输出
         div(v-if="problem",v-html="problem.output")
       .main__section
-        b 样例输入
+        span.title 样例输入
         span.clipboard__btn(style="margin-left:0.04rem;",@click="handleCopyInput",ref="copyInputBtn",data-clipboard-action="copy",data-clipboard-target="#input_content",class="copyBtn") 复制
         div(v-if="problem",id="input_content",style="white-space: pre-wrap;")  {{problem.sample_input}}
       .main__section
-        b 样例输出
+        span.title 样例输出
         span.clipboard__btn(style="margin-left:0.04rem;",@click="handleCopyOutput",ref="copyOutputBtn",data-clipboard-action="copy",data-clipboard-target="#output_content",class="copyBtn")  复制
         div(v-if="problem",id="output_content",style="white-space: pre-wrap;") {{problem.sample_output}}
       .main__section
-        b 提示
+        span.title 提示
         div(v-if="problem",v-html="problem.hint")
   .gutter(ref="gutter")
   .editor__part(ref="editorPart")
@@ -82,35 +82,39 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import CodeMirror from 'common/components/codemirror.vue';
-import Clipboard from 'clipboard';
-import { testRunInterval } from 'common/const';
-import { getProblem, getContestProblem, getLanguageList } from 'user/api/nologin';
-import EventBus from 'common/eventbus';
+import { mapState } from "vuex";
+import CodeMirror from "common/components/codemirror.vue";
+import Clipboard from "clipboard";
+import { testRunInterval } from "common/const";
+import {
+  getProblem,
+  getContestProblem,
+  getLanguageList
+} from "user/api/nologin";
+import EventBus from "common/eventbus";
 import {
   submitJudgeCode,
   submitTestRunCode,
   getLatestSource,
-  getLatestContestSource,
-} from 'user/api/user';
-import { throttle, debounce } from 'throttle-debounce';
-import { setInterval, clearInterval } from 'timers';
-import helpText from './shortcutHelp';
+  getLatestContestSource
+} from "user/api/user";
+import { throttle, debounce } from "throttle-debounce";
+import { setInterval, clearInterval } from "timers";
+import helpText from "./shortcutHelp";
 
 export default {
-  name: 'problem',
+  name: "problem",
   components: {
-    CodeMirror,
+    CodeMirror
   },
   data() {
     return {
       helpText,
       testrunDisabled: false,
-      testrunButtonText: '测试运行',
+      testrunButtonText: "测试运行",
       submitButtonInLoading: false,
       submitButtonDisabled: false,
-      outputText: '',
+      outputText: "",
       dialogVisible: false,
       problemView: true,
       problem: null,
@@ -122,33 +126,34 @@ export default {
         problem_id: 0,
         contest_id: 0,
         num: 0,
-        source: '',
+        source: ""
       },
       testRunForm: {
         language: 0,
         problem_id: 0,
-        source: '',
-        input_text: '',
-      },
+        source: "",
+        input_text: ""
+      }
     };
   },
   computed: {
-    ...mapState(['user']),
+    ...mapState(["user"]),
     problemTitle() {
-      if (this.$route.name === 'problem' && this.problem != null) {
+      if (this.$route.name === "problem" && this.problem != null) {
         return `P${this.problem.id}  ${this.problem.title}`;
-      } if (this.$route.name === 'contestProblem' && this.problem != null) {
+      }
+      if (this.$route.name === "contestProblem" && this.problem != null) {
         const num = Number.parseInt(this.$route.params.num, 10);
         const engNum = this.engNum(num);
         return `C${this.$route.params.id}  ${engNum} ${this.problem.title}`;
       }
-      return '';
-    },
+      return "";
+    }
   },
   mounted() {
     this.init();
-    this.$refs.gutter.addEventListener('mousedown', () => {
-      document.onmousemove = (e) => {
+    this.$refs.gutter.addEventListener("mousedown", () => {
+      document.onmousemove = e => {
         e = e || window.event;
         const { clientWidth } = document.documentElement;
         // clientWidth += 10;
@@ -157,7 +162,7 @@ export default {
         this.$refs.problemPart.style.flexGrow = rate;
         this.$refs.editorPart.style.flexGrow = 2 - rate;
       };
-      document.onmouseup = (e) => {
+      document.onmouseup = e => {
         e = e || window.event;
         const { clientWidth } = document.documentElement;
         document.onmousemove = null;
@@ -167,28 +172,28 @@ export default {
   },
   methods: {
     async init() {
-      getLanguageList().then((res) => {
+      getLanguageList().then(res => {
         this.langList = res.data.languages;
       });
       const id = Number.parseInt(this.$route.params.id, 10);
       try {
         // 如果已经登录 拉取最近一次提交的代码
         if (this.user.username) {
-          if (this.$route.name === 'problem') {
-            getLatestSource(id).then((res) => {
+          if (this.$route.name === "problem") {
+            getLatestSource(id).then(res => {
               this.form.language = res.data.sourcecode.language;
               this.form.source = res.data.sourcecode.source;
             });
           } else {
             const num = Number.parseInt(this.$route.params.num, 10);
-            getLatestContestSource(id, num).then((res) => {
+            getLatestContestSource(id, num).then(res => {
               this.form.language = res.data.sourcecode.language;
               this.form.source = res.data.sourcecode.source;
             });
           }
         }
         // 如果是普通题目路由
-        if (this.$route.name === 'problem') {
+        if (this.$route.name === "problem") {
           const res = await getProblem(id);
           const { data } = res;
           this.problem = data.problem;
@@ -210,54 +215,58 @@ export default {
         this.copyOutputBtn = new Clipboard(this.$refs.copyOutputBtn);
       } catch (err) {
         console.log(err);
-        this.$router.replace({ name: '404Page' });
+        this.$router.replace({ name: "404Page" });
       }
     },
     handleCopyInput() {
       const clipboard = this.copyInputBtn;
-      clipboard.on('success', () => {
+      clipboard.on("success", () => {
         this.$message({
-          message: '复制成功',
-          type: 'success',
+          message: "复制成功",
+          type: "success"
         });
       });
-      clipboard.on('error', () => {
+      clipboard.on("error", () => {
         this.$message({
-          message: '复制失败，请手动复制',
-          type: 'error',
+          message: "复制失败，请手动复制",
+          type: "error"
         });
       });
     },
     handleCopyOutput() {
       const clipboard = this.copyOutputBtn;
-      clipboard.on('success', () => {
+      clipboard.on("success", () => {
         this.$message({
-          message: '复制成功',
-          type: 'success',
+          message: "复制成功",
+          type: "success"
         });
       });
-      clipboard.on('error', () => {
+      clipboard.on("error", () => {
         this.$message({
-          message: '复制失败，请手动复制',
-          type: 'error',
+          message: "复制失败，请手动复制",
+          type: "error"
         });
       });
     },
     handleSearchTag(tagId) {
-      this.$store.dispatch('bus/setTag', tagId);
-      this.$router.push({ name: 'problemSet' });
+      this.$store.dispatch("bus/setTag", tagId);
+      this.$router.push({ name: "problemSet" });
     },
     async submitToTestRun() {
+      if (!this.user.username) {
+        EventBus.$emit("goLogin");
+        return;
+      }
       if (this.form.source.length === 0) {
         this.$message({
-          message: '代码不能为空',
-          type: 'error',
+          message: "代码不能为空",
+          type: "error"
         });
         return;
       }
       this.testRunForm.source = this.form.source;
       this.testRunForm.language = this.form.language;
-      this.outputText = '正在评测中，耐心请等待.......';
+      this.outputText = "正在评测中，耐心请等待.......";
 
       // 短暂时间内无法重复提交评测
       let countDown = testRunInterval;
@@ -267,7 +276,7 @@ export default {
         if (countDown === 0) {
           clearInterval(t);
           this.testrunDisabled = false;
-          this.testrunButtonText = '测试运行';
+          this.testrunButtonText = "测试运行";
         } else {
           countDown -= 1;
           this.testrunButtonText = `测试运行（${countDown}）`;
@@ -277,28 +286,28 @@ export default {
         const res = await submitTestRunCode(this.testRunForm);
         this.$message({
           message: res.data.message,
-          type: 'success',
+          type: "success"
         });
         this.outputText = res.data.custom_output;
       } catch (err) {
         this.$message({
           message: err.response.data.message,
-          type: 'error',
+          type: "error"
         });
         console.log(err);
       }
     },
     submitToJudge: debounce(500, async function debounced() {
       if (!this.user.username) {
-        EventBus.$emit('goLogin');
+        EventBus.$emit("goLogin");
         return;
       }
       this.submitButtonDisabled = true;
       this.submitButtonInLoading = true;
       if (this.form.source.length === 0) {
         this.$message({
-          message: '代码不能为空',
-          type: 'error',
+          message: "代码不能为空",
+          type: "error"
         });
         return;
       }
@@ -306,16 +315,16 @@ export default {
         const res = await submitJudgeCode(this.form);
         this.$message({
           message: res.data.message,
-          type: 'success',
+          type: "success"
         });
         this.$router.push({
-          name: 'solution',
-          params: { id: res.data.solution.solution_id },
+          name: "solution",
+          params: { id: res.data.solution.solution_id }
         });
       } catch (err) {
         this.$message({
           message: err.response.data.message,
-          type: 'error',
+          type: "error"
         });
         console.log(err);
       } finally {
@@ -324,96 +333,100 @@ export default {
       }
     }),
     jumpToSolutions() {
-      if (this.$route.name === 'problem') {
-        this.$store.dispatch('bus/setSolutionFilter', {
-          queryParam: this.problem.id,
+      if (this.$route.name === "problem") {
+        this.$store.dispatch("bus/setSolutionFilter", {
+          queryParam: this.problem.id
         });
         this.$router.push({
-          name: 'status',
+          name: "status"
         });
       } else {
         const num = Number.parseInt(this.$route.params.num, 10);
-        this.$store.dispatch('bus/setSolutionFilter', {
-          queryParam: this.engNum(num),
+        this.$store.dispatch("bus/setSolutionFilter", {
+          queryParam: this.engNum(num)
         });
         this.$router.push({
-          name: 'contestStatus',
+          name: "contestStatus",
           params: {
-            id: this.$route.params.id,
-          },
+            id: this.$route.params.id
+          }
         });
       }
-    },
-  },
+    }
+  }
 };
 </script>
 <style lang="scss" scoped>
-
-.problem__page{
-  .problem__title{
-    font-size: 16px;
-    color:#333;
-  }
+.problem__page {
   position: relative;
   height: calc(100vh - 50px);
   text-align: left;
   border-radius: 10px;
   background: $--color-level15;
   display: flex;
-  .problem__part,.editor__part{
+  .problem__part,
+  .editor__part {
     box-sizing: border-box;
     flex: 1 0 0px;
     overflow-y: auto;
   }
-  .dragbar{
+  .dragbar {
     height: 100%;
   }
-  .problem__part{
-    padding-left: .2rem;
-    padding-top: .1rem;
+  .problem__part {
+    padding-left: 0.2rem;
+    padding-top: 0.1rem;
     overflow-y: auto;
     margin-bottom: 50px;
-    .problem__header{
+    .problem__header {
+      .problem__title {
+        font-size: 16px;
+        color: $--color-primary;
+      }
       display: flex;
-      .header__right{
-        text-align:right;
+      .header__right {
+        text-align: right;
         width: 140px;
         flex-shrink: 0;
         margin-right: 0.05rem;
         margin-left: auto;
       }
     }
-    .problem__info{
-      min-height: .3rem;
-      .info__top{
+    .problem__info {
+      min-height: 0.3rem;
+      .info__top {
         display: flex;
         flex-wrap: wrap;
-        &>*{
-          i{
-            margin-right: .05rem;
+        & > * {
+          i {
+            margin-right: 0.05rem;
           }
-          margin-right: .2rem;
+          color: #999;
+          margin-right: 0.2rem;
         }
       }
-      .info__bottom{
-        margin-top: .1rem;
-        min-height: .3rem;
+      .info__bottom {
+        color: #999;
+        margin-top: 0.1rem;
+        min-height: 0.3rem;
       }
     }
-    .problem__content{
-      margin-top: .1rem;
+    .problem__content {
+      margin-top: 0.1rem;
     }
-    .main__section{
-      padding-top: .1rem;
+    .main__section {
+      .title {
+        color: $--color-primary;
+      }
+      padding-top: 0.1rem;
       border-top: 1px solid #ddd;
-      margin-bottom: .2rem;
-      color:#333;
+      margin-bottom: 0.2rem;
     }
   }
-  .editor__part{
-    padding: 0 .1rem;
+  .editor__part {
+    padding: 0 0.1rem;
     position: relative;
-    .editor__header{
+    .editor__header {
       position: absolute;
       top: 0;
       width: 100%;
@@ -421,34 +434,35 @@ export default {
       box-sizing: border-box;
       padding: 10px 0;
     }
-    .editor__content{
+    .editor__content {
       margin-top: 50px;
       height: calc(100% - 210px);
     }
-    .editor__console{
-      height:110px;
+    .editor__console {
+      height: 110px;
       padding: 5px 0;
       display: flex;
       justify-content: space-between;
-      .left,.right{
+      .left,
+      .right {
         width: 49%;
       }
     }
   }
-  .gutter{
+  .gutter {
     z-index: 500;
     cursor: col-resize;
     width: 10px;
     height: 100%;
     box-sizing: border-box;
-    background-color:#eee;
+    background-color: #eee;
     border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
-    &:hover{
-      background-color:#2d6db3;;
+    &:hover {
+      background-color: #2d6db3;
     }
   }
-  .page_footer{
+  .page_footer {
     text-align: right;
     z-index: 1000;
     background: #fff;
@@ -458,8 +472,9 @@ export default {
     border-top: 1px solid #ddd;
     position: absolute;
     bottom: 0;
-    .el-button{
-      margin-right: .2rem;
+    left: 0;
+    .el-button {
+      margin-right: 0.2rem;
     }
   }
 }

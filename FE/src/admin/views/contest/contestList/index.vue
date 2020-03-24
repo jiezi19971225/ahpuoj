@@ -18,35 +18,68 @@
           el-tag(:type="scope.row.defunct == 0 ? 'success':'danger'",effect="dark") {{scope.row.defunct == 0?'启用':'保留'}}
           el-tag(:type="scope.row.private == 0 ? 'success':'danger'",effect="dark") {{scope.row.private == 0?'公开':'私有'}}
           el-tag(:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark") {{scope.row.team_mode == 0?'个人':'团队'}}
-      el-table-column(label="操作", width="300")
+      el-table-column(label="操作", width="400")
         template(slot-scope="scope")
           el-button(size="mini", type="primary", @click="$router.push({name:'adminEditContest',params:{id:scope.row.id}})") 编辑
+          el-button(size="mini", type="primary", @click="openDownloadRecordDialog(scope.row)") 记录下载
           el-button(size="mini", @click="$router.push({name: (scope.row.team_mode == 0)? 'adminContestManage':'adminContestTeamManage' ,params:{id:scope.row.id}})", :disabled="scope.row.private == 0") 人员
           el-button(size="mini", :type="scope.row.defunct == 0?'danger':'success'", @click="handleToggleContestStatus(scope.row)") {{scope.row.defunct == 0?'保留':'启用'}}
           el-button(size="mini", type="danger", @click="handleDeleteContest(scope.row)") 删除
   .content__pagination__wrapper
     el-pagination(@size-change="handleSizeChange",@current-change="fetchDataList",:current-page.sync="currentPage",:page-sizes="[10, 20, 30, 40,50]",:page-size="10",layout="total, sizes, prev, pager, next, jumper",:total="total")
+  el-dialog(title="下载提交记录",:visible.sync="dialogVisible",width="30%")
+    p.mb20 {{currentContest && currentContest.name}}
+    el-form
+      el-form-item(label="题号")
+        el-select(v-model="problemNum")
+          el-option(v-for="(item,index) in problemList",:label="item",:value="index+1")
+    span(slot="footer",class="dialog-footer")
+      a(:href="downloadUrl" download style="margin-right:10px;")
+        el-button(type="success") 下载
 </template>
 
 <script>
 import {
   getContestList,
+  getContest,
   deleteContest,
-  toggleContestStatus,
-} from 'admin/api/contest';
+  toggleContestStatus
+} from "admin/api/contest";
+
+import { apiPort } from "common/const";
 
 export default {
-  name: 'adminContestList',
+  name: "adminContestList",
   data() {
     return {
+      currentContest: null,
+      problemNum: 1,
+      dialogVisible: false,
       loading: true,
       currentPage: 1,
       currentRowId: 0,
       perpage: 10,
       total: 0,
-      queryParam: '',
-      tableData: [],
+      queryParam: "",
+      tableData: []
     };
+  },
+  computed: {
+    problemList() {
+      if (!this.currentContest) {
+        return [];
+      }
+      const length = this.currentContest.problems.split(",").length;
+      return Array.from({ length }).map((v, index) => {
+        return this.engNum(index + 1);
+      });
+    },
+    downloadUrl() {
+      if (!this.currentContest) {
+        return "";
+      }
+      return `${location.protocol}//${location.hostname}${apiPort}/api/admin/contest/${this.currentContest.id}/problem/${this.problemNum}/solutions`;
+    }
   },
   activated() {
     this.fetchDataList();
@@ -58,7 +91,7 @@ export default {
         const res = await getContestList(
           this.currentPage,
           this.perpage,
-          this.queryParam,
+          this.queryParam
         );
         const { data } = res;
         setTimeout(() => {
@@ -80,46 +113,54 @@ export default {
       this.fetchDataList();
     },
     async handleToggleContestStatus(row) {
-      const msg = `确认要${row.defunct === 0 ? '保留' : '启用'}竞赛${row.name}吗?`;
+      const msg = `确认要${row.defunct === 0 ? "保留" : "启用"}竞赛${
+        row.name
+      }吗?`;
       try {
-        await this.$confirm(msg, '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
+        await this.$confirm(msg, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
         });
         try {
           const res = await toggleContestStatus(row.id);
           this.$message({
-            type: 'success',
-            message: res.data.message,
+            type: "success",
+            message: res.data.message
           });
 
           row.defunct = 1 - row.defunct;
         } catch (err) {
           this.$message({
-            type: 'error',
-            message: err.response.data.message,
+            type: "error",
+            message: err.response.data.message
           });
         }
       } catch (err) {
         this.$message({
-          type: 'info',
-          message: '已取消操作',
+          type: "info",
+          message: "已取消操作"
         });
       }
     },
+    async openDownloadRecordDialog(row) {
+      this.problemNum = 1;
+      let res = await getContest(row.id);
+      this.dialogVisible = true;
+      this.currentContest = res.data.contest;
+    },
     async handleDeleteContest(row) {
       try {
-        await this.$confirm(`确认要删除竞赛${row.name}吗?`, '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
+        await this.$confirm(`确认要删除竞赛${row.name}吗?`, "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
         });
         try {
           const res = await deleteContest(row.id);
           this.$message({
-            type: 'success',
-            message: res.data.message,
+            type: "success",
+            message: res.data.message
           });
           // 删除最后一页最后一条记录，如果不是第一页，则当前页码-1
           if (this.tableData.length === 1) {
@@ -130,18 +171,18 @@ export default {
           this.fetchDataList();
         } catch (err) {
           this.$message({
-            type: 'error',
-            message: err.response.data.message,
+            type: "error",
+            message: err.response.data.message
           });
         }
       } catch (err) {
         this.$message({
-          type: 'info',
-          message: '已取消删除',
+          type: "info",
+          message: "已取消删除"
         });
       }
-    },
-  },
+    }
+  }
 };
 </script>
 

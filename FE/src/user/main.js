@@ -10,6 +10,7 @@ import VueCodemirror from 'vue-codemirror';
 import store from './store';
 import 'codemirror/lib/codemirror.css';
 
+import '@babel/polyfill';
 import router from './router';
 import App from './App.vue';
 

@@ -2,7 +2,6 @@
   .content
     .content__main
       .one-main.has__pagination
-        h1.content__panel__title 排名
         el-table(size="small",:data="tableData",v-loading="loading")
           el-table-column(label="排名", width="60")
             template(slot-scope="scope")

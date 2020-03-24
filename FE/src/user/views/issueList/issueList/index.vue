@@ -1,11 +1,13 @@
 <template lang="pug">
   .content
-    title {{$route.name=="issueList"?`讨论版 总版 - AHPUOJ`:`问题P${$route.params.id}的讨论版 - AHPUOJ`}}
+    title {{$route.name=="issueList"?`讨论版 总版 - AHPUOJ`:`问题P${problemId}的讨论版 - AHPUOJ`}}
     .content__main
       .one-main(v-if="issueEnable==true")
         .link(style="position:absolute;right:10px;top:10px;")
-          router-link(v-if="$route.name=='problemIssueList'",:to="{name:'problem',params:{id:$route.params.id}}") {{`转到问题`}}
-        h1.content__panel__title {{$route.name=="issueList"?"讨论版 总版":`问题P${$route.params.id}的讨论版`}}
+          router-link(v-if="$route.name=='problemIssueList'",:to="{name:'problem',params:{id:problemId}}") {{`转到问题`}}
+        h1.content__panel__title(style="height:20px;")
+          span(v-if="$route.name=='issueList'") {{"讨论版 总版"}}
+          span(v-if="$route.name=='problemIssueList'") {{`问题P${problemId}的讨论版`}}
         .issue__box__list
           template(v-for="item in data")
             .issue__box

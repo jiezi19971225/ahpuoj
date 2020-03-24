@@ -5,23 +5,28 @@
       .siderbar
         ul.siderbar__item__list
           li
-            .header 竞赛信息
-          li  状态：
-              template(v-if="contest")
-                el-tag(size="small",v-if="contest.status==1",type="success",effect="dark") 未开始
-                el-tag(size="small",v-if="contest.status==2",type="primary",effect="dark") 进行中
-                el-tag(size="small",v-if="contest.status==3",type="danger",effect="dark") 已结束
-          li 模式：
-              template(v-if="contest")
-                el-tag(size="small",:type="contest.private == 1 ? 'danger':'success'",effect="dark")  {{ contest.private == 1?"私有赛":"公开赛" }}
-                el-tag(size="small",:type="contest.team_mode == 0 ? 'success':'primary'",effect="dark")  {{ contest.team_mode == 0?"个人赛":"团体赛" }}
+            .section__title 竞赛信息
           li
-            div 开始时间：
-            p(v-if="contest") {{contest.start_time}}
-            div.mt10 结束时间：
-            p(v-if="contest")  {{contest.end_time}}
-          li  持续时长：
-            p(v-if="contest")  {{timeDiff}}
+            span(style="color:#409eff;") 状态：
+            template(v-if="contest")
+              el-tag(size="small",v-if="contest.status==1",type="success",effect="dark") 未开始
+              el-tag(size="small",v-if="contest.status==2",type="primary",effect="dark") 进行中
+              el-tag(size="small",v-if="contest.status==3",type="danger",effect="dark") 已结束
+          li
+            span(style="color:#409eff;") 模式：
+            template(v-if="contest")
+              el-tag(size="small",:type="contest.private == 1 ? 'danger':'success'",effect="dark")  {{ contest.private == 1?"私有赛":"公开赛" }}
+              el-tag(size="small",:type="contest.team_mode == 0 ? 'success':'primary'",effect="dark")  {{ contest.team_mode == 0?"个人赛":"团体赛" }}
+          li
+            div
+              span(style="color:#409eff;") 开始时间：
+              span.fr {{contest && contest.start_time}}
+            div(style="margin-top:10px;")
+              span(style="color:#409eff;") 结束时间：
+              span.fr {{contest && contest.end_time}}
+          li
+            span(style="color:#409eff;") 持续时长：
+            span.fr {{contest && timeDiff}}
         .button__wrapper
           router-link(:to="{name: 'contestStatus',params: {id:contest && contest.id}}",target='_blank')
             el-button(size="small",type="primary") 记录
@@ -51,18 +56,18 @@
 </template>
 
 <script>
-import { getContest, getLanguageList } from 'user/api/nologin';
+import { getContest, getLanguageList } from "user/api/nologin";
 
-import EventBus from 'common/eventbus';
-import { submitJudgeCode } from 'user/api/user';
+import EventBus from "common/eventbus";
+import { submitJudgeCode } from "user/api/user";
 
 export default {
   data() {
     return {
       seeable: false,
-      reason: '',
+      reason: "",
       contest: null,
-      langList: [],
+      langList: []
     };
   },
   computed: {
@@ -74,18 +79,18 @@ export default {
       const days = Math.floor(dateDiff / (24 * 3600 * 1000));
       let left = dateDiff % (24 * 3600 * 1000);
       const hours = Math.floor(left / (3600 * 1000));
-      left %= (3600 * 1000);
+      left %= 3600 * 1000;
       const minutes = Math.floor(left / (60 * 1000));
-      left %= (60 * 1000);
+      left %= 60 * 1000;
       const seconds = Math.round(left / 1000);
 
-      let res = '';
-      res += days ? `${days}天` : '';
-      res += hours ? `${hours}小时` : '';
-      res += minutes ? `${minutes}分钟` : '';
-      res += seconds ? `${seconds}秒` : '';
+      let res = "";
+      res += days ? `${days}天` : "";
+      res += hours ? `${hours}小时` : "";
+      res += minutes ? `${minutes}分钟` : "";
+      res += seconds ? `${seconds}秒` : "";
       return res;
-    },
+    }
   },
   mounted() {
     this.init();
@@ -103,10 +108,10 @@ export default {
         this.reason = data.reason;
       } catch (err) {
         console.log(err);
-        this.$router.replace({ name: '404Page' });
+        this.$router.replace({ name: "404Page" });
       }
-    },
-  },
+    }
+  }
 };
 </script>
 <style lang="scss" scoped>

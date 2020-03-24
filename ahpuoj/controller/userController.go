@@ -3,11 +3,13 @@ package controller
 import (
 	"ahpuoj/model"
 	"ahpuoj/request"
-	"ahpuoj/utils"
 	"ahpuoj/service/rabbitmq"
-	"encoding/json"
+	"ahpuoj/utils"
 	"crypto/sha1"
+	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/gomodule/redigo/redis"
 	"net/http"
 	"os"
 	"path"
@@ -15,8 +17,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/gomodule/redigo/redis"
-	"github.com/gin-gonic/gin"
 )
 
 // 用户获取用户信息
@@ -114,35 +114,34 @@ func SubmitToTestRun(c *gin.Context) {
 
 	conn := REDISPOOL.Get()
 	defer conn.Close()
-	testrunCount,err := redis.Int(conn.Do("incr","testrun:count"))
-	testrunCountStr:= strconv.Itoa(testrunCount)
-	utils.Consolelog(testrunCount,err)
-	jsondata,_ := json.Marshal(gin.H{
-		"UserId": 0,
-		"TestrunCount": testrunCountStr,
-		"SolutionId": 0,
-		"ProblemId":  0,
-		"Language":   req.Language,
-		"TimeLimit":  1,
-		"MemoryLimit":	64,
-		"Source":req.Source,
-		"InputText":req.InputText,
-	})
 
-	rabbitmq.Publish("oj","problem",jsondata)
-	// 等待评测机评判
-	var reinfo,ceinfo,costomOut string
+	testrunCount, _ := redis.Int(conn.Do("incr", "testrun:count"))
+	testrunCountStr := strconv.Itoa(testrunCount)
+	jsondata, _ := json.Marshal(gin.H{
+		"UserId":       0,
+		"TestrunCount": testrunCountStr,
+		"SolutionId":   0,
+		"ProblemId":    0,
+		"Language":     req.Language,
+		"TimeLimit":    1,
+		"MemoryLimit":  64,
+		"Source":       req.Source,
+		"InputText":    req.InputText,
+	})
+	rabbitmq.Publish("oj", "problem", jsondata)
+	//等待评测机评判
+	var reinfo, ceinfo, costomOut string
 	queryTimes := 0
 	for {
 		queryTimes += 1
-		if(queryTimes > 100){
+		if queryTimes > 100 {
 			break
 		}
-		exist,_ := redis.Int(conn.Do("exists","testrun:"+testrunCountStr))
-		if exist == 1{
-			values,_ :=redis.Values(conn.Do("hmget","testrun:"+testrunCountStr,"ceinfo","reinfo","custom_out"))
-			redis.Scan(values,&reinfo,&ceinfo,&costomOut)
-		}else{
+		exist, _ := redis.Int(conn.Do("exists", "testrun:"+testrunCountStr))
+		if exist == 1 {
+			values, _ := redis.Values(conn.Do("hmget", "testrun:"+testrunCountStr, "ceinfo", "reinfo", "custom_out"))
+			redis.Scan(values, &reinfo, &ceinfo, &costomOut)
+		} else {
 			time.Sleep(time.Second)
 		}
 	}
@@ -164,7 +163,6 @@ func SubmitToTestRun(c *gin.Context) {
 func SubmitToJudge(c *gin.Context) {
 	var err error
 	var contest model.Contest
-
 	user, _ := GetUserInstance(c)
 	var req struct {
 		ProblemId int    `json:"problem_id" binding:"required"`
@@ -228,7 +226,6 @@ func SubmitToJudge(c *gin.Context) {
 		if contest.TeamMode == 1 && user.Role != "admin" {
 			err = DB.Get(&teamId, "select team_id from contest_team_user ctu where ctu.contest_id = ? and ctu.user_id = ?", contest.Id, user.Id)
 		}
-
 		solution := model.Solution{
 			ProblemId:  req.ProblemId,
 			TeamId:     teamId,
@@ -251,24 +248,23 @@ func SubmitToJudge(c *gin.Context) {
 		if utils.CheckError(c, err, "保存代码记录失败") != nil {
 			return
 		}
-
 		// 将判题任务推入消息队列
-		jsondata,_ := json.Marshal(gin.H{
-			"UserId": user.Id,
+		jsondata, _ := json.Marshal(gin.H{
+			"UserId":       user.Id,
 			"TestrunCount": 0,
-			"SolutionId":	solution.Id,
-			"ProblemId":   req.ProblemId,
-			"Language":   req.Language,
-			"TimeLimit":  problem.TimeLimit,
-			"MemoryLimit":	problem.MemoryLimit,
-			"Source":req.Source,
-			"InputText": "",
+			"SolutionId":   solution.Id,
+			"ProblemId":    req.ProblemId,
+			"Language":     req.Language,
+			"TimeLimit":    problem.TimeLimit,
+			"MemoryLimit":  problem.MemoryLimit,
+			"Source":       req.Source,
+			"InputText":    "",
 		})
-		rabbitmq.Publish("oj","problem",jsondata)
 
+		rabbitmq.Publish("oj", "problem", jsondata)
 		c.JSON(http.StatusOK, gin.H{
 			"message":  "提交成功",
-			"solution":solution,
+			"solution": solution,
 		})
 	} else {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -538,7 +534,7 @@ func GetLatestContestSource(c *gin.Context) {
 	}
 	var sourceCode SourceCode
 	err = DB.Get(&sourceCode, `select source_code.source,solution.language from solution inner join source_code 
-	on source_code.solution_id = solution.solution_id where solution.contest_id = ? and solution.num = ? and solution.user_id = ? order by solution.in_date limit 1`, contestId, num, user.Id)
+	on source_code.solution_id = solution.solution_id where solution.contest_id = ? and solution.num = ? and solution.user_id = ? order by solution.in_date desc limit 1`, contestId, num, user.Id)
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "获取最近提交信息成功",
 		"sourcecode": sourceCode,

@@ -5,7 +5,7 @@ import SvgIcon from 'common/components/svgicon.vue';
 import Base from 'common/base';
 import GlobalComponents from './globalComponents';
 
-
+import '@babel/polyfill';
 import router from './router';
 import store from './store';
 import App from './App.vue';

@@ -33,7 +33,7 @@
                 li
                   el-button(size="mini",round,:class="[result==item.code?'is-active':'']", @click="handleSearchByResult(item.code)") {{item.name}}
       .main.has__pagination
-        h1.content__panel__title 评测记录
+        el-pagination(style="float:left;",@current-change="fetchData",:current-page.sync="currentPage",:page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
         el-table(size="small",:data="tableData", v-loading="loading")
           el-table-column(label="ID", prop="solution_id", width="60")
           el-table-column(label="用户",min-width="70")

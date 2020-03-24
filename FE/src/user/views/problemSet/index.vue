@@ -31,7 +31,7 @@
                 li
                   el-button(size="mini",round,:class="[tagId == tag.id?'is-active':'']",@click="handleSearchByTag(tag.id)") {{tag.name}}
       .main.has__pagination
-        h1.content__panel__title 问题列表
+        el-pagination(style="float:left;",@current-change="fetchData",:current-page.sync="currentPage",:page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
         el-table(size="small",:data="tableData",v-loading="loading")
           el-table-column(width="40")
             template(slot-scope="scope")

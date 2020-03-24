@@ -1,5 +1,4 @@
 #include "judge_client.h"
-
 int after_equal(char *c)
 {
 	int i = 0;
@@ -404,6 +403,12 @@ void copy_js_runtime(char *work_dir)
 	execute_cmd("/bin/cp /lib64/ld-linux-x86-64.so.* %s/lib64/", work_dir);
 	execute_cmd("/bin/cp /usr/lib/x86_64-linux-gnu/libicudata.so.* %s/lib/x86_64-linux-gnu/", work_dir);
 
+	// nodejs需要的共享库
+	execute_cmd("/bin/cp /usr/lib/x86_64-linux-gnu/libhttp_parser.so.* %s/lib/x86_64-linux-gnu/", work_dir);
+	execute_cmd("/bin/cp /usr/lib/x86_64-linux-gnu/libcares.so.* %s/lib/x86_64-linux-gnu/", work_dir);
+	execute_cmd("/bin/cp /usr/lib/x86_64-linux-gnu/libnghttp2.so.* %s/lib/x86_64-linux-gnu/", work_dir);
+	execute_cmd("/bin/cp /usr/lib/x86_64-linux-gnu/libcrypto* %s/lib/x86_64-linux-gnu/", work_dir);
+	execute_cmd("/bin/cp /usr/lib/x86_64-linux-gnu/libssl* %s/lib/x86_64-linux-gnu/", work_dir);
 	execute_cmd("/bin/cp /usr/bin/nodejs %s/", work_dir);
 }
 
@@ -465,6 +470,31 @@ void write_log(const char *_fmt, ...)
 	//int l;
 	sprintf(buffer, "%s/log/client.log", oj_home);
 	FILE *fp = fopen(buffer, "ae+");
+	if (fp == NULL)
+	{
+		fprintf(stderr, "%s!\n", buffer);
+		fprintf(stderr, "openfile error!\n");
+		system("pwd");
+	}
+	va_start(ap, _fmt);
+	//l =
+	vsprintf(buffer, fmt, ap);
+	fprintf(fp, "%s\n", buffer);
+	if (DEBUG)
+		printf("%s\n", buffer);
+	va_end(ap);
+	fclose(fp);
+}
+
+void write_chroot_log(const char *_fmt, ...)
+{
+	va_list ap;
+	char fmt[4096];
+	strncpy(fmt, _fmt, 4096);
+	char buffer[4096];
+	//      time_t          t = time(NULL);
+	//int l;
+	FILE *fp = fopen("/client.log", "ae+");
 	if (fp == NULL)
 	{
 		fprintf(stderr, "%s!\n", buffer);
@@ -602,64 +632,63 @@ int isInFile(const char fname[])
 	else
 		return l - 3;
 }
-
-void find_next_nonspace(int *c1, int *c2, FILE *f1, FILE *f2, int *ret)
+void find_next_nonspace(int &c1, int &c2, FILE *&f1, FILE *&f2, int &ret)
 {
 	// Find the next non-space character or \n.
-	while ((isspace(*c1)) || (isspace(*c2)))
+	while ((isspace(c1)) || (isspace(c2)))
 	{
-		if (*c1 != *c2)
+		if (c1 != c2)
 		{
-			if (*c2 == EOF)
+			if (c2 == EOF)
 			{
 				do
 				{
-					*c1 = fgetc(f1);
-				} while (isspace(*c1));
+					c1 = fgetc(f1);
+				} while (isspace(c1));
 				continue;
 			}
-			else if (*c1 == EOF)
+			else if (c1 == EOF)
 			{
 				do
 				{
-					*c2 = fgetc(f2);
-				} while (isspace(*c2));
+					c2 = fgetc(f2);
+				} while (isspace(c2));
 				continue;
 #ifdef IGNORE_ESOL
 			}
-			else if (isspace(*c1) && isspace(*c2))
+			else if (isspace(c1) && isspace(c2))
 			{
-				while (*c2 == '\n' && isspace(*c1) && *c1 != '\n')
-					*c1 = fgetc(f1);
-				while (*c1 == '\n' && isspace(*c2) && *c2 != '\n')
-					*c2 = fgetc(f2);
+				while (c2 == '\n' && isspace(c1) && c1 != '\n')
+					c1 = fgetc(f1);
+				while (c1 == '\n' && isspace(c2) && c2 != '\n')
+					c2 = fgetc(f2);
 
 #else
 			}
-			else if ((*c1 == '\r' && *c2 == '\n'))
+			else if ((c1 == '\r' && c2 == '\n'))
 			{
-				*c1 = fgetc(f1);
+				c1 = fgetc(f1);
 			}
-			else if ((*c2 == '\r' && *c1 == '\n'))
+			else if ((c2 == '\r' && c1 == '\n'))
 			{
-				*c2 = fgetc(f2);
+				c2 = fgetc(f2);
 #endif
 			}
 			else
 			{
 				if (DEBUG)
-					printf("%d=%c\t%d=%c", *c1, *c1, *c2, *c2);
+					printf("%d=%c\t%d=%c", c1, c1, c2, c2);
 				;
-				*ret = OJ_PE;
+				ret = OJ_PE;
 			}
 		}
-		if (isspace(*c1))
+		if (isspace(c1))
 		{
-			*c1 = fgetc(f1);
+			c1 = fgetc(f1);
 		}
-		if (isspace(*c2))
+		if (isspace(c2))
 		{
-			*c2 = fgetc(f2);
+			c2 = fgetc(f2);
 		}
 	}
 }
@@ -695,7 +724,7 @@ int compare(const char *file1, const char *file2)
 			// Blank lines are skipped.
 			c1 = fgetc(f1);
 			c2 = fgetc(f2);
-			find_next_nonspace(&c1, &c2, f1, f2, &ret);
+			find_next_nonspace(c1, c2, f1, f2, ret);
 			// Compare the current line.
 			for (;;)
 			{
@@ -719,7 +748,7 @@ int compare(const char *file1, const char *file2)
 					c1 = fgetc(f1);
 					c2 = fgetc(f2);
 				}
-				find_next_nonspace(&c1, &c2, f1, f2, &ret);
+				find_next_nonspace(c1, c2, f1, f2, ret);
 				if (c1 == EOF && c2 == EOF)
 				{
 					goto end;
@@ -936,7 +965,7 @@ int compile(int lang, char *work_dir)
 		}
 		if (DEBUG)
 			printf("compile end!\n");
-		//exit(!system("cat ce.txt"));
+		// 子线程推出
 		exit(0);
 	}
 	else
@@ -1059,7 +1088,7 @@ void prepare_files(char *filename, int namelen, char *infile, int p_id,
 	sprintf(userfile, "%s/run%d/user.out", oj_home, runid);
 }
 
-void run_solution(int lang, char *work_dir, int time_lmt, int usedtime, int mem_lmt)
+void run_solution(int &lang, char *work_dir, int &time_lmt, int &usedtime, int &mem_lmt)
 {
 	nice(19);
 	int py2 = execute_cmd("/bin/grep 'python2' Main.py");
@@ -1089,7 +1118,6 @@ void run_solution(int lang, char *work_dir, int time_lmt, int usedtime, int mem_
 		sleep(1);
 	while (setresuid(1536, 1536, 1536) != 0)
 		sleep(1);
-
 	// 设置资源限制
 	struct rlimit LIM;
 	if (oi_mode)
@@ -1144,7 +1172,6 @@ void run_solution(int lang, char *work_dir, int time_lmt, int usedtime, int mem_
 		// 进程总共可用的内存大小的最大值
 		setrlimit(RLIMIT_AS, &LIM);
 	}
-
 	switch (lang)
 	{
 	case 0:
@@ -1178,7 +1205,7 @@ void run_solution(int lang, char *work_dir, int time_lmt, int usedtime, int mem_
 		}
 		else
 		{
-			execl("/python3", "/python3", "Main.py", (char *)NULL);
+			execl("/python3.7", "/python3.7", "Main.py", (char *)NULL);
 		}
 		break;
 	case 7: //php
@@ -1202,9 +1229,11 @@ void run_solution(int lang, char *work_dir, int time_lmt, int usedtime, int mem_
 	}
 	//sleep(1);
 	fflush(stderr);
+	write_chroot_log("fflush end");
+	// 子线程退出
 	exit(0);
 }
-int fix_python_mis_judge(char *work_dir, int *ACflg, int *topmemory,
+int fix_python_mis_judge(char *work_dir, int &ACflg, int &topmemory,
 						 int mem_lmt)
 {
 	int comp_res = OJ_AC;
@@ -1215,14 +1244,14 @@ int fix_python_mis_judge(char *work_dir, int *ACflg, int *topmemory,
 	if (!comp_res)
 	{
 		printf("Python need more Memory!");
-		*ACflg = OJ_ML;
-		*topmemory = mem_lmt * STD_MB;
+		ACflg = OJ_ML;
+		topmemory = mem_lmt * STD_MB;
 	}
 
 	return comp_res;
 }
 
-int fix_java_mis_judge(char *work_dir, int *ACflg, int *topmemory,
+int fix_java_mis_judge(char *work_dir, int &ACflg, int &topmemory,
 					   int mem_lmt)
 {
 	int comp_res = OJ_AC;
@@ -1233,7 +1262,7 @@ int fix_java_mis_judge(char *work_dir, int *ACflg, int *topmemory,
 	if (!comp_res)
 	{
 		printf("Exception reported\n");
-		*ACflg = OJ_RE;
+		ACflg = OJ_RE;
 	}
 	execute_cmd("cat %s/error.out", work_dir);
 
@@ -1243,23 +1272,23 @@ int fix_java_mis_judge(char *work_dir, int *ACflg, int *topmemory,
 	if (!comp_res)
 	{
 		printf("JVM need more Memory!");
-		*ACflg = OJ_ML;
-		*topmemory = mem_lmt * STD_MB;
+		ACflg = OJ_ML;
+		topmemory = mem_lmt * STD_MB;
 	}
 
 	if (!comp_res)
 	{
 		printf("JVM need more Memory or Threads!");
-		*ACflg = OJ_ML;
-		*topmemory = mem_lmt * STD_MB;
+		ACflg = OJ_ML;
+		topmemory = mem_lmt * STD_MB;
 	}
 	comp_res = execute_cmd("/bin/grep 'Could not create'  %s/error.out",
 						   work_dir);
 	if (!comp_res)
 	{
 		printf("jvm need more resource,tweak -Xmx(OJ_JAVA_BONUS) Settings");
-		*ACflg = OJ_RE;
-		//*topmemory=0;
+		ACflg = OJ_RE;
+		//topmemory=0;
 	}
 	return comp_res;
 }
@@ -1315,27 +1344,27 @@ int special_judge(char *oj_home, int problem_id, char *infile, char *outfile,
 	return ret;
 }
 
-void judge_solution(int *ACflg, int usedtime, int time_lmt, int isspj,
-					int p_id, char *infile, char *outfile, char *userfile, int *PEflg,
-					int lang, char *work_dir, int topmemory, int mem_lmt, int num_of_test, char *error_point)
+void judge_solution(int &ACflg, int &usedtime, int time_lmt, int isspj,
+					int p_id, char *infile, char *outfile, char *userfile, int &PEflg,
+					int lang, char *work_dir, int &topmemory, int mem_lmt, int num_of_test, char *error_point)
 {
 	//usedtime-=1000;
 	int comp_res;
 	if (!oi_mode)
 		num_of_test = 1.0;
-	if (*ACflg == OJ_AC && usedtime > time_lmt * 1000 * (use_max_time ? 1 : num_of_test))
-		*ACflg = OJ_TL;
+	if (ACflg == OJ_AC && usedtime > time_lmt * 1000 * (use_max_time ? 1 : num_of_test))
+		ACflg = OJ_TL;
 	if (topmemory > mem_lmt * STD_MB)
-		*ACflg = OJ_ML; //issues79
-						// compare
+		ACflg = OJ_ML; //issues79
+					   // compare
 	// 在TL和ML时候也记录错误点
-	if (*ACflg == OJ_TL || *ACflg == OJ_ML)
+	if (ACflg == OJ_TL || ACflg == OJ_ML)
 	{
 		// 将错误点信息保存
 		strcpy(error_point, getFileNameFromPath(outfile));
 	}
 	// TOADD
-	if (*ACflg == OJ_AC)
+	if (ACflg == OJ_AC)
 	{
 		if (isspj)
 		{
@@ -1356,7 +1385,7 @@ void judge_solution(int *ACflg, int usedtime, int time_lmt, int isspj,
 		}
 		if (comp_res == OJ_WA)
 		{
-			*ACflg = OJ_WA;
+			ACflg = OJ_WA;
 			// 在 WA 时记录错误点
 			strcpy(error_point, getFileNameFromPath(outfile));
 			if (DEBUG)
@@ -1368,16 +1397,16 @@ void judge_solution(int *ACflg, int usedtime, int time_lmt, int isspj,
 		{
 			PEflg = OJ_PE;
 		}
-		*ACflg = comp_res;
+		ACflg = comp_res;
 	}
 	//jvm popup messages, if don't consider them will get miss-WrongAnswer
 	if (lang == 3)
 	{
-		comp_res = fix_java_mis_judge(work_dir, ACflg, &topmemory, mem_lmt);
+		comp_res = fix_java_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
 	}
 	if (lang == 6)
 	{
-		comp_res = fix_python_mis_judge(work_dir, ACflg, &topmemory, mem_lmt);
+		comp_res = fix_python_mis_judge(work_dir, ACflg, topmemory, mem_lmt);
 	}
 }
 
@@ -1402,18 +1431,24 @@ void print_runtimeerror(char *err)
 	fclose(ferr);
 }
 
-void watch_solution(pid_t pidApp, char *infile, int *ACflg, int isspj,
+void watch_solution(pid_t pidApp, char *infile, int &ACflg, int isspj,
 					char *userfile, char *outfile, int lang,
-					int *topmemory, int mem_lmt, int *usedtime, int time_lmt, int p_id,
+					int &topmemory, int mem_lmt, int &usedtime, int time_lmt, int p_id,
 					int PEflg, char *work_dir)
 {
 	int tempmemory = 0;
 	if (DEBUG)
-		printf("pid=%d judging %s\n", pidApp, infile);
+		printf("pid=%d judging filep:%p %s \n", pidApp, infile, infile);
 	int status, sig, exitcode;
+	if (DEBUG)
+		printf("step1");
 	struct user_regs_struct reg;
+	if (DEBUG)
+		printf("step2");
 	// 进程资源信息
 	struct rusage ruse;
+	if (DEBUG)
+		printf("step3");
 	int first = 1;
 	while (1)
 	{
@@ -1436,31 +1471,30 @@ void watch_solution(pid_t pidApp, char *infile, int *ACflg, int isspj,
 		{ //other use VmPeak
 			tempmemory = get_proc_status(pidApp, "VmPeak:") << 10;
 		}
-		if (tempmemory > *topmemory)
-			*topmemory = tempmemory;
-		if (*topmemory > mem_lmt * STD_MB)
+		if (tempmemory > topmemory)
+			topmemory = tempmemory;
+		if (topmemory > mem_lmt * STD_MB)
 		{
 			if (DEBUG)
-				printf("out of memory %d\n", *topmemory);
-			if (*ACflg == OJ_AC)
-				*ACflg = OJ_ML;
+				printf("out of memory %d\n", topmemory);
+			if (ACflg == OJ_AC)
+				ACflg = OJ_ML;
 			ptrace(PTRACE_KILL, pidApp, NULL, NULL);
 			break;
 		}
 		//sig = status >> 8;/*status >> 8 EXITCODE*/
-
 		if (WIFEXITED(status))
 			break;
 		if ((lang < 4 || lang == 9) && get_file_size("error.out") && !oi_mode)
 		{
-			*ACflg = OJ_RE;
+			ACflg = OJ_RE;
 			ptrace(PTRACE_KILL, pidApp, NULL, NULL);
 			break;
 		}
 
 		if (!isspj && get_file_size(userfile) > get_file_size(outfile) * 2 + 1024)
 		{
-			*ACflg = OJ_OL;
+			ACflg = OJ_OL;
 			ptrace(PTRACE_KILL, pidApp, NULL, NULL);
 			break;
 		}
@@ -1482,7 +1516,7 @@ void watch_solution(pid_t pidApp, char *infile, int *ACflg, int isspj,
 			}
 			//psignal(exitcode, NULL);
 
-			if (*ACflg == OJ_AC)
+			if (ACflg == OJ_AC)
 			{
 				switch (exitcode)
 				{
@@ -1493,16 +1527,16 @@ void watch_solution(pid_t pidApp, char *infile, int *ACflg, int isspj,
 						printf("alarm:%d\n", time_lmt);
 				case SIGKILL:
 				case SIGXCPU:
-					*ACflg = OJ_TL;
-					*usedtime = time_lmt * 1000;
+					ACflg = OJ_TL;
+					usedtime = time_lmt * 1000;
 					if (DEBUG)
-						printf("TLE:%d\n", *usedtime);
+						printf("TLE:%d\n", usedtime);
 					break;
 				case SIGXFSZ:
-					*ACflg = OJ_OL;
+					ACflg = OJ_OL;
 					break;
 				default:
-					*ACflg = OJ_RE;
+					ACflg = OJ_RE;
 				}
 				print_runtimeerror(strsignal(exitcode));
 			}
@@ -1526,7 +1560,7 @@ void watch_solution(pid_t pidApp, char *infile, int *ACflg, int isspj,
 				printf("WTERMSIG=%d\n", sig);
 				psignal(sig, NULL);
 			}
-			if (*ACflg == OJ_AC)
+			if (ACflg == OJ_AC)
 			{
 				switch (sig)
 				{
@@ -1535,14 +1569,14 @@ void watch_solution(pid_t pidApp, char *infile, int *ACflg, int isspj,
 					alarm(0);
 				case SIGKILL:
 				case SIGXCPU:
-					*ACflg = OJ_TL;
+					ACflg = OJ_TL;
 					break;
 				case SIGXFSZ:
-					*ACflg = OJ_OL;
+					ACflg = OJ_OL;
 					break;
 
 				default:
-					*ACflg = OJ_RE;
+					ACflg = OJ_RE;
 				}
 				print_runtimeerror(strsignal(sig));
 			}
@@ -1567,7 +1601,7 @@ void watch_solution(pid_t pidApp, char *infile, int *ACflg, int isspj,
 		}
 		else
 		{ //do not limit JVM syscall for using different JVM
-			*ACflg = OJ_RE;
+			ACflg = OJ_RE;
 			char error[BUFFER_SIZE];
 			sprintf(error,
 					"[错误] 一个不被允许的系统调用: 系统调用ID:%u\n"
@@ -1585,25 +1619,8 @@ void watch_solution(pid_t pidApp, char *infile, int *ACflg, int isspj,
 		ptrace(PTRACE_SYSCALL, pidApp, NULL, NULL);
 		first = 0;
 	}
-	*usedtime += (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000) * cpu_compensation;
-	*usedtime += (ruse.ru_stime.tv_sec * 1000 + ruse.ru_stime.tv_usec / 1000) * cpu_compensation;
-}
-
-void clean_workdir(char *work_dir)
-{
-	umount(work_dir);
-	if (DEBUG)
-	{
-		execute_cmd("/bin/rm -rf %s/log/*", work_dir);
-		execute_cmd("mkdir %s/log/", work_dir);
-		execute_cmd("/bin/mv %s/* %s/log/", work_dir, work_dir);
-	}
-	else
-	{
-		execute_cmd("mkdir %s/log/", work_dir);
-		execute_cmd("/bin/mv %s/* %s/log/", work_dir, work_dir);
-		execute_cmd("/bin/rm -rf %s/log/*", work_dir);
-	}
+	usedtime += (ruse.ru_utime.tv_sec * 1000 + ruse.ru_utime.tv_usec / 1000) * cpu_compensation;
+	usedtime += (ruse.ru_stime.tv_sec * 1000 + ruse.ru_stime.tv_usec / 1000) * cpu_compensation;
 }
 
 void mk_shm_workdir(char *work_dir)
@@ -1654,43 +1671,54 @@ void print_call_array()
 	printf("0};\n");
 }
 
-void read_from_file(char *dist, char *filename)
+// ./judge_client /home/judge/hustoj_core 0 1 1 128 0
+// ./judge_client /home/judge/hustoj_core 4 1 1 128 0
+// 入参 第二个参数 ojhome 第三个参数 问题id 第四个参数 语言 第五个参数 时间限制 第六个参数内存限制 第七个参数 runid
+void init_parameters(int argc, char **argv, int &p_id, int &lang, int &time_lmt, int &mem_lmt, int &runid)
 {
-	FILE *fp = fopen(filename, "re");
-	char *end = dist;
-	while (fgets(end, 1024, fp))
-	{
-		end += strlen(end);
-		if (end - dist > 40000)
-		{
-			break;
-		}
-	}
-	end = 0;
-	fclose(fp);
+	DEBUG = (argc > 5);
+	strcpy(oj_home, argv[1]);
+	p_id = atol(argv[2]);
+	lang = atol(argv[3]);
+	time_lmt = atol(argv[4]);
+	mem_lmt = atol(argv[5]);
+	runid = atol(argv[6]);
 }
 
-struct result judge(struct task *t, char *home, int runid)
+void write_result(int result, int time_used, int memeory_used, double pass_rate, char *error_point)
 {
+	char src_pth[BUFFER_SIZE];
+	sprintf(src_pth, "result.txt");
+	FILE *fp_src = fopen(src_pth, "w");
+	fprintf(fp_src, "%d\n", result);
+	fprintf(fp_src, "%d\n", time_used);
+	fprintf(fp_src, "%d\n", memeory_used);
+	fprintf(fp_src, "%lf\n", pass_rate);
+	fprintf(fp_src, "%s\n", error_point);
+}
+
+int main(int argc, char **argv)
+{
+	int p_id, lang, time_lmt, mem_lmt, runid;
+	int isspj, sim, sim_s_id, max_case_time = 0, num_of_test, namelen;
+	int usedtime = 0, topmemory = 0;
+	int ACflg, PEflg;
+	ACflg = PEflg = OJ_AC;
+	int finalACflg = ACflg;
+
+	double pass_rate = 0.0;
+
 	init_conf();
-	printf("start");
-	struct result r;
-	sprintf(oj_home, "%s", home);
+	init_parameters(argc, argv, p_id, lang, time_lmt, mem_lmt, runid);
 	char work_dir[BUFFER_SIZE];
-	int time_lmt = t->time_limit;
-	int mem_lmt = t->memory_limit;
-	int p_id = t->problem_id;
-	int lang = t->language;
-	int isspj, sim, sim_s_id, max_case_time = 0;
-	// 设置临时工作目录路径
 	sprintf(work_dir, "%s/run%d/", oj_home, runid);
 	chdir(work_dir);
 
-	clean_workdir(work_dir);
+	char error_point[BUFFER_SIZE];
+	memset(error_point, 0, BUFFER_SIZE);
+	// 设置临时工作目录路径
 	if (shm_run)
 		mk_shm_workdir(work_dir);
-
-	chdir(work_dir);
 	// 如果是测试运行
 	if (p_id == 0)
 	{
@@ -1698,17 +1726,10 @@ struct result judge(struct task *t, char *home, int runid)
 		mem_lmt = 128;
 		isspj = 0;
 	}
-
-	// 创建临时文件
-	char src_pth[BUFFER_SIZE];
-	sprintf(src_pth, "Main.%s", lang_ext[lang]);
-	FILE *fp_src = fopen(src_pth, "we");
-	fprintf(fp_src, "%s", t->source);
-	fclose(fp_src);
-
 	// 对 java 增大运行时间限制
 	if (lang >= 3 && lang != 10 && lang != 13 && lang != 14)
-	{ // Clang Clang++ not VM or Script
+	{
+		// Clang Clang++ not VM or Script
 		// the limit for java
 		time_lmt = time_lmt + java_time_bonus;
 		mem_lmt = mem_lmt + java_memory_bonus;
@@ -1720,15 +1741,11 @@ struct result judge(struct task *t, char *home, int runid)
 			execute_cmd("chown judge %s/java.policy", work_dir);
 		}
 	}
-
 	// 时间和内存限制有上限
 	if (time_lmt > 300 || time_lmt < 1)
 		time_lmt = 300;
 	if (mem_lmt > 1024 || mem_lmt < 1)
 		mem_lmt = 1024;
-
-	if (DEBUG)
-		printf("time: %d mem: %d\n", time_lmt, mem_lmt);
 
 	// 编译
 	int Compile_OK = compile(lang, work_dir);
@@ -1736,21 +1753,14 @@ struct result judge(struct task *t, char *home, int runid)
 	if (Compile_OK != 0)
 	{
 		write_log("compile error");
-		r.result = OJ_CE;
-		r.ceinfo = (char *)malloc(1 << 16);
-		read_from_file(r.ceinfo, "ce.txt");
-		clean_workdir(work_dir);
-		return r;
+		// 处理返回值
+		write_result(OJ_CE, 0, 0, 0, error_point);
+		return 0;
 	}
 	else
-	{
 		umount(work_dir);
-	}
 
-	char fullpath[BUFFER_SIZE];
-	char infile[BUFFER_SIZE];
-	char outfile[BUFFER_SIZE];
-	char userfile[BUFFER_SIZE];
+	char fullpath[BUFFER_SIZE], infile[BUFFER_SIZE], outfile[BUFFER_SIZE], userfile[BUFFER_SIZE];
 	sprintf(fullpath, "%s/data/%d", oj_home, p_id); // 数据文件所在路径
 	// 打开目录
 	DIR *dp;
@@ -1758,16 +1768,9 @@ struct result judge(struct task *t, char *home, int runid)
 	// 获取数据文件
 	if (p_id > 0 && (dp = opendir(fullpath)) == NULL)
 	{
-		// 返回IO错误
-		errno = EIO;
 		write_log("No such dir:%s!\n", fullpath);
-		return r;
+		return 1;
 	}
-
-	int ACflg, PEflg;
-	ACflg = PEflg = OJ_AC;
-	int namelen;
-	int usedtime = 0, topmemory = 0;
 
 	//create chroot for ruby bash python
 	if (lang == 4)
@@ -1795,21 +1798,10 @@ struct result judge(struct task *t, char *home, int runid)
 	if (lang == 17)
 		copy_go_runtime(work_dir);
 
-	double pass_rate = 0.0;
-	int num_of_test = 0;
-	int finalACflg = ACflg;
-
 	// 如果是测试运行
 	if (p_id == 0)
 	{
-		printf("running a custom input...\n");
-		// 获取用户输入
-		char src_pth[BUFFER_SIZE];
-		sprintf(src_pth, "data.in");
-		FILE *fp_src = fopen(src_pth, "w");
-		fprintf(fp_src, "%s", t->input_text);
-		fclose(fp_src);
-		// 限制系统调用
+		printf("runid%d,running a custom input...\n", runid);
 		init_syscalls_limits(lang);
 		pid_t pidApp = fork();
 		// 如果是 fork 的子线程
@@ -1820,33 +1812,16 @@ struct result judge(struct task *t, char *home, int runid)
 		else
 		{
 			// 主线程等待线程同步
-			watch_solution(pidApp, infile, &ACflg, isspj, userfile, outfile, lang, &topmemory, mem_lmt, &usedtime, time_lmt, p_id, PEflg, work_dir);
+			watch_solution(pidApp, infile, ACflg, isspj, userfile, outfile, lang, topmemory, mem_lmt, usedtime, time_lmt, p_id, PEflg, work_dir);
 		}
 		if (finalACflg == OJ_TL)
 		{
 			usedtime = time_lmt * 1000;
 		}
-		if (ACflg == OJ_RE)
-		{
-			if (DEBUG)
-				printf("add RE info of %d..... \n");
-			//添加错误信息
-			write_log("rerere");
-			r.reinfo = (char *)malloc(1 << 16);
-			read_from_file(r.reinfo, "error.out");
-		}
-		else
-		{
-			write_log("userout");
-			r.custom_out = (char *)malloc(1 << 16);
-			read_from_file(r.custom_out, "user.out");
-		}
-		clean_workdir(work_dir);
-		return r;
+		return 0;
 	}
 	// 循环每一个测试数据运行测试
 	// 保存错误点信息
-	r.error_point = (char *)malloc(1 << 10);
 	for (; (oi_mode || ACflg == OJ_AC || ACflg == OJ_PE) && (dirp = readdir(dp)) != NULL;)
 	{
 		namelen = isInFile(dirp->d_name); // check if the file is *.in or not
@@ -1864,11 +1839,9 @@ struct result judge(struct task *t, char *home, int runid)
 		else
 		{
 			num_of_test++;
-			watch_solution(pidApp, infile, &ACflg, isspj, userfile, outfile, lang, &topmemory, mem_lmt, &usedtime, time_lmt, p_id, PEflg, work_dir);
+			watch_solution(pidApp, infile, ACflg, isspj, userfile, outfile, lang, topmemory, mem_lmt, usedtime, time_lmt, p_id, PEflg, work_dir);
 
-			judge_solution(&ACflg, usedtime, time_lmt, isspj, p_id, infile,
-						   outfile, userfile, PEflg, lang, work_dir, topmemory,
-						   mem_lmt, num_of_test, r.error_point);
+			judge_solution(ACflg, usedtime, time_lmt, isspj, p_id, infile, outfile, userfile, PEflg, lang, work_dir, topmemory, mem_lmt, num_of_test, error_point);
 			if (use_max_time)
 			{
 				max_case_time = usedtime > max_case_time ? usedtime : max_case_time;
@@ -1885,7 +1858,6 @@ struct result judge(struct task *t, char *home, int runid)
 			{
 				finalACflg = ACflg;
 			}
-
 			ACflg = OJ_AC;
 		}
 	}
@@ -1896,38 +1868,34 @@ struct result judge(struct task *t, char *home, int runid)
 	if ((oi_mode && finalACflg == OJ_RE) || ACflg == OJ_RE)
 	{
 		if (DEBUG)
-			printf("add RE info of %d..... \n");
-		r.reinfo = (char *)malloc(1 << 16);
-		read_from_file(r.reinfo, "error.out");
+			printf("add RE info");
 	}
 
 	if (use_max_time)
 	{
-		r.time_used = max_case_time;
+		usedtime = max_case_time;
 	}
 	if (finalACflg == OJ_TL)
 	{
-		r.time_used = time_lmt * 1000;
+		usedtime = time_lmt * 1000;
 		if (DEBUG)
-			printf("usedtime:%d\n", r.time_used);
+			printf("usedtime:%d\n", usedtime);
 	}
 	if (oi_mode)
 	{
 		if (num_of_test > 0)
 			pass_rate /= num_of_test;
-		r.pass_rate = pass_rate;
 	}
 	else
 	{
-		r.pass_rate = 0;
+		pass_rate = 0;
 	}
 	// 此处有修改，修改为在TL和ML的时候也输出
 	if ((oi_mode && finalACflg == OJ_WA) || (ACflg >= OJ_WA && ACflg <= OJ_ML))
 	{
 		if (DEBUG)
-			printf("add diff info of %d..... \n");
+			printf("add diff info\n");
 	}
-	clean_workdir(work_dir);
 	if (DEBUG)
 		write_log("result=%d", oi_mode ? finalACflg : ACflg);
 	if (record_call)
@@ -1935,6 +1903,8 @@ struct result judge(struct task *t, char *home, int runid)
 		print_call_array();
 	}
 	closedir(dp);
-	r.result = oi_mode ? finalACflg : ACflg;
-	return r;
+	write_log("time_used=%d,memory_used=%d", usedtime, topmemory);
+	int finalResult = oi_mode ? finalACflg : ACflg;
+	write_result(finalResult, usedtime, topmemory >> 10, pass_rate, error_point);
+	return 0;
 }

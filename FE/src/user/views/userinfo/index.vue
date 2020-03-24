@@ -34,12 +34,14 @@
           h3 已解决的问题
           .problem__links(v-if="user")
             template(v-for="item,index in user.solved_problem_list")
-              router-link(:to="{name:'problem',params:{id:item}}") {{item}}
+              router-link(:to="{name:'problem',params:{id:item}}")
+                el-button(type="success",size="mini") {{item}}
         .main__section
           h3 未解决的问题
           .problem__links(v-if="user")
             template(v-for="item,index in user.unsolved_problem_list")
-              router-link(:to="{name:'problem',params:{id:item}}") {{item}}
+              router-link(:to="{name:'problem',params:{id:item}}")
+                el-button(type="danger",size="mini") {{item}}
 </template>
 
 <script>
@@ -138,12 +140,15 @@ ul.infolist {
 }
 
 .problem__links {
+  padding-top: 10px;
   display: flex;
   flex-wrap: wrap;
   >*{
-    margin-right: .1rem;
+    margin-right: .2rem;
+    margin-bottom: .1rem;
   }
-  font-size: 0.16rem;
-  word-spacing: 0.16rem;
+  .el-button{
+    width: 50px;
+  }
 }
 </style>

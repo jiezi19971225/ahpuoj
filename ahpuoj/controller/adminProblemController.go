@@ -6,13 +6,13 @@ import (
 	"ahpuoj/utils"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 func IndexProblem(c *gin.Context) {
@@ -384,6 +384,18 @@ func GetProblemData(c *gin.Context) {
 		"message": "读取数据文件成功",
 		"content": string(content),
 	})
+}
+
+func DownloadProblemData(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	filename := c.Param("filename")
+	cfg := utils.GetCfg()
+	dataDir, _ := cfg.GetValue("project", "datadir")
+	baseDir := dataDir + "/" + strconv.FormatInt(int64(id), 10)
+	filepath := baseDir + "/" + filename
+	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Writer.Header().Add("Content-Type", "application/octet-stream")
+	c.File(filepath)
 }
 
 func EditProblemData(c *gin.Context) {

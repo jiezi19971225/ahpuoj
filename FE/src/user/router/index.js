@@ -17,7 +17,7 @@ const router = new VueRouter({
 
 router.beforeEach(async (to, from, next) => {
   console.log('npstart');
-  NProgress.start(); // 进度条开始
+  // NProgress.start(); // 进度条开始
   if (Cookies.get('access-token')) {
     // 如果有token
     console.log('have token');
@@ -42,8 +42,8 @@ router.beforeEach(async (to, from, next) => {
   }
 });
 
-router.afterEach(() => {
-  NProgress.done(); // 进度条结束
-});
+// router.afterEach(() => {
+//   NProgress.done(); // 进度条结束
+// });
 
 export default router;

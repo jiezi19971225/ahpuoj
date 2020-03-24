@@ -13,6 +13,10 @@ import (
 func parseToken(c *gin.Context) (model.User, error) {
 
 	tokenString := c.GetHeader("Authorization")
+	// 用于文件下载请求，从 cookies 中读取
+	if tokenString == "" {
+		tokenString, _ = c.Cookie("access-token")
+	}
 	var user model.User
 	var role string
 
@@ -54,20 +58,13 @@ func parseToken(c *gin.Context) (model.User, error) {
 
 func ParseTokenMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		token, _ := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte("secret"), nil
-		})
-
-		if token != nil {
-			// 判断用户是否存在
-			user, err := parseToken(c)
-			if err != nil {
-				c.Next()
-			} else {
-				c.Set("user", user)
-				c.Next()
-			}
+		// 判断用户是否存在
+		user, err := parseToken(c)
+		if err != nil {
+			c.Next()
+		} else {
+			c.Set("user", user)
+			c.Next()
 		}
 	}
 }

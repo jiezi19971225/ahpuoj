@@ -4,11 +4,12 @@ import (
 	"ahpuoj/model"
 	"ahpuoj/request"
 	"ahpuoj/utils"
+	"archive/zip"
+	"bytes"
 	"database/sql"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 func IndexContest(c *gin.Context) {
@@ -384,4 +385,56 @@ func AddContestTeamAllUsers(c *gin.Context) {
 		"info":    infos,
 	})
 
+}
+
+func GetContestProblemSolutions(c *gin.Context) {
+	//var err error
+	//var temp int
+	id, _ := strconv.Atoi(c.Param("id"))
+	problemId, _ := strconv.Atoi(c.Param("problemid"))
+	type SolutionWithName struct {
+		Source     string `db:"source" json:"source"`
+		Username   string `db:"username" json:"username"`
+		SolutionId int    `db:"solution_id" json:"solution_id"`
+		Language   int    `db:"language" json:"language"`
+	}
+	var SolutionWithNameList []SolutionWithName
+	DB.Select(&SolutionWithNameList, "select source_code.solution_id,source_code.source,username,language from solution "+
+		"INNER JOIN source_code on solution.solution_id = source_code.solution_id "+
+		"INNER JOIN user on solution.user_id = user.id "+
+		"where contest_id = ? and num = ? and result = 4 "+
+		" order by username desc,solution_id desc;", id, problemId)
+
+	buf := new(bytes.Buffer)
+	// 实例化新的 zip.Writer
+	w := zip.NewWriter(buf)
+
+	// 从数据库查到的数据按照 用户名 提交id 排序，同一用户名可能有多份提交，需要手动去重
+	prename := ""
+	for _, solution := range SolutionWithNameList {
+		if prename == solution.Username {
+			continue
+		}
+		prename = solution.Username
+		f, err := w.Create(solution.Username + "." + utils.LanguageExt[solution.Language])
+		if err != nil {
+			utils.Consolelog(err)
+		}
+		_, err = f.Write([]byte(solution.Source))
+		if err != nil {
+			utils.Consolelog(err)
+		}
+	}
+	w.Close()
+
+	filename := "c" + c.Param("id") + "t" + c.Param("problemid")
+	contentLength := int64(buf.Len())
+
+	// 异常处理
+	defer func() {
+		recover()
+	}()
+	c.DataFromReader(200, contentLength, `application/octet-stream`, buf, map[string]string{
+		"Content-Disposition": `attachment; filename=` + filename + "solutions.zip",
+	})
 }

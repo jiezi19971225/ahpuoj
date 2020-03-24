@@ -5,10 +5,11 @@
       .siderbar
         ul.siderbar__item__list
           li
-            .header 系列赛信息
-          li 模式：
-              template(v-if="series")
-                el-tag(size="small",:type="series.team_mode == 0 ? 'success':'primary'",effect="dark")  {{ series.team_mode == 0?"个人系列赛":"团体系列赛" }}
+            .section__title 系列赛信息
+          li
+            span(style="color:#409eff;") 模式：
+            template(v-if="series")
+              el-tag(size="small",:type="series.team_mode == 0 ? 'success':'primary'",effect="dark")  {{ series.team_mode == 0?"个人系列赛":"团体系列赛" }}
 
       .main
         h1.content__panel__title {{series?series.name:''}}

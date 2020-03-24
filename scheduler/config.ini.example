@@ -16,3 +16,7 @@ host=rabbitmq
 port=5672
 user=root
 password=123456
+
+[project]
+coredir=/home/judge/hustoj_core
+schedulerdir=/home/judge/scheduler

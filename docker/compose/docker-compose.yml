@@ -50,8 +50,8 @@ services:
     image: rabbitmq:3.8.2-management
     container_name: ahpuojv2_rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER : ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS : ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     restart: always
     ports:
       - "15672:15672"

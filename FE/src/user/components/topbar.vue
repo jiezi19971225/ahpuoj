@@ -10,7 +10,7 @@
         span.line
   .topbar__nav(v-if="device==='desktop'")
     ul.topbar__nav__bar.clearfix
-      li.topbar__nav__item.topbar__section(v-for="item in menuList",:key="item.label",@click="handleMenuItemClick(item)")
+      li.topbar__nav__item.topbar__section(v-for="item in menuList",:key="item.label",@click="handleMenuItemClick(item)",:class="{active:activeTag === item.routeName}")
         router-link(:to="{name:item.routeName}")
           svg-icon(:name="item.icon")
           span {{item.label}}
@@ -33,9 +33,7 @@
             a 登出
 
     .topbar__login__wrapper(v-else, @click="handleLogin")
-        a
-          svg-icon(name="login")
-          span 登录
+        el-button(round) 登录
 
   transition(name="slide-fade")
       el-menu(@select="toggleMobileNav",class="topbar__mobile__nav__menu",background-color="#111144",
@@ -253,6 +251,28 @@ export default {
     ...mapState({
       device: (state) => state.app.device,
     }),
+    activeTag() {
+      const { name: routeName } = this.$route;
+      if (['problemSet', 'problem'].includes(routeName)) {
+        return 'problemSet';
+      }
+      if (['status', 'contestStatus', 'solution'].includes(routeName)) {
+        return 'status';
+      }
+      if (['contest', 'contestList', 'contestRank', 'contestTeamRank', 'contestProblem'].includes(routeName)) {
+        return 'contestList';
+      }
+      if (['ranklist'].includes(routeName)) {
+        return 'ranklist';
+      }
+      if (['issueList', 'issue'].includes(routeName)) {
+        return 'issueList';
+      }
+      if (['series', 'seriesList'].includes(routeName)) {
+        return 'seriesList';
+      }
+      return '';
+    },
   },
   mounted() {
     EventBus.$on('goLogin', () => {
@@ -366,9 +386,10 @@ $topbar-height: 50px;
 .topbar__wrapper {
   box-sizing: border-box;
   position: relative;
-  background: $--color-blue-verydeep;
-  border-bottom: 1px solid $--color-blue-deep;
+  background: #fff;
   height: $topbar-height;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 1px 0 0 #ddd;
 
   @media screen and (max-width: 960px) {
     height: $mibile-nav-height;
@@ -376,25 +397,23 @@ $topbar-height: 50px;
 
   .topbar__title {
     text-indent: 10px;
-
     a {
       cursor: pointer;
     }
-
     height: 100%;
     line-height: $topbar-height;
     float: left;
     width: 150px;
     font-size: 30px;
-    // @media screen and (min-width: 1280px) {
-    //   width: 200px;
-    //   font-size: 40px;
-    // }
     text-align: center;
-
     a {
+      font-weight:bold;
       cursor: pointer;
-      color: $--color-blue;
+      color: #999;
+      transition: all .6s;
+      &:hover{
+        color:#333;
+      }
     }
   }
 
@@ -430,24 +449,23 @@ $topbar-height: 50px;
       a {
         font-size: 18px;
         display: block;
-        color: $--color-level9;
+        color: #666;
       }
 
       svg {
-        vertical-align: -2px;
+        vertical-align: -3px;
         height: 20px;
         margin-right: 0.05rem;
       }
 
-      &:hover {
-        color: $--color-blue;
-
+      &:hover,&.active {
+        color: #111;
         a {
-          color: $--color-blue;
+          color: #111;
         }
 
         &::before {
-          background: $--color-blue;
+          background: $--color-primary;
           transform: translate3d(0, 0, 0) scaleX(0.8);
         }
       }
@@ -482,7 +500,7 @@ $topbar-height: 50px;
     height: 100%;
     position: absolute;
     width: 200px;
-    right: 20px;
+    right: 30px;
     top: 0;
 
     .topbar__login__wrapper {
@@ -492,9 +510,9 @@ $topbar-height: 50px;
       a {
         font-size: 18px;
         display: block;
-        color: $--color-level9;
-
+        color: #666;
         svg {
+          vertical-align: -3px;
           height: 20px !important;
         }
       }
@@ -502,17 +520,15 @@ $topbar-height: 50px;
 
     .topbar__userinfo__wrapper {
       display: flex;
-
       .username-wrapper {
         text-align: right;
         box-sizing: border-box;
         height: $topbar-height;
         width: 140px;
         line-height: $topbar-height;
-        color: $--color-level12;
+        color: #666;
         font-size: 14px;
       }
-
       img {
         cursor: pointer;
         margin-left: auto;
@@ -523,9 +539,11 @@ $topbar-height: 50px;
       }
 
       .topbar__userinfo__dropdown {
+        border-radius: 10px;
         position: absolute;
-        width: 200px;
+        width: 120px;
         top: $topbar-height;
+        right: 0;
         z-index: 100;
         background: $--color-level15;
         border: 1px solid $--color-level12;
@@ -534,21 +552,20 @@ $topbar-height: 50px;
 
         li {
           cursor: pointer;
-          color: $--color-level3;
-          height: 50px;
-          line-height: 50px;
+          height: 40px;
+          line-height: 40px;
           border-bottom: 0.01rem solid $--color-level13;
           transition: all 0.3s;
-
           a {
+            color: #999;
             display: block;
             width: 100%;
             height: 100%;
-            font-size: 16px;
-          }
-
-          &:hover {
-            color: $--color-blue;
+            font-size: 14px;
+            &:hover {
+              color: #333;
+              transition:all, .3s;
+            }
           }
         }
       }

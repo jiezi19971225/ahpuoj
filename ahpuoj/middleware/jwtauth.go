@@ -16,6 +16,10 @@ func JwtauthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		tokenString := c.GetHeader("Authorization")
+		// 用于文件下载请求，从 cookies 中读取
+		if tokenString == "" {
+			tokenString, _ = c.Cookie("access-token")
+		}
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			return []byte("secret"), nil
 		})
@@ -37,6 +41,7 @@ func JwtauthMiddleware() gin.HandlerFunc {
 			}
 		} else if ve, ok := err.(*jwt.ValidationError); ok {
 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+				utils.Consolelog("ERROR", ve.Errors)
 				c.AbortWithStatusJSON(400, gin.H{
 					"message": "token非法",
 				})

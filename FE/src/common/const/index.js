@@ -1,8 +1,12 @@
-export const server = process.env.NODE_ENV === 'production' ? 'http://172.16.0.3/' : 'http://localhost/';
-export const tinymceDocumentBaseUrl = process.env.NODE_ENV === 'production' ? 'http://172.16.0.3/' : 'http://localhost:8888/';
+export const server = `${window.location.protocol}//${window.location.hostname}/`;
+export const tinymceDocumentBaseUrl = process.env.NODE_ENV === 'production' ?
+  `${window.location.protocol}//${window.location.hostname}/` : 'http://localhost:8888/';
+
+// 线上环境 由 nginx 反代  本地环境，需要手动代理到8080端口
+export const apiPort = process.env.NODE_ENV === 'production' ? "" : `:8080`
+
 export const testRunInterval = 5;
-export const resultList = [
-  {
+export const resultList = [{
     code: 0,
     name: '队列中',
     description: '',
@@ -35,14 +39,12 @@ export const resultList = [
   {
     code: 6,
     name: '答案错误',
-    description:
-      '答案不对，仅仅通过样例数据的测试并不一定是正确答案，一定还有你没想到的地方。',
+    description: '答案不对，仅仅通过样例数据的测试并不一定是正确答案，一定还有你没想到的地方。',
   },
   {
     code: 7,
     name: '时间超限',
-    description:
-      '运行超出时间限制，检查下是否有死循环，或者应该有更快的计算方法。',
+    description: '运行超出时间限制，检查下是否有死循环，或者应该有更快的计算方法。',
   },
   {
     code: 8,
@@ -57,8 +59,7 @@ export const resultList = [
   {
     code: 10,
     name: '运行错误',
-    description:
-      '运行时错误，可能的原因有非法的内存访问，数组越界，指针漂移，调用禁用的系统函数。',
+    description: '运行时错误，可能的原因有非法的内存访问，数组越界，指针漂移，调用禁用的系统函数。',
   },
   {
     code: 11,
