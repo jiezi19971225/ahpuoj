@@ -1,6 +1,6 @@
 <template lang="pug">
   .content
-    title {{`S${solution && solution.id} 评测详情 - AHPUOJ`}}
+    title {{`S${solution && solution.solution_id} 评测详情 - AHPUOJ`}}
     .content__main
       .siderbar
         ul.siderbar__item__list
@@ -57,18 +57,21 @@
 </template>
 
 <script>
-import CodeMirror from 'common/components/codemirror.vue';
-import clipboard from 'clipboard';
-import { getSolution } from 'user/api/nologin';
-import { downloadDatafile, submitJudgeCode, toggleSolutionStatus } from 'user/api/user';
-import EventBus from 'common/eventbus';
+import CodeMirror from "common/components/codemirror.vue";
+import clipboard from "clipboard";
+import { getSolution } from "user/api/nologin";
+import {
+  downloadDatafile,
+  submitJudgeCode,
+  toggleSolutionStatus
+} from "user/api/user";
+import EventBus from "common/eventbus";
 
-import { resultList, langList } from 'common/const';
-
+import { resultList, langList } from "common/const";
 
 export default {
   components: {
-    CodeMirror,
+    CodeMirror
   },
   data() {
     return {
@@ -82,28 +85,28 @@ export default {
       langList: [],
       seeable: false,
       resultList: [],
-      timer: 0,
+      timer: 0
     };
   },
   computed: {
     wrongFileName() {
       return this.meta.runtime_info.substring(
         0,
-        this.meta.runtime_info.lastIndexOf('.'),
+        this.meta.runtime_info.lastIndexOf(".")
       );
     },
     renderWrongInfo() {
       if (!this.meta) {
-        return '';
+        return "";
       }
       if (!this.meta.runtime_info) {
-        return '没有错误信息';
+        return "没有错误信息";
       }
       if (this.solution.result >= 5 && this.solution.result <= 8) {
         return `测试样例${this.wrongFileName}处发生了错误`;
       }
       return this.meta.runtime_info;
-    },
+    }
   },
   mounted() {
     this.resultList = resultList;
@@ -134,9 +137,9 @@ export default {
           this.loading = this.$loading({
             target: this.$refs.solutionContent,
             lock: true,
-            text: '等待评测中',
-            spinner: 'el-icon-loading',
-            background: 'rgba(0, 0, 0, 0.3)',
+            text: "等待评测中",
+            spinner: "el-icon-loading",
+            background: "rgba(0, 0, 0, 0.3)"
           });
           this.timer = setInterval(async () => {
             const res2 = await getSolution(id);
@@ -152,15 +155,15 @@ export default {
         }
       } catch (err) {
         console.log(err);
-        this.$router.replace({ name: '404Page' });
+        this.$router.replace({ name: "404Page" });
       }
     },
     handleSearchTag(tagId) {
-      this.$store.dispatch('bus/setTag', tagId);
-      this.$router.push({ name: 'problemSet' });
+      this.$store.dispatch("bus/setTag", tagId);
+      this.$router.push({ name: "problemSet" });
     },
     async handleDownloadDataFile(filename, type) {
-      if (type === 'in') {
+      if (type === "in") {
         this.downloadInDataButtonInLoading = true;
         this.downloadInDataButtonDisabled = true;
       } else {
@@ -172,13 +175,13 @@ export default {
         const res = await downloadDatafile(
           this.solution.problem_id,
           this.solution.solution_id,
-          filename,
+          filename
         );
         const url = window.URL.createObjectURL(new Blob([res.data]));
-        const downloadElement = document.createElement('a');
-        downloadElement.style.display = 'none';
+        const downloadElement = document.createElement("a");
+        downloadElement.style.display = "none";
         downloadElement.href = url;
-        downloadElement.setAttribute('download', filename);
+        downloadElement.setAttribute("download", filename);
         document.body.appendChild(downloadElement);
         downloadElement.click();
         document.body.removeChild(downloadElement); // 下载完成移除元素
@@ -186,7 +189,7 @@ export default {
       } catch (err) {
         console.log(err);
       } finally {
-        if (type === 'in') {
+        if (type === "in") {
           this.downloadInDataButtonInLoading = false;
           this.downloadInDataButtonDisabled = false;
         } else {
@@ -197,21 +200,21 @@ export default {
     },
     async handleToggleSolutionStatus() {
       try {
-        const res = await toggleSolutionStatus(this.solution.id);
+        const res = await toggleSolutionStatus(this.solution.solution_id);
         this.solution.public = !this.solution.public;
         this.$message({
           message: res.data.message,
-          type: 'success',
+          type: "success"
         });
       } catch (err) {
         console.log(err);
         this.$message({
           message: err.response.data.message,
-          type: 'err',
+          type: "err"
         });
       }
-    },
-  },
+    }
+  }
 };
 </script>
 <style lang="scss" scoped>

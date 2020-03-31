@@ -333,7 +333,7 @@ func NologinGetSolution(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "数据获取成功",
 		"solution": solution,
-		"meta":	meta,
+		"meta":     meta,
 		"seeable":  seeable,
 	})
 }
@@ -369,7 +369,8 @@ func NologinGetProblem(c *gin.Context) {
 	if cache, err := redis.Bytes(conn.Do("get", "problem:"+c.Param("id"))); err == nil {
 		var jsonData map[string]interface{}
 		json.Unmarshal(cache, &jsonData)
-		if jsonData["defunct"] == 1 && (loggedIn && user.Role != "admin" || !loggedIn) {
+		// 非管理员 不能查看隐藏的问题
+		if jsonData["defunct"].(float64) == 1 && !(loggedIn && user.Role == "admin") {
 			err = errors.New("权限不足")
 		}
 		if utils.CheckError(c, err, "问题不存在") != nil {
@@ -383,7 +384,7 @@ func NologinGetProblem(c *gin.Context) {
 	} else {
 		err := DB.Get(&problem, "select * from problem where id = ?", id)
 		// 查询成功 但是用户没有权限查看该题目
-		if err == nil && problem.Defunct == 1 && (loggedIn && user.Role != "admin" || !loggedIn) {
+		if err == nil && problem.Defunct == 1 && !(loggedIn && user.Role == "admin") {
 			err = errors.New("权限不足")
 		}
 		problem.FetchTags()
@@ -415,7 +416,8 @@ func NologinGetContestProblem(c *gin.Context) {
 	num, _ := strconv.Atoi(c.Param("num"))
 	var contest model.Contest
 
-	if loggedIn && user.Role != "admin" || !loggedIn {
+	// 非管理员
+	if !(loggedIn && user.Role == "admin") {
 		err = DB.Get(&contest, "select * from contest where id = ? and is_deleted = 0 and defunct = 0", cid)
 	} else {
 		err = DB.Get(&contest, "select * from contest where id = ? and is_deleted = 0", cid)
@@ -500,7 +502,7 @@ func NologinGetContest(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
 	// 非管理员无法查看被保留的竞赛作业
-	if loggedIn && user.Role != "admin" || !loggedIn {
+	if !(loggedIn && user.Role == "admin") {
 		err = DB.Get(&contest, "select * from contest where id = ? and is_deleted = 0 and defunct = 0", id)
 	} else {
 		err = DB.Get(&contest, "select * from contest where id = ? and is_deleted = 0", id)
@@ -927,7 +929,7 @@ func NologinGetSeries(c *gin.Context) {
 	var series model.Series
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	if loggedIn && user.Role != "admin" || !loggedIn {
+	if !(loggedIn && user.Role == "admin") {
 		err = DB.Get(&series, "select * from series where id = ? and defunct = 0", id)
 	} else {
 		err = DB.Get(&series, "select * from series where id = ?", id)

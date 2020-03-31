@@ -3,6 +3,7 @@ package controller
 import (
 	"ahpuoj/model"
 	"ahpuoj/request"
+	"ahpuoj/service/rabbitmq"
 	"ahpuoj/utils"
 	"database/sql"
 	"encoding/json"
@@ -189,17 +190,43 @@ func ToggleProblemStatus(c *gin.Context) {
 
 // 重判问题相关
 func RejudgeSolution(c *gin.Context) {
+	var err error
 	id, _ := strconv.Atoi(c.Param("id"))
-	var temp int
-	// 判断提交是否存在
-	DB.Get(&temp, "select count(1) from solution where solution_id = ?", id)
-	if temp == 0 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "重判提交失败，该提交不存在",
-		})
+	//	// 判断提交是否存在
+
+	type RejudgeInfo struct {
+		UserId      int    `db:"user_id"`
+		SolutionId  int    `db:"solution_id"`
+		ProblemId   int    `db:"problem_id"`
+		Language    int    `db:"language"`
+		TimeLimit   int    `db:"time_limit"`
+		MemoryLimit int    `db:"memory_limit"`
+		Source      string `db:"source"`
+	}
+	var info RejudgeInfo
+	err = DB.Get(&info, `select solution.solution_id,solution.user_id,solution.problem_id,solution.language,problem.time_limit,problem.memory_limit,source_code.source from solution 
+	inner join problem on solution.problem_id=problem.id 
+	inner join source_code on solution.solution_id=source_code.solution_id 
+	where solution.solution_id = ?`, id)
+	if utils.CheckError(c, err, "重判提交失败，该提交不存在") != nil {
 		return
 	}
+	//更改提交状态
 	DB.Exec("update solution set result = 1 where solution_id = ?", id)
+	//将判题数据推入消息队列
+
+	jsondata, _ := json.Marshal(gin.H{
+		"UserId":       info.UserId,
+		"TestrunCount": 0,
+		"SolutionId":   info.SolutionId,
+		"ProblemId":    info.ProblemId,
+		"Language":     info.Language,
+		"TimeLimit":    1,
+		"MemoryLimit":  64,
+		"Source":       info.Source,
+		"InputText":    "",
+	})
+	rabbitmq.Publish("oj", "problem", jsondata)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "重判提交成功",
 	})
@@ -217,6 +244,35 @@ func RejudgeProblem(c *gin.Context) {
 		return
 	}
 	DB.Exec("update solution set result = 1 where problem_id = ?", id)
+	type RejudgeInfo struct {
+		UserId      int    `db:"user_id"`
+		SolutionId  int    `db:"solution_id"`
+		ProblemId   int    `db:"problem_id"`
+		Language    int    `db:"language"`
+		TimeLimit   int    `db:"time_limit"`
+		MemoryLimit int    `db:"memory_limit"`
+		Source      string `db:"source"`
+	}
+	var infos []RejudgeInfo
+	DB.Select(&infos, `select solution.solution_id,solution.user_id,solution.problem_id,solution.language,problem.time_limit,problem.memory_limit,source_code.source from solution 
+	inner join problem on solution.problem_id=problem.id 
+	inner join source_code on solution.solution_id=source_code.solution_id 
+	where solution.problem_id = ?`, id)
+
+	for _, info := range infos {
+		jsondata, _ := json.Marshal(gin.H{
+			"UserId":       info.UserId,
+			"TestrunCount": 0,
+			"SolutionId":   info.SolutionId,
+			"ProblemId":    info.ProblemId,
+			"Language":     info.Language,
+			"TimeLimit":    1,
+			"MemoryLimit":  64,
+			"Source":       info.Source,
+			"InputText":    "",
+		})
+		rabbitmq.Publish("oj", "problem", jsondata)
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "重判问题成功",
 	})

@@ -32,7 +32,7 @@
                   el-button(size="mini",round,:class="[tagId == tag.id?'is-active':'']",@click="handleSearchByTag(tag.id)") {{tag.name}}
       .main.has__pagination
         el-pagination(style="float:left;",@current-change="fetchData",:current-page.sync="currentPage",:page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
-        el-table(size="small",:data="tableData",v-loading="loading")
+        el-table(size="small",:data="tableData",v-loading="loading",row-key="id")
           el-table-column(width="40")
             template(slot-scope="scope")
               svg-icon(name="ok",v-if="scope.row.status == 1")
@@ -58,28 +58,28 @@
 </template>
 
 <script>
-import { getProblemList, getAllTags } from 'user/api/nologin';
-import { mapState } from 'vuex';
+import { getProblemList, getAllTags } from "user/api/nologin";
+import { mapState } from "vuex";
 
 export default {
-  name: 'problemSet',
+  name: "problemSet",
   data() {
     return {
       loading: false,
       currentPage: 1,
       perpage: 50,
-      queryParam: '',
+      queryParam: "",
       tableData: [],
       total: 0,
       level: -1,
       tagId: -1,
-      tags: [],
+      tags: []
     };
   },
   computed: {
     ...mapState({
-      device: (state) => state.app.device,
-    }),
+      device: state => state.app.device
+    })
   },
   async mounted() {
     this.tagId = this.$store.getters.tagId;
@@ -93,7 +93,7 @@ export default {
       this.tagId = this.$store.getters.tagId;
       this.fetchData();
     }
-    this.$store.dispatch('bus/resetTag');
+    this.$store.dispatch("bus/resetTag");
   },
   methods: {
     async fetchData() {
@@ -107,7 +107,7 @@ export default {
           this.perpage,
           this.queryParam,
           this.level,
-          this.tagId,
+          this.tagId
         );
         const { data } = res;
         this.tableData = data.data;
@@ -116,12 +116,12 @@ export default {
       } catch (err) {
         console.log(err);
       }
-      this.$store.dispatch('bus/resetTag');
+      this.$store.dispatch("bus/resetTag");
     },
     handleSearchByResetConf() {
       this.level = -1;
       this.tagId = -1;
-      this.queryParam = '';
+      this.queryParam = "";
       this.fetchData();
     },
     handleSearchByParam() {
@@ -141,7 +141,7 @@ export default {
     calcRate(row) {
       const rate = row.submit === 0 ? 0 : row.accepted / row.submit;
       return `${(rate * 100).toFixed(2)}%`;
-    },
-  },
+    }
+  }
 };
 </script>
