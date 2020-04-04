@@ -34,4 +34,6 @@ ahpuoj/.vscode/launch.json
 # mysql model
 /model/oj.mwb.bak
 
+# ide
 .idea
+.vscode

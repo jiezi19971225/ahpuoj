@@ -47,7 +47,7 @@
                 span {{`${scope.row.nick}`}}
           el-table-column(label="问题", min-width="180")
             template(slot-scope="scope")
-              router-link(:to="{name:'problem',params:{id:scope.row.problem_id}}") {{ !isContest?`P${scope.row.problem_id} ${scope.row.problem_title}`:`${engNum(scope.row.num)} ${scope.row.problem_title}` }}
+              router-link(:to="isContest?{name:'contestProblem',params:{id:contestId,num:scope.row.num}}:{name:'problem',params:{id:scope.row.problem_id}}") {{ !isContest?`P${scope.row.problem_id} ${scope.row.problem_title}`:`${engNum(scope.row.num)} ${scope.row.problem_title}` }}
           el-table-column(label="评测状态", min-width="80")
             template(slot-scope="scope")
               router-link(:to="{name:'solution',params:{id:scope.row.solution_id}}")
@@ -75,16 +75,16 @@
 </template>
 
 <script>
-import { getSolutionList, getLanguageList } from 'user/api/nologin';
-import { resultList } from 'common/const';
-import { mapState } from 'vuex';
+import { getSolutionList, getLanguageList } from "user/api/nologin";
+import { resultList } from "common/const";
+import { mapState } from "vuex";
 
 export default {
   props: {
     isContest: {
       type: Boolean,
-      default: false,
-    },
+      default: false
+    }
   },
   data() {
     return {
@@ -92,25 +92,27 @@ export default {
       currentPage: 1,
       perpage: 30,
       tableData: [],
-      queryParam: '',
+      queryParam: "",
       contestId: 0,
       contestPnum: -1,
-      nick: '',
+      nick: "",
       language: -1,
       result: -1,
       total: 0,
       langList: [],
       resultList: [],
-      timer: 0,
+      timer: 0
     };
   },
   computed: {
     ...mapState({
-      device: (state) => state.app.device,
+      device: state => state.app.device
     }),
     searchableResultList() {
-      return this.resultList.filter((val, index, arr) => val.code >= 4 && val.code <= 11);
-    },
+      return this.resultList.filter(
+        (val, index, arr) => val.code >= 4 && val.code <= 11
+      );
+    }
   },
   async mounted() {
     const res = await getLanguageList();
@@ -142,7 +144,7 @@ export default {
     if (this.$store.getters.solutionResult !== -1) {
       this.result = this.$store.getters.solutionResult;
     }
-    this.$store.dispatch('bus/resetSolutionFilter');
+    this.$store.dispatch("bus/resetSolutionFilter");
     // 5s请求一次数据
     this.fetchData();
     this.timer = setInterval(() => {
@@ -165,7 +167,7 @@ export default {
           this.nick,
           this.language,
           this.result,
-          this.contestId,
+          this.contestId
         );
         const { data } = res;
         setTimeout(() => {
@@ -179,8 +181,8 @@ export default {
     },
     handleSearchByResetConf() {
       this.loading = true;
-      this.queryParam = '';
-      this.nick = '';
+      this.queryParam = "";
+      this.nick = "";
       this.language = -1;
       this.result = -1;
       this.fetchData();
@@ -230,14 +232,14 @@ export default {
     },
     calcRerultType(result) {
       if (result === 4) {
-        return 'success';
+        return "success";
       }
-      return 'danger';
+      return "danger";
     },
     calcCodeLength(codeLength) {
       return `${Number(codeLength / 1000).toFixed(2)}KB`;
-    },
-  },
+    }
+  }
 };
 </script>
 <style lang="scss" scoped>

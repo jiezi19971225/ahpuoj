@@ -97,7 +97,7 @@ module.exports = {
   devServer: {
     open: true,
     hot: true,
-    host: '127.0.0.1',
+    host: 'localhost',
     port: '8888',
     disableHostCheck: true,
     historyApiFallback: {
