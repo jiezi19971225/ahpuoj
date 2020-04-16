@@ -14,6 +14,9 @@
         template(slot-scope="scope")
           el-tag(:type="scope.row.defunct == 0 ? 'success':'danger'",effect="dark") {{scope.row.defunct == 0?'启用':'保留'}}
           el-tag(:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark") {{scope.row.team_mode == 0?'个人':'团队'}}
+      el-table-column(label="创建者", width="180")
+       template(slot-scope="scope")
+          a(:href="`/userinfo/${scope.row.id}`",target="_blank") {{scope.row.username}}
       el-table-column(label="操作", width="300")
         template(slot-scope="scope")
           el-button(size="mini", type="primary", @click="$router.push({name:'adminSeriesManage',params:{id:scope.row.id}})") 管理
@@ -93,11 +96,10 @@ export default {
           this.queryParam,
         );
         const { data } = res;
-        setTimeout(() => {
-          this.tableData = data.data;
-          this.total = data.total;
-          this.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.currentPage = data.page;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
@@ -109,7 +111,6 @@ export default {
     },
     handleSizeChange(val) {
       this.perpage = val;
-      console.log(this.perpage);
       this.fetchDataList();
     },
     openDialog() {
@@ -132,22 +133,14 @@ export default {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
           try {
-            let res;
             if (this.submitMode === 'create') {
-              res = await createSeries(this.form);
+              await createSeries(this.form);
             } else {
-              res = await editSeries(this.currentRowId, this.form);
+              await editSeries(this.currentRowId, this.form);
             }
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.fetchDataList();
           } catch (err) {
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
+            console.log(err);
           }
           this.dialogFormVisible = false;
         } else {
@@ -183,18 +176,10 @@ export default {
           type: 'warning',
         });
         try {
-          const res = await toggleSeriesStatus(row.id);
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
-
+          await toggleSeriesStatus(row.id);
           row.defunct = 1 - row.defunct;
         } catch (err) {
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({
@@ -211,17 +196,10 @@ export default {
           type: 'warning',
         });
         try {
-          const res = await deleteSeries(row.id);
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
+          await deleteSeries(row.id);
           this.fetchDataList();
         } catch (err) {
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({

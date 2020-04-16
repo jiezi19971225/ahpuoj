@@ -7,18 +7,20 @@ import (
 )
 
 func ApiAdminRouter(g *gin.RouterGroup) {
-	// 竞赛
+	// 竞赛二级管理员可访问
 	g.GET("/contest/:id/problem/:problemid/solutions", controller.GetContestProblemSolutions)
 	g.POST("/contest", controller.StoreContest)
 	g.GET("/contests", controller.IndexContest)
 	g.GET("/allcontests", controller.GetAllContests)
 	g.GET("/contest/:id", controller.ShowContest)
+	g.GET("/contest/:id/users", controller.IndexContestUser)
+	g.GET("/contest/:id/teams", controller.IndexContestTeamWithUser)
+	// 竞赛二级管理员为资源拥有者可访问
 	g.PUT("/contest/:id", controller.UpdateContest)
 	g.DELETE("/contest/:id", controller.DeleteContest)
 	g.PUT("/contest/:id/status", controller.ToggleContestStatus)
-	g.GET("/contest/:id/users", controller.IndexContestUser)
+	g.POST("/contest/:id/users", controller.AddContestUsers)
 	g.DELETE("/contest/:id/user/:userid", controller.DeleteContestUser)
-	g.GET("/contest/:id/teams", controller.IndexContestTeamWithUser)
 	g.POST("/contest/:id/team/:teamid", controller.AddContestTeam)
 	g.DELETE("/contest/:id/team/:teamid", controller.DeleteContestTeam)
 	g.POST("/contest/:id/team/:teamid/users", controller.AddContestTeamUsers)
@@ -40,30 +42,33 @@ func ApiAdminRouter(g *gin.RouterGroup) {
 	g.DELETE("/new/:id", controller.DeleteNew)
 	g.PUT("/new/:id/status", controller.ToggleNewStatus)
 	g.PUT("/new/:id/topstatus", controller.ToggleNewTopStatus)
-	// 问题
+	// 问题二级管理员可访问
 	g.POST("/problem", controller.StoreProblem)
 	g.GET("/problems", controller.IndexProblem)
 	g.GET("/problem/:id", controller.ShowProblem)
-	g.PUT("/problem/:id", controller.UpdateProblem)
-	g.DELETE("/problem/:id", controller.DeleteProblem)
-	g.PUT("/problem/:id/status", controller.ToggleProblemStatus)
 	g.GET("/problem/:id/datas", controller.IndexProblemData)
 	g.GET("/problem/:id/data/:filename", controller.GetProblemData)
 	g.GET("/download/problem/:id/data/:filename", controller.DownloadProblemData)
+	g.PUT("/solution/:id/judgestatus", controller.RejudgeSolution)
+	g.PUT("/problem/:id/judgestatus", controller.RejudgeProblem)
+	// 问题二级管理员为资源拥有者可访问
+	g.PUT("/problem/:id", controller.UpdateProblem)
+	g.DELETE("/problem/:id", controller.DeleteProblem)
+	g.PUT("/problem/:id/status", controller.ToggleProblemStatus)
 	g.POST("/problem/:id/data", controller.AddProblemData)
 	g.POST("/problem/:id/datafile", controller.AddProblemDataFile)
 	g.PUT("/problem/:id/data/:filename", controller.EditProblemData)
 	g.DELETE("/problem/:id/data/:filename", controller.DeleteProblemData)
-	g.PUT("/solution/:id/judgestatus", controller.RejudgeSolution)
-	g.PUT("/problem/:id/judgestatus", controller.RejudgeProblem)
+	//问题只有超级管理员可以访问
 	g.PUT("/problem/:id/movement/:newid", controller.ReassignProblem)
 	// 问题集
 	g.POST("/problemset", controller.ImportProblemSet)
-	// 系列赛事
+	// 系列赛事二级管理员可访问
 	g.POST("/series", controller.StoreSeries)
 	g.GET("/serieses", controller.IndexSeries)
 	g.GET("/series/:id", controller.ShowSeries)
 	g.GET("/series/:id/contests", controller.IndexSeriesContest)
+	// 系列赛事二级管理员为资源拥有者可访问
 	g.PUT("/series/:id", controller.UpdateSeries)
 	g.DELETE("/series/:id", controller.DeleteSeries)
 	g.PUT("/series/:id/status", controller.ToggleSeriesStatus)
@@ -72,26 +77,34 @@ func ApiAdminRouter(g *gin.RouterGroup) {
 	// 设置
 	g.GET("/settings", controller.GetSettings)
 	g.PUT("/settings", controller.SetSettings)
+	g.GET("/settings/fixpermission", controller.FixPermission)
 	// 标签
 	g.POST("/tag", controller.StoreTag)
 	g.GET("/tags", controller.IndexTag)
 	g.GET("/alltags", controller.GetAllTags)
 	g.PUT("/tag/:id", controller.UpdateTag)
 	g.DELETE("/tag/:id", controller.DeleteTag)
-	// 用户
+	// 用户二级管理员可访问
 	g.GET("/users", controller.IndexUser)
+	// 用户只有超级管理员可访问
 	g.PUT("/user/:id/status", controller.ToggleUserStatus)
 	g.PUT("/user/:id/pass", controller.ChangeUserPass)
 	// 首页
 	g.GET("/submitstatistic", controller.GetSubmitStatistic)
-	// 团队
+	// 团队二级管理员可访问
 	g.POST("/team", controller.StoreTeam)
-	g.POST("/team/:id/users", controller.AddTeamUsers)
 	g.GET("/teams", controller.IndexTeam)
 	g.GET("/allteams", controller.GetAllTeams) // 在竞赛作业人员配置中获取全部团队的接口
 	g.GET("/team/:id", controller.GetTeam)
 	g.GET("/team/:id/users", controller.IndexTeamUser)
+	// 团队二级管理员为资源拥有者可访问
+	g.POST("/team/:id/users", controller.AddTeamUsers)
 	g.PUT("/team/:id", controller.UpdateTeam)
 	g.DELETE("/team/:id/user/:userid", controller.DeleteTeamUser)
 	g.DELETE("/team/:id", controller.DeleteTeam)
+	// 权限
+	g.GET("/permission/rolelist", controller.GetRoleList)
+	g.GET("/permission/adminlist", controller.GetAdminList)
+	g.POST("/permission/assign", controller.AssignRole)
+	g.POST("/permission/unassign", controller.UnassignRole)
 }

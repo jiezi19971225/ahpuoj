@@ -15,14 +15,16 @@ type Series struct {
 	CreatedAt   string `db:"created_at" json:"created_at"`
 	UpdatedAt   string `db:"updated_at" json:"updated_at"`
 	IsDeleted   int    `db:"is_deleted" json:"is_deleted"`
+	UserId      int    `db:"user_id" json:"user_id"`
+	Username    string `db:"username" json:"username"`
 	// 附加信息
 	ContestInfos []map[string]interface{} `json:"contestinfos"`
 }
 
 func (series *Series) Save() error {
 	result, err := DB.Exec(`insert into series
-	(name,description,team_mode,created_at,updated_at) 
-	values (?,?,?,NOW(),NOW())`, series.Name, series.Description, series.TeamMode)
+	(name,description,team_mode,user_id,created_at,updated_at) 
+	values (?,?,?,?,NOW(),NOW())`, series.Name, series.Description, series.TeamMode, series.UserId)
 	if err != nil {
 		return err
 	}

@@ -24,13 +24,13 @@ func NologinGetNewList(c *gin.Context) {
 	perpage, _ := strconv.Atoi(c.DefaultQuery("perpage", "20"))
 
 	whereString := ""
-	if !(loggedIn && user.Role == "admin") {
+	if !(loggedIn && user.Role != "user") {
 		whereString += " where defunct = 0 "
 	}
 
 	whereString += " order by top desc, id desc"
 
-	rows, total, err := model.Paginate(page, perpage, "new", []string{"*"}, whereString)
+	rows, total, err := model.Paginate(&page, &perpage, "new", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -43,6 +43,7 @@ func NologinGetNewList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"data":    news,
 	})
 }
@@ -81,14 +82,14 @@ func NologinGetProblemList(c *gin.Context) {
 	}
 
 	// 非管理员无法查看隐藏的题目
-	if !loggedIn || (loggedIn && user.Role != "admin") {
+	if !loggedIn || (loggedIn && user.Role == "user") {
 		whereString += " and problem.defunct=0 "
 	}
 
 	whereString += " group by problem.id "
 	whereString += " order by problem.id asc"
 	utils.Consolelog(whereString)
-	rows, total, err := model.Paginate(page, perpage, "problem left join problem_tag on problem.id = problem_tag.problem_id",
+	rows, total, err := model.Paginate(&page, &perpage, "problem left join problem_tag on problem.id = problem_tag.problem_id",
 		[]string{"problem.*"}, whereString)
 	utils.Consolelog(whereString)
 
@@ -137,6 +138,7 @@ func NologinGetProblemList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    problems,
 	})
@@ -163,14 +165,14 @@ func NologinGetContestList(c *gin.Context) {
 	}
 	// 非管理员无法查看隐藏的竞赛
 	if loggedIn {
-		if user.Role != "admin" {
+		if user.Role == "user" {
 			whereString += " and defunct = 0 "
 		}
 	}
 
 	whereString += " order by id desc"
 	utils.Consolelog(whereString)
-	rows, total, err := model.Paginate(page, perpage, "contest", []string{"*"}, whereString)
+	rows, total, err := model.Paginate(&page, &perpage, "contest", []string{"*"}, whereString)
 
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
@@ -186,6 +188,7 @@ func NologinGetContestList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    contests,
 	})
@@ -250,7 +253,7 @@ func NologinGetSolutionList(c *gin.Context) {
 	whereString += " order by solution.solution_id desc"
 	utils.Consolelog(whereString)
 	// 多表联查
-	rows, total, err := model.Paginate(page, perpage, `solution inner join problem on solution.problem_id=problem.id 
+	rows, total, err := model.Paginate(&page, &perpage, `solution inner join problem on solution.problem_id=problem.id 
 	inner join user on solution.user_id = user.id 
 	inner join source_code on solution.solution_id=source_code.solution_id`,
 		[]string{"solution.*,user.username,user.nick,user.avatar,problem.title,source_code.public"}, whereString)
@@ -269,6 +272,7 @@ func NologinGetSolutionList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    solutions,
 	})
@@ -295,7 +299,7 @@ func NologinGetSolution(c *gin.Context) {
 	seeable := false
 
 	// 代码是否可以查看
-	if loggedIn && user.Role == "admin" {
+	if loggedIn && user.Role != "user" {
 		seeable = true
 	} else {
 		// 自己的代码可以查看
@@ -370,7 +374,7 @@ func NologinGetProblem(c *gin.Context) {
 		var jsonData map[string]interface{}
 		json.Unmarshal(cache, &jsonData)
 		// 非管理员 不能查看隐藏的问题
-		if jsonData["defunct"].(float64) == 1 && !(loggedIn && user.Role == "admin") {
+		if jsonData["defunct"].(float64) == 1 && !(loggedIn && user.Role != "user") {
 			err = errors.New("权限不足")
 		}
 		if utils.CheckError(c, err, "问题不存在") != nil {
@@ -384,7 +388,7 @@ func NologinGetProblem(c *gin.Context) {
 	} else {
 		err := DB.Get(&problem, "select * from problem where id = ?", id)
 		// 查询成功 但是用户没有权限查看该题目
-		if err == nil && problem.Defunct == 1 && !(loggedIn && user.Role == "admin") {
+		if err == nil && problem.Defunct == 1 && !(loggedIn && user.Role != "user") {
 			err = errors.New("权限不足")
 		}
 		problem.FetchTags()
@@ -417,7 +421,7 @@ func NologinGetContestProblem(c *gin.Context) {
 	var contest model.Contest
 
 	// 非管理员
-	if !(loggedIn && user.Role == "admin") {
+	if !(loggedIn && user.Role != "user") {
 		err = DB.Get(&contest, "select * from contest where id = ? and is_deleted = 0 and defunct = 0", cid)
 	} else {
 		err = DB.Get(&contest, "select * from contest where id = ? and is_deleted = 0", cid)
@@ -434,7 +438,7 @@ func NologinGetContestProblem(c *gin.Context) {
 
 	if loggedIn {
 		// 不是管理员
-		if user.Role != "admin" {
+		if user.Role == "user" {
 			// 如果竞赛作业尚未开始，题目不可见
 			if contest.Status == 1 {
 				seeable = false
@@ -502,7 +506,7 @@ func NologinGetContest(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
 	// 非管理员无法查看被保留的竞赛作业
-	if !(loggedIn && user.Role == "admin") {
+	if !(loggedIn && user.Role != "user") {
 		err = DB.Get(&contest, "select * from contest where id = ? and is_deleted = 0 and defunct = 0", id)
 	} else {
 		err = DB.Get(&contest, "select * from contest where id = ? and is_deleted = 0", id)
@@ -518,7 +522,7 @@ func NologinGetContest(c *gin.Context) {
 
 	if loggedIn {
 		// 不是管理员
-		if user.Role != "admin" {
+		if user.Role == "user" {
 			// 如果竞赛作业尚未开始，题目不可见
 			if contest.Status == 1 {
 				seeable = false
@@ -603,7 +607,7 @@ func NologinGetContestRankList(c *gin.Context) {
 
 	if loggedIn {
 		// 不是管理员
-		if user.Role != "admin" {
+		if user.Role == "user" {
 			// 如果竞赛作业尚未开始，排名不可见
 			if contest.Status == 1 {
 				seeable = false
@@ -727,7 +731,7 @@ func NologinGetContestTeamRankList(c *gin.Context) {
 
 	if loggedIn {
 		// 不是管理员
-		if user.Role != "admin" {
+		if user.Role == "user" {
 			// 如果竞赛作业尚未开始，排名不可见
 			if contest.Status == 1 {
 				seeable = false
@@ -895,13 +899,13 @@ func NologinGetSeriesList(c *gin.Context) {
 	}
 	// 非管理员无法查看隐藏的竞赛
 	if loggedIn {
-		if user.Role != "admin" {
+		if user.Role == "user" {
 			whereString += " and defunct = 0 "
 		}
 	}
 
 	whereString += " order by id desc"
-	rows, total, err := model.Paginate(page, perpage, "series", []string{"*"}, whereString)
+	rows, total, err := model.Paginate(&page, &perpage, "series", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -916,6 +920,7 @@ func NologinGetSeriesList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    serieses,
 	})
@@ -929,7 +934,7 @@ func NologinGetSeries(c *gin.Context) {
 	var series model.Series
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	if !(loggedIn && user.Role == "admin") {
+	if !(loggedIn && user.Role != "user") {
 		err = DB.Get(&series, "select * from series where id = ? and defunct = 0", id)
 	} else {
 		err = DB.Get(&series, "select * from series where id = ?", id)
@@ -1108,11 +1113,11 @@ func NologinGetIssueList(c *gin.Context) {
 		whereString += " and problem_id =" + c.Param("id")
 	}
 	// 管理员可以查看被删除的主题
-	if !loggedIn || (loggedIn && user.Role != "admin") {
+	if !loggedIn || (loggedIn && user.Role == "user") {
 		whereString += " and is_deleted = 0 "
 	}
 	whereString += " order by created_at desc"
-	rows, total, err := model.Paginate(page, perpage, "issue inner join user on issue.user_id = user.id left join problem on issue.problem_id = problem.id",
+	rows, total, err := model.Paginate(&page, &perpage, "issue inner join user on issue.user_id = user.id left join problem on issue.problem_id = problem.id",
 		[]string{"user.username,user.nick,user.avatar,issue.*,problem.title ptitle,(select count(1) from reply where issue_id = issue.id) as reply_count"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
@@ -1163,11 +1168,11 @@ func NologinGetIssue(c *gin.Context) {
 	whereString := "where issue_id = " + c.Param("id")
 	whereString += " and reply_id = 0"
 	// 管理员可以查看被删除的回复
-	if !loggedIn || (loggedIn && user.Role != "admin") {
+	if !loggedIn || (loggedIn && user.Role == "user") {
 		whereString += " and is_deleted = 0 "
 	}
 	whereString += " order by reply.created_at asc"
-	rows, total, err := model.Paginate(page, perpage, "reply inner join user on reply.user_id = user.id",
+	rows, total, err := model.Paginate(&page, &perpage, "reply inner join user on reply.user_id = user.id",
 		[]string{"user.username,user.nick,user.avatar,reply.*,'' as rnick,(select count(1) from reply  r where reply.id = r.reply_id) as reply_count"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
@@ -1317,7 +1322,7 @@ func NologinGetRankList(c *gin.Context) {
 
 	// 不统计比赛用户的数据
 	whereString := " where user.is_compete_user = 0 order by user.solved desc, user.submit asc"
-	rows, total, err := model.Paginate(page, perpage, "user", []string{"user.*"}, whereString)
+	rows, total, err := model.Paginate(&page, &perpage, "user", []string{"user.*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -1330,6 +1335,7 @@ func NologinGetRankList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    users,
 	})

@@ -134,7 +134,6 @@ export default {
             this.inited = true;
           }
         } catch (err) {
-          console.log(err);
           this.$store.dispatch('tagsView/delViewByRoute', this.$route);
           this.$router.replace({ name: 'admin404Page' });
         }
@@ -144,25 +143,16 @@ export default {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
           try {
-            console.log(this.form);
-            let res;
             if (!this.isEdit) {
-              res = await createProblem(this.form);
+              await createProblem(this.form);
             } else {
               const { id } = this.$route.params;
-              res = await editProblem(id, this.form);
+              await editProblem(id, this.form);
             }
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.$store.dispatch('tagsView/delViewByRoute', this.$route);
             this.$router.push({ name: 'adminProblemList' });
           } catch (err) {
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
+            console.log(err);
           }
         } else {
           this.$message({

@@ -20,7 +20,7 @@ func IndexNew(c *gin.Context) {
 		whereString += "where title like '%" + param + "%'"
 	}
 	whereString += " order by top desc, id desc"
-	rows, total, err := model.Paginate(page, perpage, "new", []string{"*"}, whereString)
+	rows, total, err := model.Paginate(&page, &perpage, "new", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -33,6 +33,7 @@ func IndexNew(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    news,
 	})

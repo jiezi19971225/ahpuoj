@@ -14,7 +14,7 @@
     el-table-column(label="操作", width="250")
       template(slot-scope="scope")
         a(:href="calcUrl(scope.row)" download style="margin-right:10px;")
-          el-button(type="primary" size="mini",@click="handleDownloadData(scope.row)") 下载
+          el-button(type="primary" size="mini") 下载
         el-button(size="mini",@click="handleEditData(scope.row)") 编辑
         el-button(size="mini" type="danger" @click="deleteProblemData(scope.row)") 删除
   el-dialog(:title="dialogFormTitle",:visible.sync="dialogFormVisible",@closed="closeDialog",@opened="openDialog",width="600px",:close-on-click-modal="false")
@@ -37,51 +37,51 @@ import {
   addProblemData,
   deleteProblemData,
   downloadProblemDataFile,
-  getProblemDataFile
-} from "admin/api/problem";
+  getProblemDataFile,
+} from 'admin/api/problem';
 
-import { apiPort } from "common/const";
+import { apiPort } from 'common/const';
 
 export default {
-  name: "adminProblemData",
+  name: 'adminProblemData',
   data() {
     return {
       problem: null,
-      dialogFormTitle: "",
+      dialogFormTitle: '',
       dialogFormVisible: false,
-      dialogType: "",
+      dialogType: '',
       currentRow: null,
       filelist: [],
       addDataForm: {
-        filename: ""
+        filename: '',
       },
       editDataForm: {
-        content: ""
+        content: '',
       },
       addDataRules: {
         filename: [
           {
             required: true,
-            message: "请输入数据名称",
-            trigger: "blur"
+            message: '请输入数据名称',
+            trigger: 'blur',
           },
           {
             max: 20,
-            message: "超出长度限制",
-            trigger: "blur"
-          }
-        ]
+            message: '超出长度限制',
+            trigger: 'blur',
+          },
+        ],
       },
       editDataRules: {
         content: [
           {
             required: true,
-            message: "请输入数据内容",
-            trigger: "blur"
-          }
-        ]
+            message: '请输入数据内容',
+            trigger: 'blur',
+          },
+        ],
       },
-      tableData: []
+      tableData: [],
     };
   },
   async activated() {
@@ -91,8 +91,8 @@ export default {
       this.problem = res.data.problem;
       this.fetchDataList();
     } catch (err) {
-      this.$store.dispatch("tagsView/delViewByRoute", this.$route);
-      this.$router.replace({ name: "admin404Page" });
+      this.$store.dispatch('tagsView/delViewByRoute', this.$route);
+      this.$router.replace({ name: 'admin404Page' });
       console.log(err);
     }
   },
@@ -100,19 +100,18 @@ export default {
     async fetchDataList() {
       try {
         const res = await getProblemDataList(this.problem.id);
-        console.log(res);
         this.tableData = res.data.files;
       } catch (err) {
         console.log(err);
       }
     },
     openDialog() {
-      if (this.dialogType === "addData") {
+      if (this.dialogType === 'addData') {
         this.$notify({
-          title: "提示",
+          title: '提示',
           message:
-            "添加方法：输入数据名称点击确定，系统将生成对应的.in和.out文件，之后再编辑对应的数据文件。",
-          duration: 6000
+            '添加方法：输入数据名称点击确定，系统将生成对应的.in和.out文件，之后再编辑对应的数据文件。',
+          duration: 6000,
         });
       }
       this.$refs.addDataForm.clearValidate();
@@ -121,66 +120,67 @@ export default {
     closeDialog() {
       this.$refs.addDataForm.resetFields();
       this.$refs.editDataForm.resetFields();
-      this.addDataForm.filename = "";
-      this.editDataForm.content = "";
+      this.addDataForm.filename = '';
+      this.editDataForm.content = '';
     },
     submit() {
-      let refform = "";
-      if (this.dialogType === "addData") {
-        refform = "addDataForm";
+      let refform = '';
+      if (this.dialogType === 'addData') {
+        refform = 'addDataForm';
       } else {
-        refform = "editDataForm";
+        refform = 'editDataForm';
       }
-      this.$refs[refform].validate(async valid => {
+      this.$refs[refform].validate(async (valid) => {
         if (valid) {
           try {
-            let res;
-            if (this.dialogType === "addData") {
-              res = await addProblemData(this.problem.id, this.addDataForm);
-              res.data.info.forEach((x, index) => {
-                setTimeout(() => {
-                  this.$notify({
-                    title: "提示",
-                    message: x,
-                    duration: 6000
-                  });
-                }, 500 * index);
-              });
+            if (this.dialogType === 'addData') {
+              try {
+                const res = await addProblemData(this.problem.id, this.addDataForm);
+                res.data.info.forEach((x, index) => {
+                  setTimeout(() => {
+                    this.$notify({
+                      title: '提示',
+                      message: x,
+                      duration: 6000,
+                    });
+                  }, 500 * index);
+                });
+                this.dialogFormVisible = false;
+                this.fetchDataList();
+              } catch (err) {
+                console.log(err);
+              }
             } else {
-              res = await editProblemData(
-                this.problem.id,
-                this.currentRow.filename,
-                this.editDataForm
-              );
+              try {
+                await editProblemData(
+                  this.problem.id,
+                  this.currentRow.filename,
+                  this.editDataForm,
+                );
+                this.dialogFormVisible = false;
+                this.fetchDataList();
+              } catch (err) {
+                console.log(err);
+              }
             }
-            this.$message({
-              message: res.data.message,
-              type: "success"
-            });
-            this.fetchDataList();
           } catch (err) {
             console.log(err);
-            this.$message({
-              message: err.response.data.message,
-              type: "error"
-            });
           }
-          this.dialogFormVisible = false;
         } else {
           return false;
         }
       });
     },
     handleAdd() {
-      this.dialogFormTitle = "添加数据";
-      this.dialogType = "addData";
+      this.dialogFormTitle = '添加数据';
+      this.dialogType = 'addData';
       this.dialogFormVisible = true;
     },
     handleUploadSuccess(res, file, filelist) {
       this.filelist = filelist.shift();
       this.$message({
         message: res.message,
-        type: "success"
+        type: 'success',
       });
       this.fetchDataList();
     },
@@ -188,47 +188,44 @@ export default {
       this.filelist = filelist.shift();
       this.$message({
         message: err.response.message ? err.response.message : err,
-        type: "error"
+        type: 'error',
       });
     },
     async handleEditData(row) {
       this.dialogFormTitle = `编辑数据文件${row.filename}`;
-      this.dialogType = "editData";
+      this.dialogType = 'editData';
       this.currentRow = row;
-      const res = await getProblemDataFile(this.problem.id, row.filename);
-      this.editDataForm.content = res.data.content;
-      this.dialogFormVisible = true;
+      try {
+        const res = await getProblemDataFile(this.problem.id, row.filename);
+        this.editDataForm.content = res.data.content;
+        this.dialogFormVisible = true;
+      } catch (err) {
+        console.log(err);
+      }
     },
     calcUrl(row) {
-      return `${location.protocol}//${location.hostname}${apiPort}/api/admin/download/problem/${this.$route.params.id}/data/${row.filename}`;
+      return `${window.location.protocol}//${window.location.hostname}${apiPort}/api/admin/download/problem/${this.$route.params.id}/data/${row.filename}`;
     },
     async deleteProblemData(row) {
       try {
-        await this.$confirm(`确认要删除数据文件${row.filename}吗?`, "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
+        await this.$confirm(`确认要删除数据文件${row.filename}吗?`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
         });
         try {
-          const res = await deleteProblemData(this.problem.id, row.filename);
-          this.$message({
-            type: "success",
-            message: res.data.message
-          });
+          await deleteProblemData(this.problem.id, row.filename);
           this.fetchDataList();
+        // eslint-disable-next-line no-empty
         } catch (err) {
-          this.$message({
-            type: "error",
-            message: err.response.data.message
-          });
         }
       } catch (err) {
         this.$message({
-          type: "info",
-          message: "已取消删除"
+          type: 'info',
+          message: '已取消删除',
         });
       }
-    }
-  }
+    },
+  },
 };
 </script>

@@ -14,8 +14,8 @@
             el-input(v-model.number="rejudgeProblemForm.id",@keyup.enter.native="submitRejudgeProblem",placeholder="请输入问题ID")
           el-form-item
             el-button(type="primary",@click="submitRejudgeProblem") 提交
-
-    el-col(:xs="24" :md="12")
+    // 只有管理员可以重排问题
+    el-col(:xs="24" :md="12" v-if="user.role === admin")
       el-card(class="content__card__item")
         h2(class="content__card__title") 重排问题
         el-form(:model="form",ref="form",:rules="rules",@submit.native.prevent)
@@ -29,6 +29,7 @@
 
 <script>
 import { rejudgeSolution, rejudgeProblem, reassignProblem } from 'admin/api/problem';
+import { mapState } from 'vuex';
 
 export default {
   name: 'adminRejudgeAndReassignProblem',
@@ -81,6 +82,11 @@ export default {
         ],
       },
     };
+  },
+  computed: {
+    ...mapState({
+      user: (state) => state.user,
+    }),
   },
   methods: {
     submitRejudgeSolution() {

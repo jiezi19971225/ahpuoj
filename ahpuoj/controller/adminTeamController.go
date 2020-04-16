@@ -31,8 +31,8 @@ func IndexTeam(c *gin.Context) {
 	if len(param) > 0 {
 		whereString += "and name like '%" + param + "%'"
 	}
-	whereString += " order by id desc"
-	rows, total, err := model.Paginate(page, perpage, "team", []string{"*"}, whereString)
+	whereString += " order by team.id desc"
+	rows, total, err := model.Paginate(&page, &perpage, "team inner join user on team.user_id = user.id", []string{"team.*", "user.username"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -45,6 +45,7 @@ func IndexTeam(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    teams,
 	})
@@ -74,7 +75,7 @@ func IndexTeamUser(c *gin.Context) {
 		whereString += " and user.username like '%" + param + "%' or user.nick like '%" + param + "%'"
 	}
 	whereString += " order by user.id desc"
-	rows, total, err := model.Paginate(page, perpage,
+	rows, total, err := model.Paginate(&page, &perpage,
 		"team_user inner join user on team_user.user_id = user.id",
 		[]string{"user.*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
@@ -89,6 +90,7 @@ func IndexTeamUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    users,
 	})
@@ -106,25 +108,39 @@ func AddTeamUsers(c *gin.Context) {
 	infos := team.AddUsers(req.UserList)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
+		"show":    true,
 		"info":    infos,
 	})
 }
 
 func StoreTeam(c *gin.Context) {
 	var req request.Team
+	user, _ := GetUserInstance(c)
 	err := c.ShouldBindJSON(&req)
 	if utils.CheckError(c, err, "请求参数错误") != nil {
 		return
 	}
 	team := model.Team{
-		Name: req.Name,
+		Name:   req.Name,
+		UserId: user.Id,
 	}
 	err = team.Save()
+	// TODO 先这样处理 给次级管理员添加权限
 	if utils.CheckError(c, err, "新建团队失败，该团队已存在") != nil {
 		return
 	}
+	idStr := strconv.Itoa(user.Id)
+	teamIdStr := strconv.Itoa(team.Id)
+	if user.Role != "admin" {
+		enforcer := model.GetCasbin()
+		enforcer.AddPolicy(idStr, "/api/admin/team/"+teamIdStr+"/users", "POST")
+		enforcer.AddPolicy(idStr, "/api/admin/team/"+teamIdStr, "PUT")
+		enforcer.AddPolicy(idStr, "/api/admin/team/"+teamIdStr+"/user/:userid", "DELETE")
+		enforcer.AddPolicy(idStr, "/api/admin/team/"+teamIdStr, "DELETE")
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "新建团队成功",
+		"show":    true,
 		"team":    team,
 	})
 }
@@ -146,6 +162,7 @@ func UpdateTeam(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "编辑团队成功",
+		"show":    true,
 		"team":    team,
 	})
 }
@@ -161,6 +178,7 @@ func DeleteTeam(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除团队成功",
+		"show":    true,
 	})
 }
 
@@ -176,10 +194,12 @@ func DeleteTeamUser(c *gin.Context) {
 	if rowsAffected == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "删除团队成员失败，团队成员不存在",
+			"show":    true,
 		})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除团队成员成功",
+		"show":    true,
 	})
 }

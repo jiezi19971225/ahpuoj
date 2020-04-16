@@ -31,6 +31,8 @@ type Problem struct {
 	UpdatedAt    string                   `db:"updated_at" json:"updated_at"`
 	CreatorId    string                   `db:"creator_id" json:"creator_id"`
 	Tags         []map[string]interface{} `json:"tags"`
+	UserId       int                      `db:"user_id" json:"user_id"`
+	Username     string                   `db:"username" json:"username"`
 }
 
 type ProblemWithoutTag struct {
@@ -67,9 +69,9 @@ func (problem *Problem) MarshalJSON() ([]byte, error) {
 
 func (problem *Problem) Save() error {
 	result, err := DB.Exec(`insert into problem
-	(title,description,input,output,sample_input,sample_output,spj,hint,level,time_limit,memory_limit,defunct,created_at,updated_at) 
-	values (?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())`, problem.Title, problem.Description, problem.Input, problem.Output,
-		problem.SampleInput, problem.SampleOutput, 0, problem.Hint, problem.Level, problem.TimeLimit, problem.MemoryLimit, 1)
+	(title,description,input,output,sample_input,sample_output,spj,hint,level,time_limit,memory_limit,defunct,user_id,created_at,updated_at) 
+	values (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())`, problem.Title, problem.Description, problem.Input, problem.Output,
+		problem.SampleInput, problem.SampleOutput, 0, problem.Hint, problem.Level, problem.TimeLimit, problem.MemoryLimit, 1, problem.UserId)
 	if err != nil {
 		return err
 	}

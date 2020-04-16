@@ -17,7 +17,6 @@ const router = new VueRouter({
 
 // 动态生成路由
 router.beforeEach(async (to, from, next) => {
-  console.log('npstart');
   NProgress.start(); // 进度条开始
   let ok = false;
   if (Cookies.get('access-token')) {
@@ -26,15 +25,11 @@ router.beforeEach(async (to, from, next) => {
     if (store.getters.username.length === 0) {
       try {
         await store.dispatch('user/GetUserInfo'); // 拉取用户信息
-        console.log('拉取用户信息');
-        console.log(process.env);
       } catch (err) {
         Message.error('登录失败');
       }
     }
-    console.log(store.getters.userRole);
-    if (store.getters.userRole === 'admin') {
-      // if (store.getters.isGeneratedRoutes == false) {
+    if (store.getters.userRole !== 'user') {
       ok = true;
       next();
     }

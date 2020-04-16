@@ -24,8 +24,8 @@ func IndexProblem(c *gin.Context) {
 	if len(param) > 0 {
 		whereString += " where title like '%" + param + "%' "
 	}
-	whereString += " order by id desc "
-	rows, total, err := model.Paginate(page, perpage, "problem", []string{"*"}, whereString)
+	whereString += " order by problem.id desc "
+	rows, total, err := model.Paginate(&page, &perpage, "problem inner join user on problem.user_id = user.id", []string{"problem.*", "user.username"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -39,6 +39,7 @@ func IndexProblem(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    problems,
 	})
@@ -59,6 +60,7 @@ func ShowProblem(c *gin.Context) {
 }
 
 func StoreProblem(c *gin.Context) {
+	user, _ := GetUserInstance(c)
 	conn := REDISPOOL.Get()
 	defer conn.Close()
 
@@ -79,10 +81,23 @@ func StoreProblem(c *gin.Context) {
 		Hint:         model.NullString{sql.NullString{String: req.Hint, Valid: true}},
 		TimeLimit:    req.TimeLimit,
 		MemoryLimit:  req.MemoryLimit,
+		UserId:       user.Id,
 	}
 	err = problem.Save()
 	if utils.CheckError(c, err, "新建问题失败，该问题已存在") != nil {
 		return
+	}
+	idStr := strconv.Itoa(user.Id)
+	problemIdStr := strconv.Itoa(problem.Id)
+	if user.Role != "admin" {
+		enforcer := model.GetCasbin()
+		enforcer.AddPolicy(idStr, "/api/admin/problem/"+problemIdStr, "PUT")
+		enforcer.AddPolicy(idStr, "/api/admin/problem/"+problemIdStr, "DELETE")
+		enforcer.AddPolicy(idStr, "/api/admin/problem/"+problemIdStr+"/status", "PUT")
+		enforcer.AddPolicy(idStr, "/api/admin/problem/"+problemIdStr+"/data", "POST")
+		enforcer.AddPolicy(idStr, "/api/admin/problem/"+problemIdStr+"/datafile", "POST")
+		enforcer.AddPolicy(idStr, "/api/admin/problem/"+problemIdStr+"/data/:filename", "PUT")
+		enforcer.AddPolicy(idStr, "/api/admin/problem/"+problemIdStr+"/data/:filename", "DELETE")
 	}
 	problem.AddTags(req.Tags)
 	// 同步到 redis 缓存
@@ -92,6 +107,7 @@ func StoreProblem(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "新建问题成功",
+		"show":    true,
 		"problem": problem,
 	})
 }
@@ -134,12 +150,14 @@ func UpdateProblem(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "编辑问题成功",
+		"show":    true,
 		"problem": problem,
 	})
 }
 
 func DeleteProblem(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
+	user, _ := GetUserInstance(c)
 	problem := model.Problem{
 		Id: id,
 	}
@@ -163,6 +181,16 @@ func DeleteProblem(c *gin.Context) {
 	// 删除issue
 	DB.Exec("delete from issue where problem_id = ?", problem.Id)
 
+	idStr := strconv.Itoa(user.Id)
+	problemIdStr := strconv.Itoa(problem.Id)
+	enforcer := model.GetCasbin()
+	enforcer.RemovePolicy(idStr, "/api/admin/problem/"+problemIdStr, "PUT")
+	enforcer.RemovePolicy(idStr, "/api/admin/problem/"+problemIdStr, "DELETE")
+	enforcer.RemovePolicy(idStr, "/api/admin/problem/"+problemIdStr+"/status", "PUT")
+	enforcer.RemovePolicy(idStr, "/api/admin/problem/"+problemIdStr+"/data", "POST")
+	enforcer.RemovePolicy(idStr, "/api/admin/problem/"+problemIdStr+"/datafile", "POST")
+	enforcer.RemovePolicy(idStr, "/api/admin/problem/"+problemIdStr+"/data/:filename", "PUT")
+	enforcer.RemovePolicy(idStr, "/api/admin/problem/"+problemIdStr+"/data/:filename", "DELETE")
 	var maxId int
 	// 更新自增起始ID
 	DB.Get(&maxId, "select max(id) from problem")
@@ -171,6 +199,7 @@ func DeleteProblem(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除问题成功",
+		"show":    true,
 	})
 }
 
@@ -185,6 +214,7 @@ func ToggleProblemStatus(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "更改问题状态成功",
+		"show":    true,
 	})
 }
 
@@ -229,6 +259,7 @@ func RejudgeSolution(c *gin.Context) {
 	rabbitmq.Publish("oj", "problem", jsondata)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "重判提交成功",
+		"show":    true,
 	})
 }
 
@@ -275,6 +306,7 @@ func RejudgeProblem(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "重判问题成功",
+		"show":    true,
 	})
 }
 
@@ -326,6 +358,7 @@ func ReassignProblem(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "重排问题成功",
+		"show":    true,
 	})
 }
 
@@ -395,6 +428,7 @@ func AddProblemData(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
+		"show":    true,
 		"info":    infos,
 	})
 }
@@ -418,6 +452,7 @@ func AddProblemDataFile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "文件上传成功",
+		"show":    true,
 	})
 }
 
@@ -449,7 +484,7 @@ func DownloadProblemData(c *gin.Context) {
 	dataDir, _ := cfg.GetValue("project", "datadir")
 	baseDir := dataDir + "/" + strconv.FormatInt(int64(id), 10)
 	filepath := baseDir + "/" + filename
-	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s.txt", filename))
 	c.Writer.Header().Add("Content-Type", "application/octet-stream")
 	c.File(filepath)
 }
@@ -479,6 +514,7 @@ func EditProblemData(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "写入数据文件成功",
+		"show":    true,
 	})
 
 }
@@ -500,5 +536,6 @@ func DeleteProblemData(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除文件成功",
+		"show":    true,
 	})
 }

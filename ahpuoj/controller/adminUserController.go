@@ -22,7 +22,7 @@ func IndexUser(c *gin.Context) {
 		whereString += " and username like '%" + param + "%' or nick like '%" + param + "%'"
 	}
 	whereString += " order by id desc"
-	rows, total, err := model.Paginate(page, perpage, "user", []string{"*"}, whereString)
+	rows, total, err := model.Paginate(&page, &perpage, "user", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -35,6 +35,7 @@ func IndexUser(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    users,
 	})
@@ -51,6 +52,7 @@ func ToggleUserStatus(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "更改用户状态成功",
+		"show":    true,
 	})
 }
 
@@ -81,5 +83,6 @@ func ChangeUserPass(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "更改用户密码成功",
+		"show":    true,
 	})
 }

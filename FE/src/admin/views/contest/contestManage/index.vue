@@ -1,6 +1,6 @@
 <template lang="pug">
 .admin-content
-  .content-header 竞赛名称: {{contest.name}} 人员总数: {{total}}
+  .content-header 竞赛名称: {{contest&&contest.name}} 人员总数: {{total}}
   table-tools
     template(#tool)
       el-button(type="success",icon="el-icon-plus",@click="handleAdd") 添加
@@ -95,6 +95,7 @@ export default {
         setTimeout(() => {
           this.tableData = data.data;
           this.total = data.total;
+          this.currentPage = data.page;
           this.loading = false;
         }, 200);
       } catch (err) {
@@ -132,16 +133,9 @@ export default {
             const res = await addContestUser(id, this.form);
             this.infoList = res.data.info;
             this.dialogOperatorInfoVisible = true;
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.fetchDataList();
           } catch (err) {
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
+            console.log(err);
           }
           this.dialogFormVisible = false;
         } else {
@@ -164,22 +158,9 @@ export default {
         });
         try {
           const res = await deleteContestUser(this.contest.id, row.id);
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
-          // 删除最后一页最后一条记录，如果不是第一页，则当前页码-1
-          if (this.tableData.length === 1) {
-            if (this.currentPage > 1) {
-              this.currentPage -= 1;
-            }
-          }
           this.fetchDataList();
         } catch (err) {
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({

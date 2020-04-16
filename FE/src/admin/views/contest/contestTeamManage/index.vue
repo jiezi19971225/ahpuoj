@@ -20,11 +20,11 @@
             template(slot-scope="scope")
               el-button(size="mini", type="danger", @click="handleDeleteContestTeamUser(item,scope.row)") 删除
 
-  el-dialog(title="添加团队",:visible.sync="dialogAddTeamFormVisible", @closed="closeAddTeamDialog", @opened="openAddTeamDialog",width="400px",:close-on-click-modal="false")
+  el-dialog(title="添加团队",:visible.sync="dialogAddTeamFormVisible", @closed="closeAddTeamDialog",width="400px",:close-on-click-modal="false")
     el-form(:model="addTeamForm", ref="addTeamForm", :rules="addTeamFormRules", @submit.native.prevent)
       el-form-item(label="选择团队", prop="team_id")
         el-select(v-model="addTeamForm.team_id",filterable,placeholder="请选择")
-          el-option(v-for="item in teams",:key="item.id",:label="item.name",:value="item.id")
+          el-option(v-for="item in unSelectedTeams",:key="item.id",:label="item.name",:value="item.id")
     .dialog-footer(slot="footer")
       el-button(@click="cancelDialogAddTeam") 取消
       el-button(type="primary", native-type="submit", @click="submitAddTeam") 确定
@@ -100,16 +100,22 @@ export default {
   async activated() {
     const { id } = this.$route.params;
     try {
-      let res = await getContest(id);
+      getAllTeams().then((res) => {
+        this.teams = res.data.teams;
+      });
+      const res = await getContest(id);
       this.contest = res.data.contest;
-      res = await getAllTeams();
-      this.teams = res.data.teams;
       this.fetchDataList();
     } catch (err) {
       this.$store.dispatch('tagsView/delViewByRoute', this.$route);
       this.$router.replace({ name: 'admin404Page' });
       console.log(err);
     }
+  },
+  computed: {
+    unSelectedTeams() {
+      return this.teams.filter((x) => !this.contestTeamList.find((y) => x.id === y.id));
+    },
   },
   methods: {
     async fetchDataList() {
@@ -125,9 +131,6 @@ export default {
         console.log(err);
       }
     },
-    openAddTeamDialog() {
-      this.$refs.addTeamForm.clearValidate();
-    },
     closeAddTeamDialog() {
       this.$refs.addTeamForm.resetFields();
     },
@@ -138,7 +141,6 @@ export default {
           '每一行对应一个用户名，若对应账号属于该团队并且没有以其他团队成员参与该竞赛则加入，否则将忽略。',
         duration: 6000,
       });
-      this.$refs.addTeamUserForm.clearValidate();
     },
     closeAddTeamUserDialog() {
       this.$refs.addTeamUserForm.resetFields();
@@ -148,20 +150,12 @@ export default {
         if (valid) {
           try {
             const { id } = this.$route.params;
-            const res = await addContestTeam(id, this.addTeamForm.team_id);
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
+            await addContestTeam(id, this.addTeamForm.team_id);
             this.fetchDataList();
+            this.dialogAddTeamFormVisible = false;
           } catch (err) {
             console.log(err);
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
           }
-          this.dialogAddTeamFormVisible = false;
         } else {
           return false;
         }
@@ -177,20 +171,11 @@ export default {
               this.currentTeam.id,
               this.addTeamUserForm,
             );
-            console.log(res);
             this.infoList = res.data.info;
             this.dialogOperatorInfoVisible = true;
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.fetchDataList();
           } catch (err) {
             console.log(err);
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
           }
           this.dialogAddTeamUserFormVisible = false;
         } else {
@@ -222,20 +207,11 @@ export default {
           const res = await addContestTeamAllUsers(this.contest.id, team.id);
           this.infoList = res.data.info;
           this.dialogOperatorInfoVisible = true;
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
           this.fetchDataList();
         } catch (err) {
           console.log(err);
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
         }
       } catch (err) {
-        console.log(err);
         this.$message({
           type: 'info',
           message: '已取消删除',
@@ -250,21 +226,12 @@ export default {
           type: 'warning',
         });
         try {
-          const res = await deleteContestTeam(this.contest.id, team.id);
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
+          await deleteContestTeam(this.contest.id, team.id);
           this.fetchDataList();
         } catch (err) {
           console.log(err);
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
         }
       } catch (err) {
-        console.log(err);
         this.$message({
           type: 'info',
           message: '已取消删除',
@@ -283,22 +250,14 @@ export default {
           },
         );
         try {
-          const res = await deleteContestTeamUser(
+          await deleteContestTeamUser(
             this.contest.id,
             team.id,
             row.id,
           );
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
           this.fetchDataList();
         } catch (err) {
           console.log(err);
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
         }
       } catch (err) {
         console.log(err);

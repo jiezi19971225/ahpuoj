@@ -1,6 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
-// import { Message } from 'element-ui'
+import { Message } from 'element-ui';
 
 const baseURL = '/api';
 
@@ -26,32 +26,24 @@ axios.interceptors.request.use(
 //     return Promise.reject(err);
 // });
 
-// 封装数据返回失败提示函数
-function errorState(response) {
-  // 如果http状态码正常，则直接返回数据
-  if (
-    response &&
-    (response.status === 200 ||
-      response.status === 304 ||
-      response.status === 400)
-  ) {
-    return response;
-  }
-  // Message({
-  //     message: '服务器内部错误',
-  //     type: 'error'
-  // });
-  return response;
+// 前端消息提示
+function errorState(err) {
+  Message({
+    message: err.response.data.message,
+    type: 'error',
+  });
+  return err;
 }
 
-// 封装数据返回成功提示函数
-// function successState(res) {
-//     // 统一判断后端返回的错误码(错误码与后台协商而定)
-//     if (res.data.code === '000000') {
-//         console.log('success')
-//         return res
-//     }
-// }
+function successState(res) {
+  if (res.data.show) {
+    Message({
+      message: res.data.message,
+      type: 'success',
+    });
+  }
+  return res;
+}
 
 // 封装axios
 function request(method, url, payload) {
@@ -70,7 +62,7 @@ function request(method, url, payload) {
   return new Promise(async (resolve, reject) => {
     try {
       const res = await axios(httpDefault);
-      // successState(res)
+      successState(res);
       resolve(res);
     } catch (err) {
       errorState(err);

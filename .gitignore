@@ -32,7 +32,7 @@ ahpuoj/.vscode/launch.json
 /scheduler/scheduler
 
 # mysql model
-/model/oj.mwb.bak
+*.bak
 
 # ide
 .idea

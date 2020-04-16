@@ -116,6 +116,7 @@ func CheckError(c *gin.Context, err error, msg string) error {
 		Consolelog(err.Error())
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": msg,
+			"show":    true,
 		})
 		return err
 	} else {

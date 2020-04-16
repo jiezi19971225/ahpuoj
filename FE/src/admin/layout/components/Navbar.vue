@@ -3,9 +3,12 @@
     <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
     <breadcrumb id="breadcrumb-container" class="breadcrumb-container" />
     <div class="right-menu">
-      <div class="avatar-container">
+      <div class="username-container" style="float:left;">
+        {{user.username}}
+      </div>
+      <div class="avatar-container" style="float:left;margin-left:10px;">
         <div class="avatar-wrapper">
-          <img :src="userAvatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+          <img :src="user.avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
         </div>
       </div>
     </div>
@@ -13,7 +16,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 import Breadcrumb from 'admin/components/Breadcrumb/index.vue';
 import Hamburger from 'admin/components/Hamburger/index.vue';
 
@@ -26,9 +29,11 @@ export default {
   computed: {
     ...mapGetters([
       'sidebar',
-      'userAvatar',
       'device',
     ]),
+    ...mapState({
+      user: (state) => state.user,
+    }),
   },
   methods: {
     toggleSideBar() {

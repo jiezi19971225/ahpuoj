@@ -61,3 +61,11 @@ type Tag struct {
 type Team struct {
 	Name string `json:"name" binding:"required,max=20"`
 }
+type AssignRole struct {
+	UserName string `json:"username" binding:"required"`
+	RoleId   int    `json:"role_id" binding:"required"`
+}
+
+type UnassignRole struct {
+	UserId int `json:"user_id" binding:"required"`
+}

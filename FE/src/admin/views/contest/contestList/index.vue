@@ -18,6 +18,9 @@
           el-tag(:type="scope.row.defunct == 0 ? 'success':'danger'",effect="dark") {{scope.row.defunct == 0?'启用':'保留'}}
           el-tag(:type="scope.row.private == 0 ? 'success':'danger'",effect="dark") {{scope.row.private == 0?'公开':'私有'}}
           el-tag(:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark") {{scope.row.team_mode == 0?'个人':'团队'}}
+      el-table-column(label="创建者", width="180")
+       template(slot-scope="scope")
+          a(:href="`/userinfo/${scope.row.id}`",target="_blank") {{scope.row.username}}
       el-table-column(label="操作", width="400")
         template(slot-scope="scope")
           el-button(size="mini", type="primary", @click="$router.push({name:'adminEditContest',params:{id:scope.row.id}})") 编辑
@@ -43,13 +46,13 @@ import {
   getContestList,
   getContest,
   deleteContest,
-  toggleContestStatus
-} from "admin/api/contest";
+  toggleContestStatus,
+} from 'admin/api/contest';
 
-import { apiPort } from "common/const";
+import { apiPort } from 'common/const';
 
 export default {
-  name: "adminContestList",
+  name: 'adminContestList',
   data() {
     return {
       currentContest: null,
@@ -60,8 +63,8 @@ export default {
       currentRowId: 0,
       perpage: 10,
       total: 0,
-      queryParam: "",
-      tableData: []
+      queryParam: '',
+      tableData: [],
     };
   },
   computed: {
@@ -69,17 +72,15 @@ export default {
       if (!this.currentContest) {
         return [];
       }
-      const length = this.currentContest.problems.split(",").length;
-      return Array.from({ length }).map((v, index) => {
-        return this.engNum(index + 1);
-      });
+      const { length } = this.currentContest.problems.split(',');
+      return Array.from({ length }).map((v, index) => this.engNum(index + 1));
     },
     downloadUrl() {
       if (!this.currentContest) {
-        return "";
+        return '';
       }
-      return `${location.protocol}//${location.hostname}${apiPort}/api/admin/contest/${this.currentContest.id}/problem/${this.problemNum}/solutions`;
-    }
+      return `${window.location.protocol}//${window.location.hostname}${apiPort}/api/admin/contest/${this.currentContest.id}/problem/${this.problemNum}/solutions`;
+    },
   },
   activated() {
     this.fetchDataList();
@@ -91,14 +92,13 @@ export default {
         const res = await getContestList(
           this.currentPage,
           this.perpage,
-          this.queryParam
+          this.queryParam,
         );
         const { data } = res;
-        setTimeout(() => {
-          this.tableData = data.data;
-          this.total = data.total;
-          this.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.currentPage = data.page;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
@@ -113,76 +113,55 @@ export default {
       this.fetchDataList();
     },
     async handleToggleContestStatus(row) {
-      const msg = `确认要${row.defunct === 0 ? "保留" : "启用"}竞赛${
+      const msg = `确认要${row.defunct === 0 ? '保留' : '启用'}竞赛${
         row.name
       }吗?`;
       try {
-        await this.$confirm(msg, "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
+        await this.$confirm(msg, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
         });
         try {
-          const res = await toggleContestStatus(row.id);
-          this.$message({
-            type: "success",
-            message: res.data.message
-          });
-
+          await toggleContestStatus(row.id);
           row.defunct = 1 - row.defunct;
         } catch (err) {
-          this.$message({
-            type: "error",
-            message: err.response.data.message
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({
-          type: "info",
-          message: "已取消操作"
+          type: 'info',
+          message: '已取消操作',
         });
       }
     },
     async openDownloadRecordDialog(row) {
       this.problemNum = 1;
-      let res = await getContest(row.id);
+      const res = await getContest(row.id);
       this.dialogVisible = true;
       this.currentContest = res.data.contest;
     },
     async handleDeleteContest(row) {
       try {
-        await this.$confirm(`确认要删除竞赛${row.name}吗?`, "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
+        await this.$confirm(`确认要删除竞赛${row.name}吗?`, '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
         });
         try {
-          const res = await deleteContest(row.id);
-          this.$message({
-            type: "success",
-            message: res.data.message
-          });
-          // 删除最后一页最后一条记录，如果不是第一页，则当前页码-1
-          if (this.tableData.length === 1) {
-            if (this.currentPage > 1) {
-              this.currentPage -= 1;
-            }
-          }
+          await deleteContest(row.id);
           this.fetchDataList();
         } catch (err) {
-          this.$message({
-            type: "error",
-            message: err.response.data.message
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({
-          type: "info",
-          message: "已取消删除"
+          type: 'info',
+          message: '已取消删除',
         });
       }
-    }
-  }
+    },
+  },
 };
 </script>
 

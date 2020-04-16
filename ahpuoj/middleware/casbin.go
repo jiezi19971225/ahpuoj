@@ -4,29 +4,35 @@ import (
 	"ahpuoj/model"
 	"ahpuoj/utils"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func CasbinMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var sub string
+		var sub1 string
+		var sub2 string
 		user, _ := c.Get("user")
 		if user, ok := user.(model.User); ok {
-			sub = user.Role
+			sub1 = user.Role
+			sub2 = strconv.Itoa(user.Id)
 		}
 
-		obj := c.Request.URL.RequestURI()
+		obj := c.Request.URL.Path
 		act := c.Request.Method
 		enforcer := model.GetCasbin()
-		if res, err := enforcer.EnforceSafe(sub, obj, act); err != nil {
-			utils.Consolelog(err)
+		res1, err1 := enforcer.Enforce(sub1, obj, act)
+		res2, err2 := enforcer.Enforce(sub2, obj, act)
+
+		if err1 != nil || err2 != nil {
+			utils.Consolelog(err1, err2)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": "内部错误",
 			})
 			c.Abort()
 			return
-		} else if res {
+		} else if res1 || res2 {
 			c.Next()
 		} else {
 			c.JSON(http.StatusBadRequest, gin.H{

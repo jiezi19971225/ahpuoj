@@ -11,7 +11,7 @@ const layout = () => import('../layout/index.vue');
  * redirect: noRedirect           if set noRedirect will no redirect in the breadcrumb
  * name:'router-name'             the name is used by <keep-alive> (must set!!!)
  * meta : {
-    roles: ['admin','editor']    control the page roles (you can set multiple roles)
+    roles: ['admin','editor']    当设置该属性，只有在 roles 列表中的角色才可访问该页面，否则一律重定向到 404
     title: 'title'               the name show in sidebar and breadcrumb (recommend set)
     icon: 'svg-name'             the icon show in the sidebar
     noCache: true                if set true, the page will no be cached(default is false)
@@ -66,6 +66,7 @@ export default [
         meta: {
           title: '添加新闻',
           activeMenu: '/admin/new/list',
+          roles: ['admin'],
         },
         component: () => import('../views/new/addNew'),
       },
@@ -76,6 +77,7 @@ export default [
         meta: {
           title: '编辑新闻',
           activeMenu: '/admin/new/list',
+          roles: ['admin'],
         },
         component: () => import('../views/new/editNew'),
       },
@@ -85,6 +87,7 @@ export default [
         meta: {
           title: '新闻列表',
           icon: 'file-text',
+          roles: ['admin'],
         },
         component: () => import('../views/new/newList'),
       },
@@ -173,6 +176,7 @@ export default [
         name: 'adminImportProblem',
         meta: {
           title: '导入问题',
+          roles: ['admin'],
         },
         component: () => import('../views/problem/importProblem'),
       },
@@ -204,6 +208,7 @@ export default [
         meta: {
           icon: 'tag',
           title: '标签列表',
+          roles: ['admin'],
         },
         component: () => import('../views/tag/tag_list'),
       },
@@ -284,6 +289,22 @@ export default [
     ],
   },
   {
+    path: '/admin/permission',
+    component: layout,
+    children: [
+      {
+        path: '',
+        name: 'adminPermissionManage',
+        meta: {
+          icon: 'add_user',
+          title: '权限管理',
+          roles: ['admin'],
+        },
+        component: () => import('../views/permission'),
+      },
+    ],
+  },
+  {
     path: '/admin/generator',
     component: layout,
     children: [
@@ -308,6 +329,7 @@ export default [
         meta: {
           icon: 'setting',
           title: '设置',
+          roles: ['admin'],
         },
         component: () => import('../views/settings'),
       },

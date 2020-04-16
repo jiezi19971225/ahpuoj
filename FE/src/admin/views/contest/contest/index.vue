@@ -154,7 +154,7 @@ export default {
             duration: 6000,
           });
           // 重新计算selectlist
-          // TODO: foreach
+          // TODO: 改成foreach
           // eslint-disable-next-line no-restricted-syntax
           for (const i in this.langList) {
             // eslint-disable-next-line no-bitwise
@@ -180,24 +180,16 @@ export default {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
           try {
-            let res;
             if (this.$route.name === 'adminAddContest') {
-              res = await createContest(this.form);
+              await createContest(this.form);
             } else {
               const { id } = this.$route.params;
-              res = await editContest(id, this.form);
+              await editContest(id, this.form);
             }
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.$store.dispatch('tagsView/delViewByRoute', this.$route);
             this.$router.push({ name: 'adminContestList' });
           } catch (err) {
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
+            console.log(err);
           }
         } else {
           this.$message({

@@ -19,7 +19,7 @@ func IndexTag(c *gin.Context) {
 		whereString += "where name like '%" + param + "%'"
 	}
 	whereString += " order by id desc"
-	rows, total, err := model.Paginate(page, perpage, "tag", []string{"*"}, whereString)
+	rows, total, err := model.Paginate(&page, &perpage, "tag", []string{"*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -32,6 +32,7 @@ func IndexTag(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    tags,
 	})

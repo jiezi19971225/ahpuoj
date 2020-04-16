@@ -1,7 +1,8 @@
 <template>
+<!-- 根据角色渲染侧边栏 -->
   <div v-if="!item.hidden">
     <template v-if="hasOneShowingChild(item.children,item) && (!onlyOneChild.children||onlyOneChild.noShowingChildren)&&!item.alwaysShow">
-      <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path)">
+      <app-link v-if="onlyOneChild.meta && (!onlyOneChild.meta.roles || onlyOneChild.meta.roles.includes(user.role))" :to="resolvePath(onlyOneChild.path)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown':!isNest}">
           <item :icon="onlyOneChild.meta.icon||(item.meta&&item.meta.icon)" :title="onlyOneChild.meta.title" />
         </el-menu-item>
@@ -27,6 +28,7 @@
 <script>
 import path from 'path';
 import { isExternal } from 'common/utils';
+import { mapState } from 'vuex';
 import Item from './Item.vue';
 import AppLink from './Link.vue';
 import FixiOSBug from './FixiOSBug';
@@ -56,13 +58,18 @@ export default {
     this.onlyOneChild = null;
     return {};
   },
+  computed: {
+    ...mapState({
+      user: (state) => state.user,
+    }),
+  },
   methods: {
     hasOneShowingChild(children = [], parent) {
+      const { user } = this;
       const showingChildren = children.filter((item) => {
         if (item.hidden) {
           return false;
         }
-        // Temp set(will be used if only has one showing child)
         this.onlyOneChild = item;
         return true;
       });
@@ -77,7 +84,6 @@ export default {
         this.onlyOneChild = { ...parent, path: '', noShowingChildren: true };
         return true;
       }
-
       return false;
     },
     resolvePath(routePath) {

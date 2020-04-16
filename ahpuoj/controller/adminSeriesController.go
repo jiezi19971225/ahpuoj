@@ -18,8 +18,8 @@ func IndexSeries(c *gin.Context) {
 	if len(param) > 0 {
 		whereString += "and name like '%" + param + "%'"
 	}
-	whereString += " order by id desc"
-	rows, total, err := model.Paginate(page, perpage, "series", []string{"*"}, whereString)
+	whereString += " order by series.id desc"
+	rows, total, err := model.Paginate(&page, &perpage, "series inner join user on series.user_id = user.id", []string{"series.*,user.username"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -32,6 +32,7 @@ func IndexSeries(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    serieses,
 	})
@@ -59,7 +60,7 @@ func IndexSeriesContest(c *gin.Context) {
 		whereString += " and contest.name like '%" + param + "%'"
 	}
 	whereString += " order by contest.id desc"
-	rows, total, err := model.Paginate(page, perpage,
+	rows, total, err := model.Paginate(&page, &perpage,
 		"contest_series inner join contest on contest_series.contest_id = contest.id",
 		[]string{"contest.*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
@@ -74,6 +75,7 @@ func IndexSeriesContest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    contests,
 	})
@@ -82,6 +84,7 @@ func IndexSeriesContest(c *gin.Context) {
 func StoreSeries(c *gin.Context) {
 	var req request.Series
 	err := c.ShouldBindJSON(&req)
+	user, _ := GetUserInstance(c)
 	if utils.CheckError(c, err, "请求参数错误") != nil {
 		return
 	}
@@ -89,13 +92,25 @@ func StoreSeries(c *gin.Context) {
 		Name:        req.Name,
 		Description: req.Description,
 		TeamMode:    req.TeamMode,
+		UserId:      user.Id,
 	}
 	err = series.Save()
 	if utils.CheckError(c, err, "新建系列赛失败，该系列赛已存在") != nil {
 		return
 	}
+	idStr := strconv.Itoa(user.Id)
+	seriesIdStr := strconv.Itoa(series.Id)
+	if user.Role != "admin" {
+		enforcer := model.GetCasbin()
+		enforcer.AddPolicy(idStr, "/api/admin/series/"+seriesIdStr, "PUT")
+		enforcer.AddPolicy(idStr, "/api/admin/series/"+seriesIdStr, "DELETE")
+		enforcer.AddPolicy(idStr, "/api/admin/series/"+seriesIdStr+"/status", "PUT")
+		enforcer.AddPolicy(idStr, "/api/admin/series/"+seriesIdStr+"/contest/:contestid", "POST")
+		enforcer.AddPolicy(idStr, "/api/admin/series/"+seriesIdStr+"/contest/:contestid", "DELETE")
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "新建系列赛成功",
+		"show":    true,
 		"series":  series,
 	})
 }
@@ -119,6 +134,7 @@ func UpdateSeries(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "编辑系列赛成功",
+		"show":    true,
 		"series":  series,
 	})
 }
@@ -129,11 +145,12 @@ func ToggleSeriesStatus(c *gin.Context) {
 		Id: id,
 	}
 	err := series.ToggleStatus()
-	if utils.CheckError(c, err, "更改竞赛&作业状态失败，竞赛&作业不存在") != nil {
+	if utils.CheckError(c, err, "更改系列赛状态失败，系列赛不存在") != nil {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "更改竞赛&作业状态成功",
+		"message": "更改系列赛状态成功",
+		"show":    true,
 	})
 }
 
@@ -148,6 +165,7 @@ func DeleteSeries(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除系列赛成功",
+		"show":    true,
 	})
 }
 
@@ -161,6 +179,7 @@ func AddSeriesContest(c *gin.Context) {
 	if temp == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "系列赛不存在",
+			"show":    true,
 		})
 		return
 	}
@@ -170,6 +189,7 @@ func AddSeriesContest(c *gin.Context) {
 	if temp == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "竞赛&作业不存在",
+			"show":    true,
 		})
 		return
 	}
@@ -179,6 +199,7 @@ func AddSeriesContest(c *gin.Context) {
 	if temp > 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "该竞赛&作业已经在系列赛中了",
+			"show":    true,
 		})
 		return
 	}
@@ -188,6 +209,7 @@ func AddSeriesContest(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "添加竞赛&作业成功",
+		"show":    true,
 	})
 }
 
@@ -197,5 +219,6 @@ func DeleteSeriesContest(c *gin.Context) {
 	DB.Exec("delete from contest_series where series_id = ? and contest_id = ?", id, contestId)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除系列赛竞赛&作业成功",
+		"show":    true,
 	})
 }

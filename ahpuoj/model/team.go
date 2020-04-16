@@ -16,12 +16,14 @@ type Team struct {
 	IsDeleted int    `db:"is_deleted" json:"is_deleted"`
 	CreatorId int    `db:"creator_id" json:"creator_id"`
 	UserInfos []User `json:"userinfos"`
+	UserId    int    `db:"user_id" json:"user_id"`
+	Username  string `db:"username" json:"username"`
 }
 
 func (team *Team) Save() error {
 	result, err := DB.Exec(`insert into team
-	(name,created_at,updated_at) 
-	values (?,NOW(),NOW())`, team.Name)
+	(name,user_id,created_at,updated_at) 
+	values (?,?,NOW(),NOW())`, team.Name, team.UserId)
 	if err != nil {
 		return err
 	}

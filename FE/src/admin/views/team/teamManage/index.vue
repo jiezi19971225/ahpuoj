@@ -96,11 +96,10 @@ export default {
         );
         console.log(res);
         const { data } = res;
-        setTimeout(() => {
-          this.tableData = data.data;
-          this.total = data.total;
-          this.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.currentPage = data.page;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
@@ -133,22 +132,18 @@ export default {
         if (valid) {
           try {
             const { id } = this.$route.params;
-            const res = await addTeamUser(id, this.form);
-            console.log(res);
-            this.infoList = res.data.info;
-            this.dialogOperatorInfoVisible = true;
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
-            this.fetchDataList();
+            try {
+              const res = await addTeamUser(id, this.form);
+              this.infoList = res.data.info;
+              this.dialogOperatorInfoVisible = true;
+              this.fetchDataList();
+              this.dialogFormVisible = false;
+            } catch (err) {
+              console.log(err);
+            }
           } catch (err) {
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
+            console.log(err);
           }
-          this.dialogFormVisible = false;
         } else {
           return false;
         }
@@ -168,23 +163,10 @@ export default {
           type: 'warning',
         });
         try {
-          const res = await deleteTeamUser(this.team.id, row.id);
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
-          // 删除最后一页最后一条记录，如果不是第一页，则当前页码-1
-          if (this.tableData.length === 1) {
-            if (this.currentPage > 1) {
-              this.currentPage -= 1;
-            }
-          }
+          await deleteTeamUser(this.team.id, row.id);
           this.fetchDataList();
         } catch (err) {
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({

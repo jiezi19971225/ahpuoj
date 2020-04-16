@@ -100,11 +100,10 @@ export default {
           this.queryParam,
         );
         const { data } = res;
-        setTimeout(() => {
-          this.tableData = data.data;
-          this.total = data.total;
-          this.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.currentPage = data.page;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
@@ -119,16 +118,13 @@ export default {
       this.fetchDataList();
     },
     openDialog() {
-      this.$refs.form.clearValidate();
       this.$refs.input.focus();
     },
     closeDialog() {
       this.$refs.form.resetFields();
       this.$refs.input.blur();
-      this.form.name = '';
     },
     handleChangePass(row) {
-      console.log(row);
       this.currentRowId = row.id;
       this.dialogFormVisible = true;
     },
@@ -136,18 +132,11 @@ export default {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
           try {
-            const res = await changeUserPass(this.currentRowId, this.form);
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
+            await changeUserPass(this.currentRowId, this.form);
+            this.dialogFormVisible = false;
           } catch (err) {
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
+            console.log(err);
           }
-          this.dialogFormVisible = false;
         } else {
           return false;
         }
@@ -168,17 +157,9 @@ export default {
         });
         try {
           const res = await toggleUserStatus(row.id);
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
-
           row.defunct = 1 - row.defunct;
         } catch (err) {
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({

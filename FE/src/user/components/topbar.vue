@@ -27,7 +27,7 @@
             router-link(:to="{name:'account'}") 账号设置
           li
             router-link(:to="{name:'myreplys'}") 查看回复
-          li(v-if="$store.getters.userRole=='admin'")
+          li(v-if="$store.getters.userRole!=='user'")
             a(href="/admin") 后台管理
           li(@click="handleLogout")
             a 登出

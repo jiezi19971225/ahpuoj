@@ -20,8 +20,8 @@ func IndexContest(c *gin.Context) {
 	if len(param) > 0 {
 		whereString += "and name like '%" + param + "%'"
 	}
-	whereString += " order by id desc"
-	rows, total, err := model.Paginate(page, perpage, "contest", []string{"*"}, whereString)
+	whereString += " order by contest.id desc"
+	rows, total, err := model.Paginate(&page, &perpage, "contest inner join user on contest.user_id = user.id", []string{"contest.*,user.username"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
 	}
@@ -34,6 +34,7 @@ func IndexContest(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    contests,
 	})
@@ -69,6 +70,7 @@ func GetAllContests(c *gin.Context) {
 
 func StoreContest(c *gin.Context) {
 	var req request.Contest
+	user, _ := GetUserInstance(c)
 	err := c.ShouldBindJSON(&req)
 	if utils.CheckError(c, err, "请求参数错误") != nil {
 		return
@@ -81,6 +83,7 @@ func StoreContest(c *gin.Context) {
 		LangMask:    req.LangMask,
 		Private:     req.Private,
 		TeamMode:    req.TeamMode,
+		UserId:      user.Id,
 	}
 	err = contest.Save()
 	// 处理竞赛作业包含的问题
@@ -88,8 +91,24 @@ func StoreContest(c *gin.Context) {
 	if utils.CheckError(c, err, "新建竞赛&作业失败，该竞赛&作业已存在") != nil {
 		return
 	}
+	idStr := strconv.Itoa(user.Id)
+	contestIdStr := strconv.Itoa(contest.Id)
+	if user.Role != "admin" {
+		enforcer := model.GetCasbin()
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr, "PUT")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr, "DELETE")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr+"/status", "PUT")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr+"/users", "POST")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr+"/user/:userid", "DELETE")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr+"/team/:teamid", "POST")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr+"/team/:teamid", "DELETE")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr+"/team/:teamid/users", "POST")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr+"/team/:teamid/allusers", "POST")
+		enforcer.AddPolicy(idStr, "/api/admin/contest/"+contestIdStr+"/team/:teamid/user/:userid", "DELETE")
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "新建竞赛&作业成功",
+		"show":    true,
 		"contest": contest,
 	})
 }
@@ -120,6 +139,7 @@ func UpdateContest(c *gin.Context) {
 	contest.AddProblems(req.Problems)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "编辑竞赛&作业成功",
+		"show":    true,
 		"contest": contest,
 	})
 }
@@ -135,6 +155,7 @@ func DeleteContest(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除竞赛&作业成功",
+		"show":    true,
 	})
 }
 
@@ -149,6 +170,7 @@ func ToggleContestStatus(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "更改竞赛&作业状态成功",
+		"show":    true,
 	})
 }
 
@@ -162,7 +184,7 @@ func IndexContestUser(c *gin.Context) {
 		whereString += " and user.username like '%" + param + "%' or user.nick like '%" + param + "%'"
 	}
 	whereString += " order by user.id desc"
-	rows, total, err := model.Paginate(page, perpage,
+	rows, total, err := model.Paginate(&page, &perpage,
 		"contest_user inner join user on contest_user.user_id = user.id",
 		[]string{"user.*"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
@@ -177,6 +199,7 @@ func IndexContestUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"perpage": perpage,
 		"data":    users,
 	})
@@ -203,6 +226,7 @@ func AddContestUsers(c *gin.Context) {
 	infos := contest.AddUsers(req.UserList, 0)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
+		"show":    true,
 		"info":    infos,
 	})
 }
@@ -213,6 +237,7 @@ func DeleteContestUser(c *gin.Context) {
 	DB.Exec("delete from contest_user where contest_id = ? and user_id = ?", id, userId)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除竞赛&作业人员成功",
+		"show":    true,
 	})
 }
 
@@ -268,6 +293,7 @@ func AddContestTeam(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "添加团队成功",
+		"show":    true,
 	})
 }
 
@@ -282,6 +308,7 @@ func DeleteContestTeam(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除团队成功",
+		"show":    true,
 	})
 }
 
@@ -295,6 +322,7 @@ func DeleteContestTeamUser(c *gin.Context) {
 	DB.Exec("delete from contest_team_user where contest_id = ? and team_id = ? and user_id = ?", id, teamId, userId)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "删除团队人员成功",
+		"show":    true,
 	})
 }
 
@@ -331,6 +359,7 @@ func AddContestTeamUsers(c *gin.Context) {
 	infos := contest.AddUsers(req.UserList, teamId)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
+		"show":    true,
 		"info":    infos,
 	})
 }
@@ -382,6 +411,7 @@ func AddContestTeamAllUsers(c *gin.Context) {
 	checkHasUserStmt.Close()
 	c.JSON(http.StatusOK, gin.H{
 		"message": "操作成功",
+		"show":    true,
 		"info":    infos,
 	})
 

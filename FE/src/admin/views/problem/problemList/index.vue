@@ -19,6 +19,9 @@
       el-table-column(label="状态", width="180")
         template(slot-scope="scope")
           el-tag(:type="scope.row.defunct == 0 ? 'success':'danger'",effect="dark") {{scope.row.defunct == 0?'启用':'保留'}}
+      el-table-column(label="创建者", width="180")
+       template(slot-scope="scope")
+          a(:href="`/userinfo/${scope.row.id}`",target="_blank") {{scope.row.username}}
       el-table-column(label="操作", width="300")
         template(slot-scope="scope")
           el-button(size="mini", @click="$router.push({name:'adminProblemData',params:{id:scope.row.id}})") 数据
@@ -54,20 +57,18 @@ export default {
   },
   methods: {
     async fetchDataList() {
-      const self = this;
-      self.loading = true;
+      this.loading = true;
       try {
         const res = await getProblemList(
-          self.currentPage,
-          self.perpage,
-          self.queryParam,
+          this.currentPage,
+          this.perpage,
+          this.queryParam,
         );
         const { data } = res;
-        setTimeout(() => {
-          self.tableData = data.data;
-          self.total = data.total;
-          self.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.currentPage = data.page;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
@@ -82,66 +83,43 @@ export default {
       this.fetchDataList();
     },
     async handleToggleProblemStatus(row) {
-      const self = this;
       const msg = `确认要${row.defunct === 0 ? '保留' : '启用'}问题${
         row.title
       }吗?`;
       try {
-        await self.$confirm(msg, '提示', {
+        await this.$confirm(msg, '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning',
         });
         try {
-          const res = await toggleProblemStatus(row.id);
-          self.$message({
-            type: 'success',
-            message: res.data.message,
-          });
-
+          await toggleProblemStatus(row.id);
           row.defunct = 1 - row.defunct;
         } catch (err) {
-          self.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
-        self.$message({
+        this.$message({
           type: 'info',
           message: '已取消操作',
         });
       }
     },
     async handleDeleteProblem(row) {
-      const self = this;
       try {
-        await self.$confirm(`确认要删除问题${row.title}吗?`, '提示', {
+        await this.$confirm(`确认要删除问题${row.title}吗?`, '提示', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning',
         });
         try {
-          const res = await deleteProblem(row.id);
-          self.$message({
-            type: 'success',
-            message: res.data.message,
-          });
-          // 删除最后一页最后一条记录，如果不是第一页，则当前页码-1
-          if (self.tableData.length === 1) {
-            if (self.currentPage > 1) {
-              self.currentPage -= 1;
-            }
-          }
-          self.fetchDataList();
+          await deleteProblem(row.id);
+          this.fetchDataList();
         } catch (err) {
-          self.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
-        self.$message({
+        this.$message({
           type: 'info',
           message: '已取消删除',
         });

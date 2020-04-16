@@ -19,6 +19,10 @@ import (
 	"time"
 )
 
+/*
+前台用户登陆后可访问api的控制器
+*/
+
 // 用户获取用户信息
 func GetUser(c *gin.Context) {
 
@@ -49,6 +53,7 @@ func ResetNick(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "昵称修改成功",
+		"show":    true,
 		"user":    user,
 	})
 }
@@ -74,6 +79,7 @@ func ResetPassword(c *gin.Context) {
 	if hashedOldPassword != user.Password {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "原密码错误",
+			"show":    true,
 		})
 		return
 	}
@@ -88,6 +94,7 @@ func ResetPassword(c *gin.Context) {
 	if hashedPassword == user.Password {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "新密码不能和原密码相同",
+			"show":    true,
 		})
 		return
 	}
@@ -96,6 +103,7 @@ func ResetPassword(c *gin.Context) {
 	utils.Consolelog(err)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "密码修改成功",
+		"show":    true,
 	})
 }
 
@@ -155,6 +163,7 @@ func SubmitToTestRun(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "测试运行成功",
+		"show":          true,
 		"custom_output": customOutput,
 	})
 }
@@ -186,7 +195,7 @@ func SubmitToJudge(c *gin.Context) {
 	submitable := false
 
 	// 管理员无提交限制
-	if user.Role == "admin" {
+	if user.Role != "user" {
 		submitable = true
 	} else {
 		// 比赛的提交
@@ -264,11 +273,13 @@ func SubmitToJudge(c *gin.Context) {
 		rabbitmq.Publish("oj", "problem", jsondata)
 		c.JSON(http.StatusOK, gin.H{
 			"message":  "提交成功",
+			"show":     true,
 			"solution": solution,
 		})
 	} else {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "对不起，你没有提交权限",
+			"show":    true,
 		})
 	}
 }
@@ -292,6 +303,7 @@ func ToggleSolutionStatus(c *gin.Context) {
 	DB.Exec("update source_code set public = not public where solution_id = ?", id)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "修改代码公开状态成功",
+		"show":    true,
 	})
 }
 
@@ -325,6 +337,7 @@ func DownloadDataFile(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest,
 			gin.H{
 				"message": "数据不存在",
+				"show":    true,
 			})
 		return
 	}
@@ -335,7 +348,7 @@ func DownloadDataFile(c *gin.Context) {
 	baseDir := dataDir + "/" + strconv.FormatInt(int64(pid), 10)
 	dataFileName := baseDir + "/" + filename
 
-	c.Header("Content-Disposition", `attachment; filename=`+filename)
+	c.Header("Content-Disposition", `attachment; filename=`+filename+".txt")
 	c.Header("Content-Type", "application/octet-stream")
 	c.File(dataFileName)
 }
@@ -367,6 +380,7 @@ func UploadAvatar(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "头像上传成功",
+		"show":    true,
 		"url":     url,
 	})
 }
@@ -388,6 +402,7 @@ func PostIssue(c *gin.Context) {
 		if temp == 0 {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"message": "发布讨论主题失败，问题不存在",
+				"show":    true,
 			})
 			return
 		}
@@ -403,6 +418,7 @@ func PostIssue(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "发布讨论主题成功",
+		"show":    true,
 		"issue":   issue,
 	})
 }
@@ -425,6 +441,7 @@ func ReplyToIssue(c *gin.Context) {
 	if temp == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "发布回复失败，目标主题不存在",
+			"show":    true,
 		})
 		return
 	}
@@ -434,6 +451,7 @@ func ReplyToIssue(c *gin.Context) {
 		if temp == 0 {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 				"message": "发布回复失败，目标回复不存在",
+				"show":    true,
 			})
 			return
 		}
@@ -452,6 +470,7 @@ func ReplyToIssue(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "发布回复成功",
 		"reply":   reply,
+		"show":    true,
 	})
 }
 
@@ -472,7 +491,7 @@ func GetMyReplys(c *gin.Context) {
 	if user.Role != "admin" {
 		whereString += " and reply.is_deleted = 0 "
 	}
-	rows, total, err := model.Paginate(page, perpage, "reply inner join user on reply.user_id = user.id inner join issue on reply.issue_id = issue.id",
+	rows, total, err := model.Paginate(&page, &perpage, "reply inner join user on reply.user_id = user.id inner join issue on reply.issue_id = issue.id",
 		[]string{"user.username,user.nick,user.avatar,reply.*,'' as rnick,(select count(1) from reply  r where reply.id = r.reply_id) as reply_count,issue.title as issue_title"}, whereString)
 	if utils.CheckError(c, err, "数据获取失败") != nil {
 		return
@@ -486,6 +505,7 @@ func GetMyReplys(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "数据获取成功",
 		"total":   total,
+		"page":    page,
 		"replys":  replys,
 	})
 

@@ -13,6 +13,9 @@
         template(slot-scope="scope")
           router-link(:to="{name:'adminTeamManage',params:{id:scope.row.id}}")
             el-link(type="primary") {{scope.row.name}}
+      el-table-column(label="创建者", width="180")
+       template(slot-scope="scope")
+          a(:href="`/userinfo/${scope.row.id}`",target="_blank") {{scope.row.username}}
       el-table-column(label="操作", width="240")
         template(slot-scope="scope")
           el-button(size="mini", type="primary" @click="$router.push({name:'adminTeamManage',params:{id:scope.row.id}})") 管理
@@ -83,11 +86,10 @@ export default {
           this.queryParam,
         );
         const { data } = res;
-        setTimeout(() => {
-          this.tableData = data.data;
-          this.total = data.total;
-          this.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.currentPage = data.page;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
@@ -117,22 +119,15 @@ export default {
           try {
             let res;
             if (this.submitMode === 'create') {
-              res = await createTeam(this.form);
+              await createTeam(this.form);
             } else {
-              res = await editTeam(this.currentRowId, this.form);
+              await editTeam(this.currentRowId, this.form);
             }
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.fetchDataList();
+            this.dialogFormVisible = false;
           } catch (err) {
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
+            console.log(err);
           }
-          this.dialogFormVisible = false;
         } else {
           return false;
         }
@@ -162,16 +157,9 @@ export default {
         });
         try {
           const res = await deleteTeam(row.id);
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
           this.fetchDataList();
         } catch (err) {
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({

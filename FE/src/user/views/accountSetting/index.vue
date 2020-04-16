@@ -173,17 +173,9 @@ export default {
         if (valid) {
           try {
             const res = await resetNick(this.resetNickForm);
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.$store.dispatch('user/UpdateUserInfo', res.data.user);
           } catch (err) {
             console.log(err);
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
           }
         } else {
           this.$message({
@@ -199,17 +191,9 @@ export default {
         if (valid) {
           try {
             const res = await resetPassword(this.resetPasswordForm);
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.$store.dispatch('user/UpdateUserInfo', res.data.user);
           } catch (err) {
             console.log(err);
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
           }
         } else {
           this.$message({

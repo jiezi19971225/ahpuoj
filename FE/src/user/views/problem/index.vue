@@ -82,39 +82,39 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
-import CodeMirror from "common/components/codemirror.vue";
-import Clipboard from "clipboard";
-import { testRunInterval } from "common/const";
+import { mapState } from 'vuex';
+import CodeMirror from 'common/components/codemirror.vue';
+import Clipboard from 'clipboard';
+import { testRunInterval } from 'common/const';
 import {
   getProblem,
   getContestProblem,
-  getLanguageList
-} from "user/api/nologin";
-import EventBus from "common/eventbus";
+  getLanguageList,
+} from 'user/api/nologin';
+import EventBus from 'common/eventbus';
 import {
   submitJudgeCode,
   submitTestRunCode,
   getLatestSource,
-  getLatestContestSource
-} from "user/api/user";
-import { throttle, debounce } from "throttle-debounce";
-import { setInterval, clearInterval } from "timers";
-import helpText from "./shortcutHelp";
+  getLatestContestSource,
+} from 'user/api/user';
+import { throttle, debounce } from 'throttle-debounce';
+import { setInterval, clearInterval } from 'timers';
+import helpText from './shortcutHelp';
 
 export default {
-  name: "problem",
+  name: 'problem',
   components: {
-    CodeMirror
+    CodeMirror,
   },
   data() {
     return {
       helpText,
       testrunDisabled: false,
-      testrunButtonText: "测试运行",
+      testrunButtonText: '测试运行',
       submitButtonInLoading: false,
       submitButtonDisabled: false,
-      outputText: "",
+      outputText: '',
       dialogVisible: false,
       problemView: true,
       problem: null,
@@ -126,34 +126,34 @@ export default {
         problem_id: 0,
         contest_id: 0,
         num: 0,
-        source: ""
+        source: '',
       },
       testRunForm: {
         language: 0,
         problem_id: 0,
-        source: "",
-        input_text: ""
-      }
+        source: '',
+        input_text: '',
+      },
     };
   },
   computed: {
-    ...mapState(["user"]),
+    ...mapState(['user']),
     problemTitle() {
-      if (this.$route.name === "problem" && this.problem != null) {
+      if (this.$route.name === 'problem' && this.problem != null) {
         return `P${this.problem.id}  ${this.problem.title}`;
       }
-      if (this.$route.name === "contestProblem" && this.problem != null) {
+      if (this.$route.name === 'contestProblem' && this.problem != null) {
         const num = Number.parseInt(this.$route.params.num, 10);
         const engNum = this.engNum(num);
         return `C${this.$route.params.id}  ${engNum} ${this.problem.title}`;
       }
-      return "";
-    }
+      return '';
+    },
   },
   mounted() {
     this.init();
-    this.$refs.gutter.addEventListener("mousedown", () => {
-      document.onmousemove = e => {
+    this.$refs.gutter.addEventListener('mousedown', () => {
+      document.onmousemove = (e) => {
         e = e || window.event;
         const { clientWidth } = document.documentElement;
         // clientWidth += 10;
@@ -162,7 +162,7 @@ export default {
         this.$refs.problemPart.style.flexGrow = rate;
         this.$refs.editorPart.style.flexGrow = 2 - rate;
       };
-      document.onmouseup = e => {
+      document.onmouseup = (e) => {
         e = e || window.event;
         const { clientWidth } = document.documentElement;
         document.onmousemove = null;
@@ -172,28 +172,28 @@ export default {
   },
   methods: {
     async init() {
-      getLanguageList().then(res => {
+      getLanguageList().then((res) => {
         this.langList = res.data.languages;
       });
       const id = Number.parseInt(this.$route.params.id, 10);
       try {
         // 如果已经登录 拉取最近一次提交的代码
         if (this.user.username) {
-          if (this.$route.name === "problem") {
-            getLatestSource(id).then(res => {
+          if (this.$route.name === 'problem') {
+            getLatestSource(id).then((res) => {
               this.form.language = res.data.sourcecode.language;
               this.form.source = res.data.sourcecode.source;
             });
           } else {
             const num = Number.parseInt(this.$route.params.num, 10);
-            getLatestContestSource(id, num).then(res => {
+            getLatestContestSource(id, num).then((res) => {
               this.form.language = res.data.sourcecode.language;
               this.form.source = res.data.sourcecode.source;
             });
           }
         }
         // 如果是普通题目路由
-        if (this.$route.name === "problem") {
+        if (this.$route.name === 'problem') {
           const res = await getProblem(id);
           const { data } = res;
           this.problem = data.problem;
@@ -215,58 +215,58 @@ export default {
         this.copyOutputBtn = new Clipboard(this.$refs.copyOutputBtn);
       } catch (err) {
         console.log(err);
-        this.$router.replace({ name: "404Page" });
+        this.$router.replace({ name: '404Page' });
       }
     },
     handleCopyInput() {
       const clipboard = this.copyInputBtn;
-      clipboard.on("success", () => {
+      clipboard.on('success', () => {
         this.$message({
-          message: "复制成功",
-          type: "success"
+          message: '复制成功',
+          type: 'success',
         });
       });
-      clipboard.on("error", () => {
+      clipboard.on('error', () => {
         this.$message({
-          message: "复制失败，请手动复制",
-          type: "error"
+          message: '复制失败，请手动复制',
+          type: 'error',
         });
       });
     },
     handleCopyOutput() {
       const clipboard = this.copyOutputBtn;
-      clipboard.on("success", () => {
+      clipboard.on('success', () => {
         this.$message({
-          message: "复制成功",
-          type: "success"
+          message: '复制成功',
+          type: 'success',
         });
       });
-      clipboard.on("error", () => {
+      clipboard.on('error', () => {
         this.$message({
-          message: "复制失败，请手动复制",
-          type: "error"
+          message: '复制失败，请手动复制',
+          type: 'error',
         });
       });
     },
     handleSearchTag(tagId) {
-      this.$store.dispatch("bus/setTag", tagId);
-      this.$router.push({ name: "problemSet" });
+      this.$store.dispatch('bus/setTag', tagId);
+      this.$router.push({ name: 'problemSet' });
     },
     async submitToTestRun() {
       if (!this.user.username) {
-        EventBus.$emit("goLogin");
+        EventBus.$emit('goLogin');
         return;
       }
       if (this.form.source.length === 0) {
         this.$message({
-          message: "代码不能为空",
-          type: "error"
+          message: '代码不能为空',
+          type: 'error',
         });
         return;
       }
       this.testRunForm.source = this.form.source;
       this.testRunForm.language = this.form.language;
-      this.outputText = "正在评测中，耐心请等待.......";
+      this.outputText = '正在评测中，耐心请等待.......';
 
       // 短暂时间内无法重复提交评测
       let countDown = testRunInterval;
@@ -276,7 +276,7 @@ export default {
         if (countDown === 0) {
           clearInterval(t);
           this.testrunDisabled = false;
-          this.testrunButtonText = "测试运行";
+          this.testrunButtonText = '测试运行';
         } else {
           countDown -= 1;
           this.testrunButtonText = `测试运行（${countDown}）`;
@@ -284,48 +284,36 @@ export default {
       }, 1000);
       try {
         const res = await submitTestRunCode(this.testRunForm);
-        this.$message({
-          message: res.data.message,
-          type: "success"
-        });
         this.outputText = res.data.custom_output;
       } catch (err) {
         this.$message({
           message: err.response.data.message,
-          type: "error"
+          type: 'error',
         });
         console.log(err);
       }
     },
     submitToJudge: debounce(500, async function debounced() {
       if (!this.user.username) {
-        EventBus.$emit("goLogin");
+        EventBus.$emit('goLogin');
         return;
       }
       this.submitButtonDisabled = true;
       this.submitButtonInLoading = true;
       if (this.form.source.length === 0) {
         this.$message({
-          message: "代码不能为空",
-          type: "error"
+          message: '代码不能为空',
+          type: 'error',
         });
         return;
       }
       try {
         const res = await submitJudgeCode(this.form);
-        this.$message({
-          message: res.data.message,
-          type: "success"
-        });
         this.$router.push({
-          name: "solution",
-          params: { id: res.data.solution.solution_id }
+          name: 'solution',
+          params: { id: res.data.solution.solution_id },
         });
       } catch (err) {
-        this.$message({
-          message: err.response.data.message,
-          type: "error"
-        });
         console.log(err);
       } finally {
         this.submitButtonDisabled = false;
@@ -333,27 +321,27 @@ export default {
       }
     }),
     jumpToSolutions() {
-      if (this.$route.name === "problem") {
-        this.$store.dispatch("bus/setSolutionFilter", {
-          queryParam: this.problem.id
+      if (this.$route.name === 'problem') {
+        this.$store.dispatch('bus/setSolutionFilter', {
+          queryParam: this.problem.id,
         });
         this.$router.push({
-          name: "status"
+          name: 'status',
         });
       } else {
         const num = Number.parseInt(this.$route.params.num, 10);
-        this.$store.dispatch("bus/setSolutionFilter", {
-          queryParam: this.engNum(num)
+        this.$store.dispatch('bus/setSolutionFilter', {
+          queryParam: this.engNum(num),
         });
         this.$router.push({
-          name: "contestStatus",
+          name: 'contestStatus',
           params: {
-            id: this.$route.params.id
-          }
+            id: this.$route.params.id,
+          },
         });
       }
-    }
-  }
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>

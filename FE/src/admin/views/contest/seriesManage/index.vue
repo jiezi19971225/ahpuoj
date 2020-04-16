@@ -68,12 +68,10 @@ export default {
       tableData: [],
     };
   },
-  computed:{
-    contestsNotInSeries(){
-      return this.contests.filter(x => {
-        return !this.tableData.find(y => y.id === x.id)
-      })
-    }
+  computed: {
+    contestsNotInSeries() {
+      return this.contests.filter((x) => !this.tableData.find((y) => y.id === x.id));
+    },
   },
   async activated() {
     const { id } = this.$route.params;
@@ -101,11 +99,10 @@ export default {
         );
         console.log(res);
         const { data } = res;
-        setTimeout(() => {
-          this.tableData = data.data;
-          this.total = data.total;
-          this.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.currentPage = data.page;
+        this.loading = false;
       } catch (err) {
         console.log(err);
       }
@@ -117,7 +114,6 @@ export default {
     },
     handleSizeChange(val) {
       this.perpage = val;
-      console.log(this.perpage);
       this.fetchDataList();
     },
     openDialog() {
@@ -127,7 +123,6 @@ export default {
           '每一行对应一个竞赛ID，若对应竞赛存在则加入系列赛，否则将忽略。',
         duration: 6000,
       });
-      this.$refs.form.clearValidate();
     },
     closeDialog() {
       this.$refs.form.resetFields();
@@ -138,18 +133,9 @@ export default {
           try {
             const { id } = this.$route.params;
             const res = await addSeriesContest(id, this.form.contest_id);
-            console.log(res);
-            this.$message({
-              message: res.data.message,
-              type: 'success',
-            });
             this.fetchDataList();
           } catch (err) {
             console.log(err);
-            this.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
           }
           this.dialogFormVisible = false;
         } else {
@@ -171,23 +157,10 @@ export default {
           type: 'warning',
         });
         try {
-          const res = await deleteSeriesContest(this.series.id, row.id);
-          this.$message({
-            type: 'success',
-            message: res.data.message,
-          });
-          // 删除最后一页最后一条记录，如果不是第一页，则当前页码-1
-          if (this.tableData.length === 1) {
-            if (this.currentPage > 1) {
-              this.currentPage -= 1;
-            }
-          }
+          await deleteSeriesContest(this.series.id, row.id);
           this.fetchDataList();
         } catch (err) {
-          this.$message({
-            type: 'error',
-            message: err.response.data.message,
-          });
+          console.log(err);
         }
       } catch (err) {
         this.$message({
