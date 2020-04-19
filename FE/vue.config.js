@@ -1,5 +1,6 @@
 const path = require('path');
-const CompressionWebpackPlugin = require("compression-webpack-plugin");
+const CompressionWebpackPlugin = require('compression-webpack-plugin');
+
 const productionGzipExtensions = /\.(js|css)(\?.*)?$/i;
 
 module.exports = {
@@ -74,12 +75,12 @@ module.exports = {
   configureWebpack: (config) => {
     if (process.env.NODE_ENV === 'production') {
       config.plugins.push(new CompressionWebpackPlugin({
-        filename: "[path].gz[query]",
-        algorithm: "gzip",
+        filename: '[path].gz[query]',
+        algorithm: 'gzip',
         test: productionGzipExtensions,
         threshold: 10240,
-        minRatio: 0.8
-      }))
+        minRatio: 0.8,
+      }));
     }
     return {
       resolve: {
@@ -102,13 +103,13 @@ module.exports = {
     disableHostCheck: true,
     historyApiFallback: {
       rewrites: [{
-          from: /^\/$/,
-          to: '/index.html',
-        },
-        {
-          from: /^\/admin/,
-          to: '/admin/index.html',
-        },
+        from: /^\/$/,
+        to: '/index.html',
+      },
+      {
+        from: /^\/admin/,
+        to: '/admin/index.html',
+      },
       ],
     },
     proxy: {

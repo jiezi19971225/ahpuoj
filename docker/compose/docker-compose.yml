@@ -22,7 +22,8 @@ services:
       - "33060:3306"
     volumes:
       - /var/lib/mysql
-      - ../sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../sql/oj.sql:/docker-entrypoint-initdb.d/oj.sql
+      - ../sql/casbin.sql:/docker-entrypoint-initdb.d/casbin.sql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}

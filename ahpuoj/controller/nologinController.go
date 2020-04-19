@@ -898,10 +898,8 @@ func NologinGetSeriesList(c *gin.Context) {
 		whereString += " and name like '%" + param + "%' "
 	}
 	// 非管理员无法查看隐藏的竞赛
-	if loggedIn {
-		if user.Role == "user" {
-			whereString += " and defunct = 0 "
-		}
+	if !(loggedIn && user.Role != "user") {
+		whereString += " and defunct = 0 "
 	}
 
 	whereString += " order by id desc"
