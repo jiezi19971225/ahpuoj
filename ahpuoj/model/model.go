@@ -53,7 +53,7 @@ func Paginate(page *int, perpage *int, tableName string, outputField []string, w
 		*perpage = 0
 	}
 	var total int
-	sql := "select count(1) from " + tableName + " " + whereString
+	sql := "select count(1) from  (select 1 from " + tableName + " " + whereString + ")pesudo"
 	err := DB.Get(&total, sql)
 	var maxPage int
 	if total == 0 {

@@ -298,25 +298,20 @@ export default {
       }, 500);
     },
     submitLogin() {
-      const self = this;
-      self.$refs.loginForm.validate(async (valid) => {
+      this.$refs.loginForm.validate(async (valid) => {
         if (valid) {
           try {
-            const res = await self.$store.dispatch('user/Login', self.loginForm);
-            self.$message({
+            const res = await this.$store.dispatch('user/Login', this.loginForm);
+            this.$message({
               message: res.data.message,
               type: 'success',
             });
-            self.dialogFormVisible = false;
-            self.showDropDownMenu = false;
-            await self.$store.dispatch('user/GetUserInfo');
-            self.$router.replace({ name: 'refresh' });
+            this.dialogFormVisible = false;
+            this.showDropDownMenu = false;
+            await this.$store.dispatch('user/GetUserInfo');
+            this.$router.replace({ name: 'refresh' });
           } catch (err) {
             console.log(err);
-            self.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
           }
         } else {
           return false;
@@ -324,25 +319,20 @@ export default {
       });
     },
     async submitRegister() {
-      const self = this;
-      self.$refs.registerForm.validate(async (valid) => {
+      this.$refs.registerForm.validate(async (valid) => {
         if (valid) {
           try {
-            const res = await self.$store.dispatch('user/Register', self.registerForm);
+            const res = await this.$store.dispatch('user/Register', this.registerForm);
             console.log(res);
-            self.$message({
+            this.$message({
               message: res.data.message,
               type: 'success',
             });
-            self.dialogFormVisible = false;
-            self.showDropDownMenu = false;
-            await self.$store.dispatch('user/GetUserInfo');
+            this.dialogFormVisible = false;
+            this.showDropDownMenu = false;
+            await this.$store.dispatch('user/GetUserInfo');
           } catch (err) {
             console.log(err);
-            self.$message({
-              message: err.response.data.message,
-              type: 'error',
-            });
           }
         } else {
           return false;
