@@ -1,8 +1,6 @@
 import Vue from 'vue';
-import { Message } from 'element-ui';
 import Cookies from 'js-cookie';
 import VueRouter from 'vue-router';
-import NProgress from 'nprogress';
 import store from '../store';
 import routes from '../routes';
 import 'nprogress/nprogress.css';
@@ -29,9 +27,6 @@ router.beforeEach(async (to, from, next) => {
         next();
       } catch (err) {
         console.log(err);
-        store.dispatch('user/Logout').then(() => {
-          Message.error('登录超时,请重新登陆');
-        });
         next();
       }
     } else {

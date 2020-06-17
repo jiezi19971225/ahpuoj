@@ -5,7 +5,6 @@
 ## 准备
 
 添加后端配置文件，将 ahpuoj/config/config.ini.example 复制一份，文件名设置为 config.ini，默认不需要更改配置
-添加判题机配置文件 将 scheduler/config.ini.example 复制一份，文件名设置为 config.ini，默认不需要更改配置
 
 ## 开发环境部署
 
@@ -36,14 +35,7 @@ yarn run serve
 
 ### 说明
 
-目前部署方案是将 docker 目录上传到服务器，然后启动容器。容器启动后，compose 文件夹下面会生成 web 目录和 data 目录，分别为 nginx 容器的站点根目录和 judger 容器存放题目数据文件的目录
-
-### 前端打包
-
-```bash
-cd FE
-yarn run build
-```
+目前部署方案是将 docker 目录上传到服务器，然后启动容器，判题机和前端资源已被打包为镜像，后端程序需要编译后上传到服务器。
 
 ### 后端编译
 
@@ -63,18 +55,6 @@ SET GOARCH=amd64
 $env:CGO_ENABLED=0
 $env:GOOS="linux"
 $env:GOARCH="amd64"
-```
-
-### 上传文件
-
-将后端打包生产的 ahpuoj，config 目录，和 前端打包生成的 dist 目录下的文件上传到服务器的 docker/compose/web 目录下，结构应该是这样的
-
-```bash
-web
-    ├── ahpuoj
-    ├── config
-    └── upload
-    └── js,css,html 等文件
 ```
 
 ### 后端配置

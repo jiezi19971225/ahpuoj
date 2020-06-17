@@ -8,7 +8,7 @@
       </div>
       <div class="avatar-container" style="float:left;margin-left:10px;">
         <div class="avatar-wrapper">
-          <img :src="user.avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
+          <img :src="imgUrl(user.avatar)+'?imageView2/1/w/80/h/80'" class="user-avatar">
         </div>
       </div>
     </div>

@@ -7,7 +7,8 @@
     "build": "vue-cli-service build",
     "build:prod": "vue-cli-service build &&  scp -r dist/* root@172.16.0.3:/home/ahpuoj/ahpuojv2docker/compose/web/",
     "test:unit": "vue-cli-service test:unit",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "buildimg":"docker-build.bat"
   },
   "dependencies": {
     "@tinymce/tinymce-vue": "^3.2.0",
