@@ -157,8 +157,12 @@ export default {
       }
     },
     handleSearchTag(tagId) {
-      this.$store.dispatch('bus/setTag', tagId);
-      this.$router.push({ name: 'problemSet' });
+      this.$router.push({
+        name: 'problemSet',
+        query: {
+          tagId,
+        },
+      });
     },
     async handleDownloadDataFile(filename, type) {
       if (type === 'in') {

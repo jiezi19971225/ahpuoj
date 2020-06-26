@@ -128,10 +128,10 @@ export default {
       }
     },
     jumpToContestStatus(row) {
-      this.$store.dispatch('bug/setSolutionFilter', { nick: row.user.nick });
       this.$router.push({
         name: 'contestStatus',
         params: { id: this.contest.id },
+        query: { nick: row.user.nick },
       });
     },
     exportExcel() {

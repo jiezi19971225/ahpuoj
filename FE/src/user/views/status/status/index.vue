@@ -9,29 +9,29 @@
           li
             .section__title 按问题检索：
             .siderbar__searchbar__wrapper
-              el-input(size="small",style="max-width:20em", :placeholder="!isContest?'请输入问题名/ID':'请输入题号(如A)'", @keyup.enter.native="handleSearchByProblem", v-model="queryParam", maxlength="20", clearable)
-                el-button(slot="append" icon="el-icon-search", @click="handleSearchByParam")
+              el-input(size="small",style="max-width:20em", :placeholder="!isContest?'请输入问题名/ID':'请输入题号(如A)'", @keyup.enter.native="handleSearch", v-model="queryParams.queryParam", maxlength="20", clearable)
+                el-button(slot="append" icon="el-icon-search", @click="handleSearch")
           li
             .section__title 按用户检索：
             .siderbar__searchbar__wrapper
-              el-input(size="small",style="max-width:20em", placeholder="请输入用户昵称", @keyup.enter.native="handleSearchByNick", v-model="nick", maxlength="20", clearable)
-                el-button(slot="append" icon="el-icon-search", @click="handleSearchByNick")
+              el-input(size="small",style="max-width:20em", placeholder="请输入用户昵称", @keyup.enter.native="handleSearch", v-model="queryParams.nick", maxlength="20", clearable)
+                el-button(slot="append" icon="el-icon-search", @click="handleSearch")
           li
             .section__title 按语言检索：
             ul.button-list
               li
-                el-button(size="mini",round,:class="[language == -1?'is-active':'']", @click="handleSearchByLanguage(-1)",) 全部
+                el-button(size="mini",round,:class="[queryParams.language == -1?'is-active':'']", @click="handleSearchByLanguage(-1)",) 全部
               template(v-for="item,index in langList")
                 li(v-if="item.available")
-                  el-button(size="mini",round,:class="[language == index?'is-active':'']",@click="handleSearchByLanguage(index)") {{item.name}}
+                  el-button(size="mini",round,:class="[queryParams.language == index?'is-active':'']",@click="handleSearchByLanguage(index)") {{item.name}}
           li
             .section__title 按结果检索：
             ul.button-list
               li
-                el-button(size="mini",round,:class="[result==-1?'is-active':'']", @click="handleSearchByResult(-1)") 全部
+                el-button(size="mini",round,:class="[queryParams.result==-1?'is-active':'']", @click="handleSearchByResult(-1)") 全部
               template(v-for="item in searchableResultList")
                 li
-                  el-button(size="mini",round,:class="[result==item.code?'is-active':'']", @click="handleSearchByResult(item.code)") {{item.name}}
+                  el-button(size="mini",round,:class="[queryParams.result==item.code?'is-active':'']", @click="handleSearchByResult(item.code)") {{item.name}}
       .main.has__pagination
         Paginator(style="float:left;",@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
         el-table(size="small",:data="tableData", v-loading="tableLoading")
@@ -94,22 +94,21 @@ export default {
       currentPage: 1,
       perpage: 30,
       tableData: [],
-      queryParam: '',
+      queryParams: {
+        queryParam: '',
+        nick: '',
+        language: -1,
+        result: -1,
+      },
       contestId: 0,
       contestPnum: -1,
-      nick: '',
-      language: -1,
-      result: -1,
       total: 0,
       langList: [],
-      resultList: [],
+      resultList,
       timer: 0,
     };
   },
   computed: {
-    ...mapState({
-      device: (state) => state.app.device,
-    }),
     searchableResultList() {
       return this.resultList.filter(
         (val, index, arr) => val.code >= 4 && val.code <= 11,
@@ -117,15 +116,9 @@ export default {
     },
   },
   async mounted() {
-    const res = await getLanguageList();
-    this.resultList = resultList;
-    this.langList = res.data.languages;
-  },
-  beforeDestroy() {
-    // 关闭定时器
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
+    const res = await getLanguageList().then((res) => {
+      this.langList = res.data.languages;
+    });
   },
   activated() {
     if (this.isContest) {
@@ -133,43 +126,30 @@ export default {
     } else {
       this.contestId = 0;
     }
-    // 如果bus中记录了搜索条件 获得bus中的搜索条件
-    if (`${this.$store.getters.solutionQueryParam}`) {
-      this.queryParam = `${this.$store.getters.solutionQueryParam}`;
+    if (JSON.stringify(this.$route.query) !== '{}') {
+      Object.assign(this.queryParams, this.$route.query);
     }
-    if (`${this.$store.getters.solutionUserNick}`) {
-      this.nick = `${this.$store.getters.solutionUserNick}`;
-    }
-    if (this.$store.getters.solutionLanguage !== -1) {
-      this.language = this.$store.getters.solutionLanguage;
-    }
-    if (this.$store.getters.solutionResult !== -1) {
-      this.result = this.$store.getters.solutionResult;
-    }
-    this.$store.dispatch('bus/resetSolutionFilter');
     // 5s请求一次数据
-    this.fetchData();
-    this.timer = setInterval(() => {
-      this.fetchData();
+    const timer = setInterval(() => {
+      this.fetchDataList();
     }, 5000);
-  },
-  deactivated() {
-    // 关闭定时器
-    if (this.timer) {
+    this.$on('hook:deactivated', () => {
       clearInterval(this.timer);
-    }
+    });
+    this.tableLoading = true;
+    this.fetchDataList();
   },
   methods: {
-    async fetchData() {
+    async fetchDataList() {
       try {
         const res = await getSolutionList({
+          contest_id: this.contestId,
           page: this.currentPage,
           perpage: this.perpage,
-          param: this.queryParam,
-          username: this.nick,
-          language: this.language,
-          result: this.result,
-          contest_id: this.contestId,
+          param: this.queryParams.queryParam,
+          username: this.queryParams.nick,
+          language: this.queryParams.language,
+          result: this.queryParams.result,
         });
         const { data } = res;
         this.tableData = data.data;
@@ -179,52 +159,28 @@ export default {
         console.log(err);
       }
     },
+    handleSearch() {
+      this.currentPage = 1;
+      this.fetchDataList();
+    },
     handleSearchByResetConf() {
-      this.tableLoading = true;
-      this.queryParam = '';
-      this.nick = '';
-      this.language = -1;
-      this.result = -1;
-      this.fetchData();
+      this.queryParams.queryParam = '';
+      this.queryParams.nick = '';
+      this.queryParams.language = -1;
+      this.queryParams.result = -1;
+      this.handleSearch();
     },
     handleSearchMine() {
-      this.currentPage = 1;
-      this.tableLoading = true;
-      this.nick = this.$store.getters.userNick;
-      this.fetchData();
-    },
-    handleSearchByProblem() {
-      this.currentPage = 1;
-      this.tableLoading = true;
-      this.fetchData();
-    },
-    handleSearchByParam() {
-      this.currentPage = 1;
-      this.tableLoading = true;
-      this.fetchData();
-    },
-    handleSearchByNick() {
-      this.currentPage = 1;
-      this.tableLoading = true;
-      this.fetchData();
+      this.queryParams.nick = this.$store.getters.userNick;
+      this.handleSearch();
     },
     handleSearchByLanguage(language) {
-      this.currentPage = 1;
-      this.tableLoading = true;
-      this.language = language;
-      this.fetchData();
+      this.queryParams.language = language;
+      this.handleSearch();
     },
     handleSearchByResult(result) {
-      this.currentPage = 1;
-      this.tableLoading = true;
-      this.result = result;
-      this.fetchData();
-    },
-    handleSearchByTag(tagId) {
-      this.currentPage = 1;
-      this.tableLoading = true;
-      this.tagId = tagId;
-      this.fetchData();
+      this.queryParams.result = result;
+      this.handleSearch();
     },
     calcRate(row) {
       const rate = row.submit === 0 ? 0 : row.solved / row.submit;

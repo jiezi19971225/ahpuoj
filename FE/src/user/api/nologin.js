@@ -18,14 +18,8 @@ export function getIssue({ id, ...data }) {
 export function getProblem(id) {
   return request('GET', `problem/${id}`);
 }
-export function getProblemList(page, perpage, queryParam, level, tagId) {
-  return request('GET', 'problems', {
-    page,
-    perpage,
-    param: queryParam,
-    level,
-    tag_id: tagId,
-  });
+export function getProblemList(data) {
+  return request('GET', 'problems', data);
 }
 export function getSolution(id) {
   return request('GET', `solution/${id}`);

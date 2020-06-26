@@ -86,25 +86,25 @@ export default {
       }
     },
     jumpToSolved() {
-      this.$store.dispatch('bus/setSolutionFilter', {
-        result: 4,
-        nick: this.user.nick,
-      });
       this.$router.push({
         name: 'status',
         params: {
           id: this.$route.params.id,
         },
+        query: {
+          result: 4,
+          nick: this.user.nick,
+        },
       });
     },
     jumpToSubmit() {
-      this.$store.dispatch('bus/setSolutionFilter', {
-        nick: this.user.nick,
-      });
       this.$router.push({
         name: 'status',
         params: {
           id: this.$route.params.id,
+        },
+        query: {
+          nick: this.user.nick,
         },
       });
     },

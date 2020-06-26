@@ -249,8 +249,12 @@ export default {
       });
     },
     handleSearchTag(tagId) {
-      this.$store.dispatch('bus/setTag', tagId);
-      this.$router.push({ name: 'problemSet' });
+      this.$router.push({
+        name: 'problemSet',
+        query: {
+          tagId,
+        },
+      });
     },
     async submitToTestRun() {
       if (!this.user.username) {
@@ -322,21 +326,21 @@ export default {
     }),
     jumpToSolutions() {
       if (this.$route.name === 'problem') {
-        this.$store.dispatch('bus/setSolutionFilter', {
-          queryParam: this.problem.id,
-        });
         this.$router.push({
           name: 'status',
+          query: {
+            queryParam: this.problem.id,
+          },
         });
       } else {
         const num = Number.parseInt(this.$route.params.num, 10);
-        this.$store.dispatch('bus/setSolutionFilter', {
-          queryParam: this.engNum(num),
-        });
         this.$router.push({
           name: 'contestStatus',
           params: {
             id: this.$route.params.id,
+            query: {
+              queryParam: this.engNum(num),
+            },
           },
         });
       }
