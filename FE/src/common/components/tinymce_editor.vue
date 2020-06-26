@@ -15,7 +15,7 @@ import 'tinymce/plugins/lists';
 import 'tinymce/plugins/code';
 import 'tinymce/plugins/wordcount';
 import 'tinymce/plugins/colorpicker';
-import { tinymceDocumentBaseUrl } from 'common/const';
+import { staticAssetsBase } from 'common/const';
 import axios from 'axios';
 
 export default {
@@ -53,9 +53,9 @@ export default {
       // 初始化配置
       init: {
         relative_urls: false,
-        language_url: `${tinymceDocumentBaseUrl}/static/tinymce/langs/zh_CN.js`,
-        skin_url: `${tinymceDocumentBaseUrl}/static/tinymce/skins/ui/oxide`,
-        content_css: `${tinymceDocumentBaseUrl}/static/tinymce/skins/ui/oxide/content.min.css`,
+        language_url: `${staticAssetsBase}/static/tinymce/langs/zh_CN.js`,
+        skin_url: `${staticAssetsBase}/static/tinymce/skins/ui/oxide`,
+        content_css: `${staticAssetsBase}/static/tinymce/skins/ui/oxide/content.min.css`,
         language: 'zh_CN',
         height: this.height,
         resize: false,

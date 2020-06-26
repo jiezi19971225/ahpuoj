@@ -42,8 +42,8 @@
         template(v-if="solution && meta.runtime_info && $store.getters.userId==solution.user_id && solution.contest_id == 0  && solution.result >= 5 && solution.result <= 8")
           .main__section
             h3 测试点数据下载
-            el-button(size="mini",type="success",:loading="downloadInDataButtonInLoading",:disabled="downloadInDataButtonInLoading",@click="handleDownloadDataFile(wrongFileName+'.in','in')") {{wrongFileName+".in"}}
-            el-button(size="mini",type="success",:loading="downloadOutDataButtonInLoading",:disabled="downloadOutDataButtonInLoading",@click="handleDownloadDataFile(wrongFileName+'.out','out')") {{wrongFileName+".out"}}
+            el-button(size="mini",type="success",:loading="downloadInDataButtonInLoading",@click="handleDownloadDataFile(wrongFileName+'.in','in')") {{wrongFileName+".in"}}
+            el-button(size="mini",type="success",:loading="downloadOutDataButtonInLoading",@click="handleDownloadDataFile(wrongFileName+'.out','out')") {{wrongFileName+".out"}}
         .main__section(v-if="solution && solution.contest_id == 0 && solution.result == 4 && $store.getters.userId == solution.user_id")
           h3 公开代码
           p 公开你的源码，用你的智慧帮助其他的人解决问题！
@@ -76,9 +76,7 @@ export default {
   data() {
     return {
       downloadInDataButtonInLoading: false,
-      downloadInDataButtonDisabled: false,
       downloadOutDataButtonInLoading: false,
-      downloadOutDataButtonDisabled: false,
       loading: null,
       solution: null,
       meta: null,
@@ -165,10 +163,8 @@ export default {
     async handleDownloadDataFile(filename, type) {
       if (type === 'in') {
         this.downloadInDataButtonInLoading = true;
-        this.downloadInDataButtonDisabled = true;
       } else {
         this.downloadOutDataButtonInLoading = true;
-        this.downloadOutDataButtonDisabled = true;
       }
 
       try {
@@ -191,10 +187,8 @@ export default {
       } finally {
         if (type === 'in') {
           this.downloadInDataButtonInLoading = false;
-          this.downloadInDataButtonDisabled = false;
         } else {
           this.downloadOutDataButtonInLoading = false;
-          this.downloadOutDataButtonDisabled = false;
         }
       }
     },

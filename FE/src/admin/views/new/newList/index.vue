@@ -22,7 +22,7 @@
           el-button(size="mini", :type="scope.row.top == 0?'success':'danger'", @click="handleToggleNewTopStatus(scope.row)") {{scope.row.top == 0?'置顶':'取置'}}
           el-button(size="mini" type="danger" @click="handleDeleteNew(scope.row)") 删除
   .content__pagination__wrapper
-    el-pagination(@size-change="handleSizeChange",@current-change="fetchDataList",:current-page.sync="currentPage",:page-sizes="[10, 20, 30, 40,50]",:page-size="10",layout="total, sizes, prev, pager, next, jumper",:total="total")
+    Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 </template>
 <script>
 import {
@@ -31,9 +31,11 @@ import {
   toggleNewStatus,
   toggleNewTopStatus,
 } from 'admin/api/new';
+import Paginator from 'admin/components/Paginator/index.vue';
 
 export default {
   name: 'adminNewList',
+  components: { Paginator },
   data() {
     return {
       status: -1,

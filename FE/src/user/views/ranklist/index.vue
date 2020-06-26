@@ -2,7 +2,7 @@
   .content
     .content__main
       .one-main.has__pagination
-        el-table(size="small",:data="tableData",v-loading="loading")
+        el-table(size="small",:data="tableData",v-loading="tableLoading")
           el-table-column(label="排名", width="60")
             template(slot-scope="scope")
               span {{ (currentPage-1) * 50 + scope.$index + 1}}
@@ -20,19 +20,21 @@
           el-table-column(label="解决",width="70",prop="solved")
           el-table-column(label="提交",width="70",prop="submit")
 
-        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 </template>
 
 <script>
 import { getRankList } from 'user/api/nologin';
 import { setTimeout } from 'timers';
 import { mapState } from 'vuex';
+import Paginator from 'user/components/Paginator/index.vue';
 
 export default {
+  name: 'ranklist',
+  components: { Paginator },
   data() {
     return {
-      loading: false,
+      tableLoading: false,
       currentPage: 1,
       perpage: 50,
       problemId: 0,
@@ -40,30 +42,24 @@ export default {
       total: 0,
     };
   },
-  computed: {
-    ...mapState({
-      device: (state) => state.app.device,
-    }),
-  },
   mounted() {
-    this.fetchData();
+    this.fetchDataList();
   },
   methods: {
     test(row) {
       console.log(row);
     },
-    async fetchData() {
-      const self = this;
-      self.loading = true;
+    async fetchDataList() {
+      this.tableLoading = true;
       try {
-        const res = await getRankList(self.currentPage, self.perpage);
-        console.log(res);
-        setTimeout(() => {
-          const { data } = res;
-          self.tableData = data.data;
-          self.total = data.total;
-          self.loading = false;
-        }, 200);
+        const res = await getRankList({
+          page: this.currentPage,
+          perpage: this.perpage,
+        });
+        const { data } = res;
+        this.tableData = data.data;
+        this.total = data.total;
+        this.tableLoading = false;
       } catch (err) {
         console.log(err);
       }

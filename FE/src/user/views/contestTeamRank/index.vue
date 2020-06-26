@@ -38,15 +38,12 @@ export default {
   mounted() {
     this.fetctContestTeamRankList();
     // 每隔1分钟拉取一次数据
-    this.timer = setInterval(() => {
+    const timer = setInterval(() => {
       this.fetctContestTeamRankList();
     }, 60000);
-  },
-  beforeDestroy() {
-    // 关闭定时器
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
+    this.$on('hook:beforeDestroy', () => {
+      clearInterval(timer);
+    });
   },
   methods: {
     async fetctContestTeamRankList() {

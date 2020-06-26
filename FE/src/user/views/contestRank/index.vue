@@ -44,18 +44,15 @@ export default {
       firstBloods: [],
     };
   },
-  beforeDestroy() {
-    // 关闭定时器
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
-  },
   mounted() {
     this.fetctContestRankList();
     // 每隔1分钟拉取一次数据
-    this.timer = setInterval(() => {
+    const timer = setInterval(() => {
       this.fetctContestRankList();
     }, 60000);
+    this.$on('hook:beforeDestroy', () => {
+      clearInterval(timer);
+    });
   },
   methods: {
     async fetctContestRankList() {

@@ -14,17 +14,13 @@ export default {
     };
   },
   mounted() {
-    const self = this;
-    self.timer = setTimeout(() => {
+    const timer = setTimeout(() => {
       console.log('index');
-      self.$router.replace({ name: 'index' });
+      this.$router.replace({ name: 'index' });
     }, 3000);
-  },
-  beforeDestroy() {
-    // 关闭定时器
-    if (this.timer) {
-      clearTimeout(this.timer);
-    }
+    this.$on('hook:beforeDestroy', () => {
+      clearTimeout(timer);
+    });
   },
 };
 </script>

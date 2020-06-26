@@ -33,8 +33,8 @@
                 li
                   el-button(size="mini",round,:class="[result==item.code?'is-active':'']", @click="handleSearchByResult(item.code)") {{item.name}}
       .main.has__pagination
-        el-pagination(style="float:left;",@current-change="fetchData",:current-page.sync="currentPage",:page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
-        el-table(size="small",:data="tableData", v-loading="loading")
+        Paginator(style="float:left;",@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
+        el-table(size="small",:data="tableData", v-loading="tableLoading")
           el-table-column(label="ID", prop="solution_id", width="60")
           el-table-column(label="用户",min-width="70")
             template(slot-scope="scope")
@@ -70,49 +70,51 @@
           el-table-column(label="公开", min-width="60",v-if="!isContest")
             template(slot-scope="scope")
               span {{ scope.row.public == 1?"是":"否"}}
-        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 </template>
 
 <script>
-import { getSolutionList, getLanguageList } from "user/api/nologin";
-import { resultList } from "common/const";
-import { mapState } from "vuex";
+import { getSolutionList, getLanguageList } from 'user/api/nologin';
+import { resultList } from 'common/const';
+import { mapState } from 'vuex';
+import Paginator from 'user/components/Paginator/index.vue';
 
 export default {
+  name: 'status',
+  components: { Paginator },
   props: {
     isContest: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   data() {
     return {
-      loading: false,
+      tableLoading: false,
       currentPage: 1,
       perpage: 30,
       tableData: [],
-      queryParam: "",
+      queryParam: '',
       contestId: 0,
       contestPnum: -1,
-      nick: "",
+      nick: '',
       language: -1,
       result: -1,
       total: 0,
       langList: [],
       resultList: [],
-      timer: 0
+      timer: 0,
     };
   },
   computed: {
     ...mapState({
-      device: state => state.app.device
+      device: (state) => state.app.device,
     }),
     searchableResultList() {
       return this.resultList.filter(
-        (val, index, arr) => val.code >= 4 && val.code <= 11
+        (val, index, arr) => val.code >= 4 && val.code <= 11,
       );
-    }
+    },
   },
   async mounted() {
     const res = await getLanguageList();
@@ -144,7 +146,7 @@ export default {
     if (this.$store.getters.solutionResult !== -1) {
       this.result = this.$store.getters.solutionResult;
     }
-    this.$store.dispatch("bus/resetSolutionFilter");
+    this.$store.dispatch('bus/resetSolutionFilter');
     // 5s请求一次数据
     this.fetchData();
     this.timer = setInterval(() => {
@@ -160,69 +162,67 @@ export default {
   methods: {
     async fetchData() {
       try {
-        const res = await getSolutionList(
-          this.currentPage,
-          this.perpage,
-          this.queryParam,
-          this.nick,
-          this.language,
-          this.result,
-          this.contestId
-        );
+        const res = await getSolutionList({
+          page: this.currentPage,
+          perpage: this.perpage,
+          param: this.queryParam,
+          username: this.nick,
+          language: this.language,
+          result: this.result,
+          contest_id: this.contestId,
+        });
         const { data } = res;
-        setTimeout(() => {
-          this.tableData = data.data;
-          this.total = data.total;
-          this.loading = false;
-        }, 200);
+        this.tableData = data.data;
+        this.total = data.total;
+        this.tableLoading = false;
       } catch (err) {
         console.log(err);
       }
     },
     handleSearchByResetConf() {
-      this.loading = true;
-      this.queryParam = "";
-      this.nick = "";
+      this.tableLoading = true;
+      this.queryParam = '';
+      this.nick = '';
       this.language = -1;
       this.result = -1;
       this.fetchData();
     },
     handleSearchMine() {
       this.currentPage = 1;
-      this.loading = true;
+      this.tableLoading = true;
       this.nick = this.$store.getters.userNick;
       this.fetchData();
     },
     handleSearchByProblem() {
       this.currentPage = 1;
-      this.loading = true;
+      this.tableLoading = true;
       this.fetchData();
     },
     handleSearchByParam() {
       this.currentPage = 1;
-      this.loading = true;
+      this.tableLoading = true;
       this.fetchData();
     },
     handleSearchByNick() {
       this.currentPage = 1;
-      this.loading = true;
+      this.tableLoading = true;
       this.fetchData();
     },
     handleSearchByLanguage(language) {
       this.currentPage = 1;
-      this.loading = true;
+      this.tableLoading = true;
       this.language = language;
       this.fetchData();
     },
     handleSearchByResult(result) {
       this.currentPage = 1;
-      this.loading = true;
+      this.tableLoading = true;
       this.result = result;
       this.fetchData();
     },
     handleSearchByTag(tagId) {
       this.currentPage = 1;
-      this.loading = true;
+      this.tableLoading = true;
       this.tagId = tagId;
       this.fetchData();
     },
@@ -232,14 +232,14 @@ export default {
     },
     calcRerultType(result) {
       if (result === 4) {
-        return "success";
+        return 'success';
       }
-      return "danger";
+      return 'danger';
     },
     calcCodeLength(codeLength) {
       return `${Number(codeLength / 1000).toFixed(2)}KB`;
-    }
-  }
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>

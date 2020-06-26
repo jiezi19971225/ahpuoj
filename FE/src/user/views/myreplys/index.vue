@@ -15,8 +15,7 @@
               span 中回复了你
               br
               .reply__content(v-html="calcContent(item.content)")
-        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 </template>
 
 <script>
@@ -24,10 +23,13 @@ import TinymceEditor from 'common/components/tinymce_editor.vue';
 import EventBus from 'common/eventbus';
 import { getMyReplys } from 'user/api/user';
 import { mapState } from 'vuex';
+import Paginator from 'user/components/Paginator/index.vue';
 
 export default {
+  name: 'myreplys',
   components: {
     TinymceEditor,
+    Paginator,
   },
   data() {
     return {
@@ -38,23 +40,21 @@ export default {
       total: 0,
     };
   },
-  computed: {
-    ...mapState({
-      device: (state) => state.app.device,
-    }),
-  },
   mounted() {
-    this.fetchData();
+    this.fetchDataList();
   },
   methods: {
-    async fetchData(resetScroll) {
+    async fetchDataList(resetScroll) {
       if (resetScroll !== false) {
         window.pageYOffset = 0;
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       }
       try {
-        const res = await getMyReplys(this.currentPage, this.perpage);
+        const res = await getMyReplys({
+          page: this.currentPage,
+          perpage: this.perpage,
+        });
         const { data } = res;
         this.replys = data.replys;
         this.total = data.total;

@@ -8,8 +8,8 @@ export function getUser() {
 export function getUserInfo(id) {
   return request('GET', `user/${id}`);
 }
-export function getMyReplys(page, perpage) {
-  return request('GET', 'myreplys', { page, perpage });
+export function getMyReplys(data) {
+  return request('GET', 'myreplys', data);
 }
 export function submitTestRunCode(data) {
   return request('POST', 'testrun', data);

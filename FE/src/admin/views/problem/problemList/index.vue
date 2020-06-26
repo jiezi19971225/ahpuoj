@@ -8,7 +8,7 @@
       el-input(placeholder="搜索问题名称", style="max-width:20em", v-model="queryParam", @keyup.enter.native="handleSearchByParam",maxlength="20", clearable)
         el-button(slot="append",icon="el-icon-search",@click="handleSearchByParam")
   .content__table__wrapper
-    el-table(:data="tableData" style="width: 100%", v-loading="loading",border)
+    el-table(:data="tableData" style="width: 100%", v-loading="tableLoading",border)
       el-table-column(label="ID", prop="id", width="180")
       el-table-column(label="标题", prop="title", min-width="300")
         template(slot-scope="scope")
@@ -29,7 +29,7 @@
           el-button(size="mini", :type="scope.row.defunct == 0?'danger':'success'", @click="handleToggleProblemStatus(scope.row)") {{scope.row.defunct == 0?'保留':'启用'}}
           el-button(size="mini", type="danger", @click="handleDeleteProblem(scope.row)") 删除
   .content__pagination__wrapper
-    el-pagination(@size-change="handleSizeChange",@current-change="fetchDataList",:current-page.sync="currentPage",:page-sizes="[10, 20, 30, 40,50]",:page-size="10",layout="total, sizes, prev, pager, next, jumper",:total="total")
+    Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 </template>
 
 <script>
@@ -38,12 +38,15 @@ import {
   deleteProblem,
   toggleProblemStatus,
 } from 'admin/api/problem';
+import Paginator from 'admin/components/Paginator/index.vue';
+
 
 export default {
   name: 'adminProblemList',
+  components: { Paginator },
   data() {
     return {
-      loading: true,
+      tableLoading: true,
       currentPage: 1,
       currentRowId: 0,
       perpage: 10,
@@ -57,7 +60,7 @@ export default {
   },
   methods: {
     async fetchDataList() {
-      this.loading = true;
+      this.tableLoading = true;
       try {
         const res = await getProblemList(
           this.currentPage,
@@ -68,14 +71,14 @@ export default {
         this.tableData = data.data;
         this.total = data.total;
         this.currentPage = data.page;
-        this.loading = false;
+        this.tableLoading = false;
       } catch (err) {
         console.log(err);
       }
     },
     handleSearchByParam() {
       this.currentPage = 1;
-      this.loading = true;
+      this.tableLoading = true;
       this.fetchDataList();
     },
     handleSizeChange(val) {

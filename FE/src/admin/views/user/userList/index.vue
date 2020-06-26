@@ -25,7 +25,7 @@
           el-button(size="mini", type="warning", @click="handleChangePass(scope.row)") 修改密码
           el-button(size="mini", :type="scope.row.defunct == 0?'danger':'success'", @click="handleToggleUserStatus(scope.row)") {{scope.row.defunct == 0?'禁用':'启用'}}
   .content__pagination__wrapper
-    el-pagination(@size-change="handleSizeChange", @current-change="fetchDataList", :current-page.sync="currentPage", :page-sizes="[10, 20, 30, 40,50]", :page-size="10", layout="total, sizes, prev, pager, next, jumper", :total="total")
+    Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
   el-dialog(title="修改密码", :visible.sync="dialogFormVisible", @closed="closeDialog", @opened="openDialog", width="400px",:close-on-click-modal="false")
     el-form(:model="form", ref="form", :rules="rules", @submit.native.prevent)
       el-form-item(label="新密码", prop="password")
@@ -41,9 +41,11 @@ import {
   toggleUserStatus,
   changeUserPass,
 } from 'admin/api/user';
+import Paginator from 'admin/components/Paginator/index.vue';
 
 export default {
   name: 'adminUserList',
+  components: { Paginator },
   data() {
     return {
       loading: true,

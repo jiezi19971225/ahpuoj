@@ -15,7 +15,7 @@
           el-form-item
             el-button(type="primary",@click="submitRejudgeProblem") 提交
     // 只有管理员可以重排问题
-    el-col(:xs="24" :md="12" v-if="user.role === admin")
+    el-col(:xs="24" :md="12" v-if="user.role === 'admin'")
       el-card(class="content__card__item")
         h2(class="content__card__title") 重排问题
         el-form(:model="form",ref="form",:rules="rules",@submit.native.prevent)

@@ -1,8 +1,8 @@
-import { server } from 'common/const';
+import { staticAssetsBase } from 'common/const';
 
 const Base = {};
 Base.install = (Vue) => {
-  Vue.prototype.imgUrl = (relativeUrl) => server + relativeUrl;
+  Vue.prototype.imgUrl = (relativeUrl) => staticAssetsBase + relativeUrl;
   Vue.prototype.engNum = (num) => {
     let engNum = '';
     while (num) {

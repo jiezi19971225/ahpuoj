@@ -17,13 +17,13 @@
           el-table-column(label="模式", min-width="150")
             template(slot-scope="scope")
               el-tag(size="small",:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark") {{ scope.row.team_mode == 0?"个人系列赛":"团体系列赛" }}
-        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 </template>
 
 <script>
 import { getSeriesList } from 'user/api/nologin';
 import { mapState } from 'vuex';
+import Paginator from 'user/components/Paginator/index.vue';
 
 export default {
   data() {
@@ -37,26 +37,22 @@ export default {
       tags: [],
     };
   },
-  computed: {
-    ...mapState({
-      device: (state) => state.app.device,
-    }),
-  },
+  components: { Paginator },
   activated() {
-    this.fetchData();
+    this.fetchDataList();
   },
   methods: {
-    async fetchData() {
+    async fetchDataList() {
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
       this.loading = true;
       try {
-        const res = await getSeriesList(
-          this.currentPage,
-          this.perpage,
-          this.queryParam,
-        );
+        const res = await getSeriesList({
+          page: this.currentPage,
+          perpage: this.perpage,
+          param: this.queryParam,
+        });
         const { data } = res;
         this.tableData = data.data;
         this.total = data.total;

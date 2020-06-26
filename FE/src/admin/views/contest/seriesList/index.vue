@@ -24,8 +24,7 @@
           el-button(size="mini", :type="scope.row.defunct == 0?'danger':'success'", @click="handleToggleSeriesStatus(scope.row)") {{scope.row.defunct == 0?'保留':'启用'}}
           el-button(size="mini", type="danger", @click="handleDeleteSeries(scope.row)") 删除
   .content__pagination__wrapper
-    el-pagination(@size-change="handleSizeChange",@current-change="fetchDataList",:current-page.sync="currentPage",
-        :page-sizes="[10, 20, 30, 40,50]",:page-size="10",layout="total, sizes, prev, pager, next, jumper",:total="total")
+    Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
   el-dialog(:title="dialogFormTitle",:visible.sync="dialogFormVisible",@closed="closeDialog",@opened="openDialog",width="600px",:close-on-click-modal="false")
     el-form(:model="form", ref="form" :rules="rules", @submit.native.prevent)
       el-form-item(label="系列赛名称", prop="name")
@@ -47,9 +46,11 @@ import {
   editSeries,
   toggleSeriesStatus,
 } from 'admin/api/series';
+import Paginator from 'admin/components/Paginator/index.vue';
 
 export default {
   name: 'adminSeriesList',
+  components: { Paginator },
   data() {
     return {
       loading: true,

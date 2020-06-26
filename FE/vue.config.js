@@ -119,12 +119,17 @@ module.exports = {
         changOrigin: true,
         secure: false,
       },
-      '/upload': {
-        target: 'http://localhost',
+      // 图片显示的本地代理
+      '^/upload': {
+        pathRewrite: { '^/upload': '/web/upload' },
+        target: 'http://localhost:8888',
         ws: false,
         changOrigin: true,
         secure: false,
       },
     },
+    // 启动一个本地静态服务器，以显示上传的图片资源，仅用于开发环境测试
+    // eslint-disable-next-line global-require
+    before: require('./static-server/static-server.js'),
   },
 };

@@ -29,7 +29,7 @@
           el-button(size="mini", :type="scope.row.defunct == 0?'danger':'success'", @click="handleToggleContestStatus(scope.row)") {{scope.row.defunct == 0?'保留':'启用'}}
           el-button(size="mini", type="danger", @click="handleDeleteContest(scope.row)") 删除
   .content__pagination__wrapper
-    el-pagination(@size-change="handleSizeChange",@current-change="fetchDataList",:current-page.sync="currentPage",:page-sizes="[10, 20, 30, 40,50]",:page-size="10",layout="total, sizes, prev, pager, next, jumper",:total="total")
+    Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
   el-dialog(title="下载提交记录",:visible.sync="dialogVisible",width="30%")
     p.mb20 {{currentContest && currentContest.name}}
     el-form
@@ -50,9 +50,11 @@ import {
 } from 'admin/api/contest';
 
 import { apiPort } from 'common/const';
+import Paginator from 'admin/components/Paginator/index.vue';
 
 export default {
   name: 'adminContestList',
+  components: { Paginator },
   data() {
     return {
       currentContest: null,

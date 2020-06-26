@@ -56,18 +56,18 @@
 </template>
 
 <script>
-import { getContest, getLanguageList } from "user/api/nologin";
+import { getContest, getLanguageList } from 'user/api/nologin';
 
-import EventBus from "common/eventbus";
-import { submitJudgeCode } from "user/api/user";
+import EventBus from 'common/eventbus';
+import { submitJudgeCode } from 'user/api/user';
 
 export default {
   data() {
     return {
       seeable: false,
-      reason: "",
+      reason: '',
       contest: null,
-      langList: []
+      langList: [],
     };
   },
   computed: {
@@ -84,13 +84,13 @@ export default {
       left %= 60 * 1000;
       const seconds = Math.round(left / 1000);
 
-      let res = "";
-      res += days ? `${days}天` : "";
-      res += hours ? `${hours}小时` : "";
-      res += minutes ? `${minutes}分钟` : "";
-      res += seconds ? `${seconds}秒` : "";
+      let res = '';
+      res += days ? `${days}天` : '';
+      res += hours ? `${hours}小时` : '';
+      res += minutes ? `${minutes}分钟` : '';
+      res += seconds ? `${seconds}秒` : '';
       return res;
-    }
+    },
   },
   mounted() {
     this.init();
@@ -108,10 +108,10 @@ export default {
         this.reason = data.reason;
       } catch (err) {
         console.log(err);
-        this.$router.replace({ name: "404Page" });
+        this.$router.replace({ name: '404Page' });
       }
-    }
-  }
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>

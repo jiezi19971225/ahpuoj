@@ -3,17 +3,17 @@ import request from 'common/axios';
 export function getLanguageList() {
   return request('GET', 'languages');
 }
-export function getRankList(page, perpage) {
-  return request('GET', 'ranklist', { page, perpage });
+export function getRankList(data) {
+  return request('GET', 'ranklist', data);
 }
-export function getNewList(page, perpage) {
-  return request('GET', 'news', { page, perpage });
+export function getNewList(data) {
+  return request('GET', 'news', data);
 }
-export function getIssueList(id, page, perpage) {
-  return request('GET', `problem/${id}/issues`, { page, perpage });
+export function getIssueList({ id, ...data }) {
+  return request('GET', `problem/${id}/issues`, data);
 }
-export function getIssue(id, page, perpage) {
-  return request('GET', `/issue/${id}`, { page, perpage });
+export function getIssue({ id, ...data }) {
+  return request('GET', `/issue/${id}`, data);
 }
 export function getProblem(id) {
   return request('GET', `problem/${id}`);
@@ -31,30 +31,12 @@ export function getSolution(id) {
   return request('GET', `solution/${id}`);
 }
 export function getSolutionList(
-  page,
-  perpage,
-  queryParam,
-  username,
-  language,
-  result,
-  contestId,
+  data,
 ) {
-  return request('GET', 'solutions', {
-    page,
-    perpage,
-    param: queryParam,
-    username,
-    language,
-    result,
-    contest_id: contestId,
-  });
+  return request('GET', 'solutions', data);
 }
-export function getContestList(page, perpage, queryParam) {
-  return request('GET', 'contests', {
-    page,
-    perpage,
-    param: queryParam,
-  });
+export function getContestList(data) {
+  return request('GET', 'contests', data);
 }
 export function getContest(id) {
   return request('GET', `contest/${id}`);
@@ -68,12 +50,8 @@ export function getContestTeamRankList(id) {
 export function getContestProblem(id, num) {
   return request('GET', `contest/${id}/problem/${num}`);
 }
-export function getSeriesList(page, perpage, queryParam) {
-  return request('GET', 'serieses', {
-    page,
-    perpage,
-    param: queryParam,
-  });
+export function getSeriesList(data) {
+  return request('GET', 'serieses', data);
 }
 export function getSeries(id) {
   return request('GET', `series/${id}`);

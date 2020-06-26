@@ -37,6 +37,10 @@ yarn run serve
 
 目前部署方案是将 docker 目录上传到服务器，然后启动容器，判题机和前端资源已被打包为镜像，后端程序需要编译后上传到服务器。
 
+docker-compose-prod.yml 是生产部署使用的配置文件你需要指定其为 docker-compose 的使用的配置文件，或者你也可以删除 docker-compose.yml，将 docker-compose-prod.yml 重命名为 docker-compose.yml
+```bash
+docker-compose -f docker-compose-prod.yml up
+```
 ### 后端编译
 
 ```bash
@@ -66,6 +70,10 @@ datadir=../data
 uploaddir=./upload
 server=http://localhost // 这里改为服务器的地址
 ```
+
+### 判题机容器配置
+
+docker/compose/
 
 ### 生产环境启动后端
 

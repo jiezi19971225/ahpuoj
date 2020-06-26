@@ -44,8 +44,7 @@
                             span  {{item.created_at}}&nbsp;
                           el-button.ml10(type="primary",size="mini",@click="handleReplyToReply(item.id,subitem.user_id)") 回复
                           el-button.ml10(v-if="$store.getters.userRole=='admin'",:type="subitem.is_deleted == 0?'danger':'success'",size="mini",@click="toggleReplyStatus(subitem.id)") {{subitem.is_deleted == 0 ? "删除":"恢复"}}
-        el-pagination.tal.mt20(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total",:small="device === 'mobile'")
+        Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 
         h1.mt20.content__panel__title 发表新回复
         .post__box__wrapper
@@ -70,10 +69,13 @@ import EventBus from 'common/eventbus';
 import { postIssue, replyToIssue } from 'user/api/user';
 import { toggleReplyStatus } from 'user/api/admin';
 import { mapState } from 'vuex';
+import Paginator from 'user/components/Paginator/index.vue';
 
 export default {
+  name: 'issue',
   components: {
     TinymceEditor,
+    Paginator,
   },
   data() {
     return {
@@ -93,27 +95,22 @@ export default {
       },
     };
   },
-  computed: {
-    ...mapState({
-      device: (state) => state.app.device,
-    }),
-  },
   mounted() {
-    this.fetchData();
+    this.fetchDataList();
   },
   methods: {
-    async fetchData(resetScroll) {
+    async fetchDataList(resetScroll) {
       if (resetScroll !== false) {
         window.pageYOffset = 0;
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       }
       try {
-        const res = await getIssue(
-          this.$route.params.id,
-          this.currentPage,
-          this.perpage,
-        );
+        const res = await getIssue({
+          id: this.$route.params.id,
+          page: this.currentPage,
+          perpage: this.perpage,
+        });
         const { data } = res;
         this.issue = data.issue;
         this.replys = data.replys;
@@ -170,7 +167,7 @@ export default {
         this.replyForm.content = '';
         this.replyContent = '';
         this.dialogFormVisible = false;
-        this.fetchData(false);
+        this.fetchDataList(false);
       } catch (err) {
         this.$message({
           message: err.response.data.message,
@@ -198,7 +195,7 @@ export default {
           message: '变更回复状态成功',
           type: 'success',
         });
-        this.fetchData(false);
+        this.fetchDataList(false);
       } catch (err) {
         this.$message({
           message: err.response.data.message,

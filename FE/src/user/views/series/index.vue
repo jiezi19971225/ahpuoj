@@ -46,7 +46,6 @@
 
 <script>
 import { getSeries } from 'user/api/nologin';
-
 import EventBus from 'common/eventbus';
 import { submitJudgeCode } from 'user/api/user';
 

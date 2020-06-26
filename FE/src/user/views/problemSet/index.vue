@@ -31,7 +31,7 @@
                 li
                   el-button(size="mini",round,:class="[tagId == tag.id?'is-active':'']",@click="handleSearchByTag(tag.id)") {{tag.name}}
       .main.has__pagination
-        el-pagination(style="float:left;",@current-change="fetchData",:current-page.sync="currentPage",:page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        Paginator(style="float:left;",@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
         el-table(size="small",:data="tableData",v-loading="loading",row-key="id")
           el-table-column(width="40")
             template(slot-scope="scope")
@@ -53,50 +53,46 @@
             template(slot-scope="scope") {{calcRate(scope.row)}}
           el-table-column(label="通过", prop="accepted", min-width="60",align="center")
           el-table-column(label="提交", prop="submit", min-width="60",align="center")
-        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        Paginator.user__pagination(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 </template>
 
 <script>
-import { getProblemList, getAllTags } from "user/api/nologin";
-import { mapState } from "vuex";
+import { getProblemList, getAllTags } from 'user/api/nologin';
+import { mapState } from 'vuex';
+import Paginator from 'user/components/Paginator/index.vue';
 
 export default {
-  name: "problemSet",
+  name: 'problemSet',
+  components: { Paginator },
   data() {
     return {
       loading: false,
       currentPage: 1,
       perpage: 50,
-      queryParam: "",
+      queryParam: '',
       tableData: [],
       total: 0,
       level: -1,
       tagId: -1,
-      tags: []
+      tags: [],
     };
-  },
-  computed: {
-    ...mapState({
-      device: state => state.app.device
-    })
   },
   async mounted() {
     this.tagId = this.$store.getters.tagId;
     console.log(this.tagId);
-    this.fetchData();
+    this.fetchDataList();
     const res = await getAllTags();
     this.tags = res.data.tags;
   },
   activated() {
     if (this.$store.getters.tagId !== -1) {
       this.tagId = this.$store.getters.tagId;
-      this.fetchData();
+      this.fetchDataList();
     }
-    this.$store.dispatch("bus/resetTag");
+    this.$store.dispatch('bus/resetTag');
   },
   methods: {
-    async fetchData() {
+    async fetchDataList() {
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
@@ -107,7 +103,7 @@ export default {
           this.perpage,
           this.queryParam,
           this.level,
-          this.tagId
+          this.tagId,
         );
         const { data } = res;
         this.tableData = data.data;
@@ -116,32 +112,32 @@ export default {
       } catch (err) {
         console.log(err);
       }
-      this.$store.dispatch("bus/resetTag");
+      this.$store.dispatch('bus/resetTag');
     },
     handleSearchByResetConf() {
       this.level = -1;
       this.tagId = -1;
-      this.queryParam = "";
-      this.fetchData();
+      this.queryParam = '';
+      this.fetchDataList();
     },
     handleSearchByParam() {
       this.currentPage = 1;
-      this.fetchData();
+      this.fetchDataList();
     },
     handleSearchByLevel(level) {
       this.currentPage = 1;
       this.level = level;
-      this.fetchData();
+      this.fetchDataList();
     },
     handleSearchByTag(tagId) {
       this.currentPage = 1;
       this.tagId = tagId;
-      this.fetchData();
+      this.fetchDataList();
     },
     calcRate(row) {
       const rate = row.submit === 0 ? 0 : row.accepted / row.submit;
       return `${(rate * 100).toFixed(2)}%`;
-    }
-  }
+    },
+  },
 };
 </script>

@@ -17,7 +17,6 @@
 </template>
 
 <script>
-import { getNewList } from 'user/api/nologin';
 import { sendFindPassEmail } from 'user/api/auth';
 import { throttle, debounce } from 'throttle-debounce';
 

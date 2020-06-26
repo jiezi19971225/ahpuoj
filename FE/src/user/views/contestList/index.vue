@@ -10,7 +10,7 @@
                 el-input(size="small",style="max-width:20em", placeholder="请输入竞赛名称", @keyup.enter.native="handleSearchByParam", v-model="queryParam", maxlength="20", clearable)
                   el-button(slot="append" icon="el-icon-search", @click="handleSearchByParam")
       .main.has__pagination
-        el-table(size="small",:data="tableData",v-loading="loading")
+        el-table(size="small",:data="tableData",v-loading="tableLoading")
           el-table-column(width="90")
             template(slot-scope="scope")
               el-tag(size="small",v-if="scope.row.status==1",type="success",effect="dark") 未开始
@@ -25,18 +25,20 @@
               el-tag(size="small",:type="scope.row.team_mode == 0 ? 'success':'primary'",effect="dark",style="margin-left:3px;") {{ scope.row.team_mode == 0?"个人赛":"团体赛" }}
           el-table-column(label="开始时间", min-width="100",prop="start_time")
           el-table-column(label="结束时间", min-width="100",prop="end_time")
-        el-pagination.user__pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
 </template>
 
 <script>
 import { getContestList } from 'user/api/nologin';
 import { mapState } from 'vuex';
+import Paginator from 'user/components/Paginator/index.vue';
 
 export default {
+  name: 'contestList',
+  components: { Paginator },
   data() {
     return {
-      loading: false,
+      tableLoading: false,
       currentPage: 1,
       perpage: 20,
       queryParam: '',
@@ -45,38 +47,33 @@ export default {
       tags: [],
     };
   },
-  computed: {
-    ...mapState({
-      device: (state) => state.app.device,
-    }),
-  },
   activated() {
-    this.fetchData();
+    this.fetchDataList();
   },
   methods: {
-    async fetchData() {
+    async fetchDataList() {
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      this.loading = true;
+      this.tableLoading = true;
       try {
-        const res = await getContestList(
-          this.currentPage,
-          this.perpage,
-          this.queryParam,
-        );
+        const res = await getContestList({
+          page: this.currentPage,
+          perpage: this.perpage,
+          param: this.queryParam,
+        });
         const { data } = res;
         this.tableData = data.data.filter((x) => x.defunct === 0);
         this.total = this.tableData.length;
-        this.loading = false;
+        this.tableLoading = false;
       } catch (err) {
         console.log(err);
       }
     },
     handleSearchByParam() {
       this.currentPage = 1;
-      this.loading = true;
-      this.fetchData();
+      this.tableLoading = true;
+      this.fetchDataList();
     },
     spliteDate(dateTimeString) {
       return dateTimeString.split(' ')[0];

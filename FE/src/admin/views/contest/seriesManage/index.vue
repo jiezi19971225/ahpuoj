@@ -19,7 +19,7 @@
         template(slot-scope="scope")
           el-button(size="mini", type="danger", @click="handleDeleteSeriesContest(scope.row)") 删除
   .content__pagination__wrapper
-    el-pagination(@size-change="handleSizeChange", @current-change="fetchDataList", :current-page.sync="currentPage", :page-sizes="[10, 20, 30, 40,50]", :page-size="10", layout="total, sizes, prev, pager, next, jumper", :total="total")
+    Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
   el-dialog(title="添加竞赛", :visible.sync="dialogFormVisible", @closed="closeDialog", @opened="openDialog", width="400px",:close-on-click-modal="false")
     el-form(:model="form", ref="form", :rules="rules", @submit.native.prevent)
       el-form-item(label="选择竞赛", prop="contest_id")
@@ -37,11 +37,12 @@ import {
   addSeriesContest,
   deleteSeriesContest,
 } from 'admin/api/series';
-
+import Paginator from 'admin/components/Paginator/index.vue';
 import { getAllContests } from 'admin/api/contest';
 
 export default {
   name: 'adminSeriesManage',
+  components: { Paginator },
   data() {
     return {
       loading: true,

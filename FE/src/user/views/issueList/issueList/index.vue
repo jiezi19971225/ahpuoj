@@ -26,8 +26,7 @@
                     router-link(v-if="item.problem_id>0",:to="{name:'problem',params:{id:item.problem_id}}") {{`In P${item.problem_id} ${item.problem.title}`}}
                     p(v-else) 总版
                     p.text-muted {{item.reply_count}}条回复 最后回复时间 {{item.updated_at}}
-        el-pagination(@current-change="fetchData",:current-page.sync="currentPage",background,
-        :page-size="perpage",:pager-count="5",:layout="'prev, pager, next'+(device=='desktop'?',jumper':'')",:total="total")
+        Paginator(@change="fetchDataList",:current-page.sync="currentPage",:page-size.sync="perpage",:total="total")
         h1.mt30.content__panel__title 发表新讨论
         .post__box__wrapper
           .post__box(v-if="$store.getters.username")
@@ -47,6 +46,7 @@ import EventBus from 'common/eventbus';
 import { postIssue, replyToIssue } from 'user/api/user';
 import { toggleIssueStatus } from 'user/api/admin';
 import { mapState } from 'vuex';
+import Paginator from 'user/components/Paginator/index.vue';
 
 export default {
   props: {
@@ -57,6 +57,7 @@ export default {
   },
   components: {
     TinymceEditor,
+    Paginator,
   },
   data() {
     return {
@@ -78,16 +79,11 @@ export default {
       },
     };
   },
-  computed: {
-    ...mapState({
-      device: (state) => state.app.device,
-    }),
-  },
   activated() {
-    this.fetchData();
+    this.fetchDataList();
   },
   methods: {
-    async fetchData() {
+    async fetchDataList() {
       window.pageYOffset = 0;
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
@@ -97,11 +93,11 @@ export default {
         this.problemId = this.$route.params.id;
       }
       try {
-        const res = await getIssueList(
-          this.problemId,
-          this.currentPage,
-          this.perpage,
-        );
+        const res = await getIssueList({
+          id: this.problemId,
+          page: this.currentPage,
+          perpage: this.perpage,
+        });
         const { data } = res;
 
         this.issueEnable = data.issue_enable;
@@ -153,7 +149,7 @@ export default {
         });
         this.issueForm.title = '';
         this.replyForm.content = '';
-        this.fetchData();
+        this.fetchDataList();
       } catch (err) {
         this.$message({
           message: err.response.data.message,
@@ -168,7 +164,7 @@ export default {
           message: '变更主题状态成功',
           type: 'success',
         });
-        this.fetchData();
+        this.fetchDataList();
       } catch (err) {
         this.$message({
           message: err.response.data.message,

@@ -1,13 +1,13 @@
 version: "3.2"
 services:
   judger:
-    image: ccr.ccs.tencentyun.com/jiezi19971225/ahpuoj-judger:1.1.1
+    image: ccr.ccs.tencentyun.com/jiezi19971225/ahpuoj-judger:latest
     container_name: ahpuojv2_judger
     restart: always
     tty: true
     volumes:
       - ${OJ_DATA_PATH_HOST}:${OJ_DATA_PATH_CONTAINER}${OJ_CODE_CONTAINER_FLAG}
-      # - ${OJ_SCHEDULER_PATH_HOST}:${OJ_SCHEDULER_PATH_CONTAINER}${OJ_CODE_CONTAINER_FLAG}
+      - ${OJ_SCHEDULER_CONFIG_FILE_HOST}:${OJ_SCHEDULER_CONFIG_FILE_CONTAINER}${OJ_CODE_CONTAINER_FLAG}
     depends_on:
       - db
       - redis
