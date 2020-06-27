@@ -12,7 +12,7 @@ services:
       - db
       - redis
       - rabbitmq
-    entrypoint: /usr/local/bin/docker-entrypoint.sh
+    entrypoint: /docker-entrypoint.sh
     privileged: true
   db:
     image: mysql:latest

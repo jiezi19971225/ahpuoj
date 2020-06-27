@@ -38,9 +38,11 @@ yarn run serve
 目前部署方案是将 docker 目录上传到服务器，然后启动容器，判题机和前端资源已被打包为镜像，后端程序需要编译后上传到服务器。
 
 docker-compose-prod.yml 是生产部署使用的配置文件你需要指定其为 docker-compose 的使用的配置文件，或者你也可以删除 docker-compose.yml，将 docker-compose-prod.yml 重命名为 docker-compose.yml
+
 ```bash
-docker-compose -f docker-compose-prod.yml up
+docker-compose -f docker-compose-prod.yml up -d
 ```
+
 ### 后端编译
 
 ```bash
@@ -73,7 +75,9 @@ server=http://localhost // 这里改为服务器的地址
 
 ### 判题机容器配置
 
-docker/compose/
+判题机也需要配置文件，docker-compose 脚本做了目录的映射
+需要在容器启动前 创建 compose/scheduler_config.ini 文件 参照 example.config.ini 替换参数配置
+如果容器已经启动，修改好后需进入容器重新启动服务
 
 ### 生产环境启动后端
 
@@ -81,7 +85,3 @@ docker/compose/
 cd docker/compose/web
 nohup ahpuoj &
 ```
-
-### nginx 配置
-
-在 docker/nginx/nginx.conf 中，将 proxy_pass $http_host:8080; 中的 $http_host 地址，改为宿主机的 docker0 网卡的 IP地址。
