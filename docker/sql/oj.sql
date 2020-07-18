@@ -62,7 +62,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`contest` (
   `user_id` INT(11) NOT NULL DEFAULT '0',
   PRIMARY KEY USING BTREE (`id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 13
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -82,7 +81,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`contest_problem` (
   INDEX `contest_id_index` USING BTREE (`contest_id`),
   INDEX `problem_id_index` USING BTREE (`problem_id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 493
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = FIXED;
@@ -101,7 +99,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`contest_series` (
   INDEX `contest_id_index` USING BTREE (`contest_id`),
   INDEX `series_id_index` USING BTREE (`series_id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 10
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = FIXED;
@@ -157,7 +154,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`contest_user` (
   PRIMARY KEY USING BTREE (`id`),
   INDEX `contest_id_index` USING BTREE (`contest_id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 99
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = FIXED;
@@ -190,7 +186,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`issue` (
   PRIMARY KEY USING BTREE (`id`),
   INDEX `user_id_index` USING BTREE (`user_id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 7
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -210,7 +205,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`new` (
   PRIMARY KEY USING BTREE (`id`),
   UNIQUE INDEX `title_UNIQUE` USING BTREE (`title`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 4
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -241,7 +235,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`problem` (
   `user_id` INT(11) NOT NULL DEFAULT '0',
   PRIMARY KEY USING BTREE (`id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 259
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -260,7 +253,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`problem_tag` (
   INDEX `problem_id_index` USING BTREE (`problem_id`),
   INDEX `tag_id_index` USING BTREE (`tag_id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 518
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = FIXED;
@@ -284,7 +276,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`reply` (
   INDEX `user_id_index` USING BTREE (`user_id`),
   INDEX `topic_id_index` USING BTREE (`issue_id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 37
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -301,7 +292,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`resetpassword` (
   PRIMARY KEY USING BTREE (`id`),
   UNIQUE INDEX `user_id_UNIQUE` USING BTREE (`user_id`))
 ENGINE = InnoDB
-AUTO_INCREMENT = 342
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci
 ROW_FORMAT = DYNAMIC;
@@ -318,7 +308,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`role` (
   `updated_at` DATETIME NOT NULL,
   PRIMARY KEY USING BTREE (`id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -352,7 +341,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`series` (
   `user_id` INT(11) NOT NULL DEFAULT '0',
   PRIMARY KEY USING BTREE (`id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -386,7 +374,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`solution` (
   INDEX `team_id_index` USING BTREE (`team_id`),
   INDEX `contest_id_index` USING BTREE (`contest_id`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 20748
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -417,7 +404,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`tag` (
   PRIMARY KEY USING BTREE (`id`),
   UNIQUE INDEX `name_UNIQUE` USING BTREE (`name`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 40
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;
@@ -480,7 +466,6 @@ CREATE TABLE IF NOT EXISTS `oj`.`user` (
   UNIQUE INDEX `username_UNIQUE` USING BTREE (`username`),
   UNIQUE INDEX `nick_UNIQUE` USING BTREE (`nick`))
 ENGINE = MyISAM
-AUTO_INCREMENT = 628
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_unicode_ci
 ROW_FORMAT = DYNAMIC;

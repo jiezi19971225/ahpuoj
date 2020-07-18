@@ -28,7 +28,7 @@
           li
             router-link(:to="{name:'myreplys'}") 查看回复
           li(v-if="$store.getters.userRole!=='user'")
-            a(href="/admin") 后台管理
+            a(:href="adminHref") 后台管理
           li(@click="handleLogout")
             a 登出
 
@@ -251,6 +251,9 @@ export default {
     ...mapState({
       device: (state) => state.app.device,
     }),
+    adminHref(){
+      return location.origin + "/admin/"
+    },
     activeTag() {
       const { name: routeName } = this.$route;
       if (['problemSet', 'problem'].includes(routeName)) {

@@ -36,6 +36,7 @@ yarn run serve
 ### 说明
 
 目前部署方案是将 docker 目录上传到服务器，然后启动容器，判题机和前端资源已被打包为镜像，后端程序需要编译后上传到服务器。
+需要将 config 配置文件目录拷贝到 部署目录下
 
 docker-compose-prod.yml 是生产部署使用的配置文件你需要指定其为 docker-compose 的使用的配置文件，或者你也可以删除 docker-compose.yml，将 docker-compose-prod.yml 重命名为 docker-compose.yml
 

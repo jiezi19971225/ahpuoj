@@ -20,6 +20,12 @@ port=6379
 password=123456
 cachelivetime=1800
 
+[rabbitmq]
+host=localhost
+port=5672
+user=root
+password=123456
+
 [mail]
 user=
 pass=
