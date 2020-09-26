@@ -134,7 +134,7 @@ export default {
       this.fetchDataList();
     }, 5000);
     this.$on('hook:deactivated', () => {
-      clearInterval(this.timer);
+      clearInterval(timer);
     });
     this.tableLoading = true;
     this.fetchDataList();
