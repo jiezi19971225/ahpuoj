@@ -129,10 +129,10 @@ export default {
     if (JSON.stringify(this.$route.query) !== '{}') {
       Object.assign(this.queryParams, this.$route.query);
     }
-    // 5s请求一次数据
+    // 10s请求一次数据
     const timer = setInterval(() => {
       this.fetchDataList();
-    }, 5000);
+    }, 10000);
     this.$on('hook:deactivated', () => {
       clearInterval(timer);
     });
